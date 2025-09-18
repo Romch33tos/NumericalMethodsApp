@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace NumericalMethodsApp
@@ -16,7 +16,17 @@ namespace NumericalMethodsApp
     private void MethodButton_Click(object sender, RoutedEventArgs e)
     {
       var button = sender as Button;
-      _presenter.OpenMethod(button.Tag.ToString());
+      string methodName = button.Tag.ToString();
+      
+      if (methodName == "Method1")
+      {
+        DichotomyMethod dichotomyWindow = new DichotomyMethod();
+        dichotomyWindow.Show();
+      }
+      else
+      {
+        _presenter.OpenMethod(methodName);
+      }
     }
 
     private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
