@@ -2,17 +2,17 @@ namespace NumericalMethodsApp
 {
   public class MainPresenter
   {
-    private readonly IMainView _view;
+    private readonly IMainView view;
 
     public MainPresenter(IMainView view)
     {
-      _view = view;
+      this.view = view;
     }
 
     public void OpenMethod(string methodName)
     {
       string message = $"Открытие метода: {methodName}\n\n";
-      
+
       switch (methodName)
       {
         case "Method1":
@@ -29,24 +29,25 @@ namespace NumericalMethodsApp
           break;
       }
 
-      _view.ShowMessage(message);
+      view.ShowMessage(message);
     }
 
     public void ShowAbout()
     {
-      string aboutText = "Численные методы v1.0\n\n" +
-                        "Приложение для реализации основных численных методов:\n" +
-                        "- Метод дихотомии\n" +
-                        "- Метод золотого сечения\n" +
-                        "- Метод Ньютона\n" +
-                        "- И другие методы оптимизации";
+      string aboutText = "Данное приложение предназначено для реализации следующих численных методов:\n\n" +
+                         "- Метод дихотомии\n" +
+                         "- Метод Ньютона\n" +
+                         "- Метод золотого сечения\n" +
+                         "- Олимпиадные сортировки\n" +
+                         "- Метод покоординатного спуска\n" +
+                         "- Метод наименьших квадратов";
 
-      _view.ShowMessage(aboutText);
+      view.ShowMessage(aboutText);
     }
 
     public void ExitApplication()
     {
-      _view.CloseApplication();
+      view.CloseApplication();
     }
   }
 }
