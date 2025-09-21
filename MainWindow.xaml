@@ -1,19 +1,15 @@
-﻿<Window x:Class="NumericalMethodsApp.MainWindow"
+<Window x:Class="NumericalMethodsApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Численные методы" Height="600" Width="496"
+        Title="Численные методы" Height="580" Width="496"
         WindowStartupLocation="CenterScreen"
         Background="White">
 
     <DockPanel>
-        <!-- Меню -->
         <Menu DockPanel.Dock="Top" Height="25" Background="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}">
-            <MenuItem Header="Справка">
-                <MenuItem Header="О программе" Click="AboutMenuItem_Click"/>
-            </MenuItem>
+            <MenuItem Header="О программе" Click="AboutMenuItem_Click"/>
         </Menu>
 
-        <!-- Основное содержимое -->
         <Grid Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -21,82 +17,103 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Заголовок -->
             <TextBlock Grid.Row="0" Text="Численные методы" 
-                      FontSize="24"
-                      HorizontalAlignment="Left" Margin="130,0,0,20"/>
+                FontSize="24"
+                HorizontalAlignment="Left" Margin="130,0,0,20"/>
 
-            <!-- Логотип и текст -->
             <Grid Grid.Row="1" Margin="0,0,0,30">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Image Source="/6458450.png" Height="160" 
-                       VerticalAlignment="Center" Margin="-11,0,20,0"/>
+                <Image Source="/6458450.png" Height="140" 
+               VerticalAlignment="Center" Margin="1,0,20,0"/>
 
                 <TextBlock
-                          TextWrapping="Wrap" 
-                          FontSize="16" 
-                          VerticalAlignment="Center"
-                          TextAlignment="Justify"
-                          Text="Добро пожаловать!&#x0a;&#x0a;Данное приложение предназначено для демонстрации работы численных методов. Нажмите на кнопку метода, чтобы запустить его работу." Grid.Column="1"/>
+                  TextWrapping="Wrap" 
+                  FontSize="16" 
+                  VerticalAlignment="Center"
+                  TextAlignment="Justify"
+                  Grid.Column="1">
+          <Run Text="Добро пожаловать!" FontWeight="Bold"/><LineBreak/><LineBreak/>
+          <Run Language="ru-ru" Text="Нажмите на кнопку с названием метода, чтобы запустить его работу."/>
+                </TextBlock>
             </Grid>
 
-            <!-- Кнопки методов -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Стиль для скругленных кнопок -->
                 <Grid.Resources>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" x:Key="MethodButtonStyle">
                         <Setter Property="Height" Value="45"/>
                         <Setter Property="Margin" Value="10,8"/>
                         <Setter Property="Background" Value="#FFDDDDDD"/>
                         <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="Cursor" Value="Hand"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="border" 
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="#FF999999"
-                                            BorderThickness="1"
-                                            CornerRadius="8">
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="#FF999999"
+                          BorderThickness="1"
+                          CornerRadius="8">
                                         <ContentPresenter HorizontalAlignment="Center" 
-                                                          VerticalAlignment="Center"/>
+                                      VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#FFAAAAAA"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#FFEEEEEE"/>
+                                <Setter Property="Foreground" Value="#FF888888"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </Grid.Resources>
 
-                <!-- Левый столбец кнопок -->
                 <StackPanel Grid.Column="0" Margin="10,0,5,0">
-                    <Button Content="Метод 1" 
-                           Click="MethodButton_Click" Tag="Method1"/>
+                    <Button Content="Метод дихотомии" 
+                 Click="MethodButton_Click" Tag="Method1"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method1Button"/>
                     <Button Content="Метод 2" 
-                           Click="MethodButton_Click" Tag="Method2"/>
+                 Click="MethodButton_Click" Tag="Method2"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method2Button"/>
                     <Button Content="Метод 3" 
-                           Click="MethodButton_Click" Tag="Method3"/>
+                 Click="MethodButton_Click" Tag="Method3"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method3Button"/>
                     <Button Content="Метод 4" 
-                           Click="MethodButton_Click" Tag="Method4"/>
+                 Click="MethodButton_Click" Tag="Method4"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method4Button"/>
                 </StackPanel>
 
-                <!-- Правый столбец кнопок -->
                 <StackPanel Grid.Column="1" Margin="5,0,10,0">
                     <Button Content="Метод 5" 
-                           Click="MethodButton_Click" Tag="Method5"/>
+                 Click="MethodButton_Click" Tag="Method5"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method5Button"/>
                     <Button Content="Метод 6" 
-                           Click="MethodButton_Click" Tag="Method6"/>
+                 Click="MethodButton_Click" Tag="Method6"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method6Button"/>
                     <Button Content="Метод 7" 
-                           Click="MethodButton_Click" Tag="Method7"/>
+                 Click="MethodButton_Click" Tag="Method7"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method7Button"/>
                     <Button Content="Метод 8" 
-                           Click="MethodButton_Click" Tag="Method8"/>
+                 Click="MethodButton_Click" Tag="Method8"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method8Button"/>
                 </StackPanel>
             </Grid>
         </Grid>
