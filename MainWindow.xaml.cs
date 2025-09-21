@@ -1,47 +1,69 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Collections.Generic;
 
 namespace NumericalMethodsApp
 {
   public partial class MainWindow : Window, IMainView
   {
-    private MainPresenter _presenter;
+    private MainPresenter presenter;
+    private Dictionary<string, Window> openMethodWindows;
 
     public MainWindow()
     {
       InitializeComponent();
-      _presenter = new MainPresenter(this);
+      presenter = new MainPresenter(this);
+      openMethodWindows = new Dictionary<string, Window>();
     }
 
     private void MethodButton_Click(object sender, RoutedEventArgs e)
     {
       var button = sender as Button;
       string methodName = button.Tag.ToString();
-      
+
+      if (openMethodWindows.ContainsKey(methodName) && openMethodWindows[methodName] != null)
+      {
+        openMethodWindows[methodName].Activate();
+        return;
+      }
+
       if (methodName == "Method1")
       {
         DichotomyMethod dichotomyWindow = new DichotomyMethod();
+        dichotomyWindow.Closed += (s, args) => MethodWindow_Closed(methodName);
         dichotomyWindow.Show();
+
+        button.IsEnabled = false;
+        openMethodWindows[methodName] = dichotomyWindow;
       }
       else
       {
-        _presenter.OpenMethod(methodName);
+        presenter.OpenMethod(methodName);
+      }
+    }
+
+    private void MethodWindow_Closed(string methodName)
+    {
+      var button = FindName(methodName + "Button") as Button;
+      if (button != null)
+      {
+        button.IsEnabled = true;
+      }
+
+      if (openMethodWindows.ContainsKey(methodName))
+      {
+        openMethodWindows[methodName] = null;
       }
     }
 
     private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
     {
-      _presenter.ShowAbout();
-    }
-
-    private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-      _presenter.ExitApplication();
+      presenter.ShowAbout();
     }
 
     public void ShowMessage(string message)
     {
-      MessageBox.Show(message, "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+      MessageBox.Show(message, "О программе", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     public void CloseApplication()
