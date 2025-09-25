@@ -1,4 +1,4 @@
-﻿namespace NumericalMethodsApp
+namespace NumericalMethodsApp
 {
   public interface IDichotomyView
   {
@@ -12,7 +12,8 @@
     void ShowWarning(string message);
     void ShowInformation(string message);
     void ClearPlot();
-    void PlotFunction(double startInterval, double endInterval, double minX, double minY);
+    void ClearInputs();
+    void PlotFunction(double startInterval, double endInterval, double[] roots);
     void FocusFunctionTextBox();
     void FocusStartIntervalTextBox();
     void FocusEndIntervalTextBox();
