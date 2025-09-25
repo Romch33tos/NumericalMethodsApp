@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using NCalc;
 
@@ -6,68 +7,81 @@ namespace NumericalMethodsApp
 {
   public class DichotomyPresenter
   {
-    private readonly IDichotomyView view;
-    private const int MaxIterations = 1000;
+    private readonly IDichotomyView _view;
+    private const int MaxIterationsCount = 1000;
 
     public DichotomyPresenter(IDichotomyView view)
     {
-      this.view = view;
+      _view = view;
     }
 
-    public void CalculateMinimum()
+    public void CalculateRoots()
     {
       try
       {
         if (!ValidateInputs())
           return;
 
-        string function = view.FunctionExpression.Trim();
-        double startInterval = ParseDouble(view.StartIntervalText);
-        double endInterval = ParseDouble(view.EndIntervalText);
-        double epsilon = ParseDouble(view.EpsilonText);
+        string functionExpression = _view.FunctionExpression.Trim();
+        double intervalStart = ParseDouble(_view.StartIntervalText);
+        double intervalEnd = ParseDouble(_view.EndIntervalText);
+        double epsilon = ParseDouble(_view.EpsilonText);
 
-        if (startInterval >= endInterval)
+        if (intervalStart >= intervalEnd)
         {
-          view.ShowError("Начало интервала (a) должно быть меньше конца интервала (b).");
+          _view.ShowError("Начало интервала (a) должно быть меньше конца интервала (b).");
           return;
         }
 
         if (epsilon <= 0)
         {
-          view.ShowError("Точность (ε) должна быть положительным числом.");
+          _view.ShowError("Точность (ε) должна быть положительным числом.");
           return;
         }
 
-        var result = FindMinimumDichotomy(function, startInterval, endInterval, epsilon);
-        double minimumX = result.x;
-        double minimumY = result.y;
+        List<double> roots = FindAllRoots(functionExpression, intervalStart, intervalEnd, epsilon);
 
-        view.PlotFunction(startInterval, endInterval, minimumX, minimumY);
-        view.SetResult($"Ответ: минимум функции находится в точке x = {minimumX:F6}, f(x) = {minimumY:F6}");
+        if (roots.Count == 0)
+        {
+          _view.SetResult("Корней на заданном интервале не найдено.");
+          _view.PlotFunction(intervalStart, intervalEnd, roots.ToArray());
+        }
+        else
+        {
+          string resultText = $"Найдено корней: {roots.Count}\n";
+          for (int i = 0; i < roots.Count; i++)
+          {
+            resultText += $"Корень {i + 1}: x = {roots[i]:F6}\n";
+          }
+
+          _view.SetResult(resultText);
+          _view.PlotFunction(intervalStart, intervalEnd, roots.ToArray());
+        }
       }
       catch (Exception ex)
       {
-        view.ShowError($"Ошибка при вычислениях: {ex.Message}");
+        _view.ShowError($"Ошибка при вычислениях: {ex.Message}");
       }
     }
 
     public void ClearAll()
     {
-      view.ClearPlot();
-      view.SetResult("Ответ: ");
+      _view.ClearPlot();
+      _view.SetResult("Ответ: ");
+      _view.ClearInputs();
     }
 
     public void ShowHelp()
     {
       string helpText = @"Метод дихотомии
 
-Метод дихотомии (половинного деления) используется для поиска минимума функции на заданном интервале.
+Метод дихотомии (половинного деления) используется для поиска корней уравнения на заданном интервале.
 
 Параметры:
 • Функция f(x): математическое выражение
 • Начало интервала (a): левая граница интервала поиска
 • Конец интервала (b): правая граница интервала поиска
-• Точность (ε): желаемая точность нахождения минимума
+• Точность (ε): желаемая точность нахождения корня
 
 Доступные функции:
 • Основные операторы: +, -, *, /
@@ -78,17 +92,17 @@ namespace NumericalMethodsApp
 Инструкция:
 1. Введите функцию и параметры
 2. Используйте Tab для перехода между полями
-3. Нажмите Вычислить минимум/Enter для ввода данных
+3. Нажмите Вычислить/Enter для ввода данных
 4. Для очистки полей используйте кнопку Очистить все";
 
-      view.ShowInformation(helpText);
+      _view.ShowInformation(helpText);
     }
 
-    public double EvaluateFunction(string function, double xValue)
+    public double EvaluateFunction(string functionExpression, double xValue)
     {
       try
       {
-        string expression = function.Trim();
+        string expression = functionExpression.Trim();
 
         NCalc.Expression ncalcExpression = new NCalc.Expression(expression);
         ncalcExpression.Parameters["x"] = xValue;
@@ -125,93 +139,160 @@ namespace NumericalMethodsApp
       }
       catch (Exception ex)
       {
-        throw new ArgumentException($"Невозможно вычислить функцию '{function}' при x={xValue}: {ex.Message}");
+        throw new ArgumentException($"Невозможно вычислить функцию '{functionExpression}' при x={xValue}: {ex.Message}");
       }
     }
 
     private bool ValidateInputs()
     {
-      if (string.IsNullOrWhiteSpace(view.FunctionExpression))
+      if (string.IsNullOrWhiteSpace(_view.FunctionExpression))
       {
-        view.ShowError("Введите функцию f(x).");
-        view.FocusFunctionTextBox();
+        _view.ShowError("Введите функцию f(x).");
+        _view.FocusFunctionTextBox();
         return false;
       }
 
-      if (!IsValidNumber(view.StartIntervalText))
+      if (!IsValidNumber(_view.StartIntervalText))
       {
-        view.ShowError("Введите корректное число для начала интервала (a).");
-        view.FocusStartIntervalTextBox();
+        _view.ShowError("Введите корректное число для начала интервала (a).");
+        _view.FocusStartIntervalTextBox();
         return false;
       }
 
-      if (!IsValidNumber(view.EndIntervalText))
+      if (!IsValidNumber(_view.EndIntervalText))
       {
-        view.ShowError("Введите корректное число для конца интервала (b).");
-        view.FocusEndIntervalTextBox();
+        _view.ShowError("Введите корректное число для конца интервала (b).");
+        _view.FocusEndIntervalTextBox();
         return false;
       }
 
-      if (!IsValidNumber(view.EpsilonText) || ParseDouble(view.EpsilonText) <= 0)
+      if (!IsValidNumber(_view.EpsilonText) || ParseDouble(_view.EpsilonText) <= 0)
       {
-        view.ShowError("Введите корректное положительное число для точности (ε).");
-        view.FocusEpsilonTextBox();
+        _view.ShowError("Введите корректное положительное число для точности (ε).");
+        _view.FocusEpsilonTextBox();
         return false;
       }
 
       try
       {
-        double startInterval = ParseDouble(view.StartIntervalText);
-        double endInterval = ParseDouble(view.EndIntervalText);
-        double testValue1 = startInterval;
-        double testValue2 = (startInterval + endInterval) / 2;
-        double testValue3 = endInterval;
+        double intervalStart = ParseDouble(_view.StartIntervalText);
+        double intervalEnd = ParseDouble(_view.EndIntervalText);
+        double testValue1 = intervalStart;
+        double testValue2 = (intervalStart + intervalEnd) / 2;
+        double testValue3 = intervalEnd;
 
-        EvaluateFunction(view.FunctionExpression, testValue1);
-        EvaluateFunction(view.FunctionExpression, testValue2);
-        EvaluateFunction(view.FunctionExpression, testValue3);
+        EvaluateFunction(_view.FunctionExpression, testValue1);
+        EvaluateFunction(_view.FunctionExpression, testValue2);
+        EvaluateFunction(_view.FunctionExpression, testValue3);
       }
       catch (Exception ex)
       {
-        view.ShowError($"Некорректный синтаксис функции: {ex.Message}\n\nИспользуйте доступные математические функции: sin(x), cos(x), exp(x), log(x), sqrt(x), abs(x), pow(x,y) и др.");
-        view.FocusFunctionTextBox();
+        _view.ShowError($"Некорректный синтаксис функции: {ex.Message}\n\nИспользуйте доступные математические функции: sin(x), cos(x), exp(x), log(x), sqrt(x), abs(x), pow(x,y) и др.");
+        _view.FocusFunctionTextBox();
         return false;
       }
 
       return true;
     }
 
-    private (double x, double y) FindMinimumDichotomy(string function, double startInterval, double endInterval, double epsilon)
+    private List<double> FindAllRoots(string functionExpression, double intervalStart, double intervalEnd, double epsilon)
     {
-      double firstPoint, secondPoint;
-      int iterationCount = 0;
+      List<double> roots = new List<double>();
 
-      while (Math.Abs(endInterval - startInterval) > epsilon && iterationCount < MaxIterations)
+      int segmentsCount = 1000;
+      double stepSize = (intervalEnd - intervalStart) / segmentsCount;
+
+      double[] functionValues = new double[segmentsCount + 1];
+      double[] xValues = new double[segmentsCount + 1];
+
+      for (int i = 0; i <= segmentsCount; i++)
       {
-        firstPoint = (startInterval + endInterval - epsilon / 2) / 2;
-        secondPoint = (startInterval + endInterval + epsilon / 2) / 2;
+        xValues[i] = intervalStart + i * stepSize;
+        functionValues[i] = EvaluateFunction(functionExpression, xValues[i]);
+      }
 
-        double firstFunctionValue = EvaluateFunction(function, firstPoint);
-        double secondFunctionValue = EvaluateFunction(function, secondPoint);
+      for (int i = 0; i <= segmentsCount; i++)
+      {
+        double x = xValues[i];
+        double functionValue = functionValues[i];
 
-        if (firstFunctionValue < secondFunctionValue)
-          endInterval = secondPoint;
+        if (Math.Abs(functionValue) < epsilon)
+        {
+          if (!IsRootAlreadyFound(roots, x, epsilon * 10))
+          {
+            roots.Add(x);
+            i += (int)(segmentsCount * 0.01);
+          }
+          continue;
+        }
+
+        if (i < segmentsCount)
+        {
+          double nextX = xValues[i + 1];
+          double nextFunctionValue = functionValues[i + 1];
+
+          if (functionValue * nextFunctionValue < 0)
+          {
+            double root = FindSingleRoot(functionExpression, x, nextX, epsilon);
+            if (!IsRootAlreadyFound(roots, root, epsilon * 10))
+            {
+              roots.Add(root);
+              i += (int)(segmentsCount * 0.01);
+            }
+          }
+        }
+      }
+
+      roots.Sort();
+      return roots;
+    }
+
+    private bool IsRootAlreadyFound(List<double> roots, double root, double tolerance)
+    {
+      foreach (double existingRoot in roots)
+      {
+        if (Math.Abs(existingRoot - root) < tolerance)
+          return true;
+      }
+      return false;
+    }
+
+    private double FindSingleRoot(string functionExpression, double intervalStart, double intervalEnd, double epsilon)
+    {
+      double functionValueAtStart = EvaluateFunction(functionExpression, intervalStart);
+      double functionValueAtEnd = EvaluateFunction(functionExpression, intervalEnd);
+
+      if (Math.Abs(functionValueAtStart) < epsilon)
+        return intervalStart;
+      if (Math.Abs(functionValueAtEnd) < epsilon)
+        return intervalEnd;
+
+      int iterationCount = 0;
+      double midpoint = 0;
+
+      while (Math.Abs(intervalEnd - intervalStart) > epsilon && iterationCount < MaxIterationsCount)
+      {
+        midpoint = (intervalStart + intervalEnd) / 2;
+        double functionValueAtMidpoint = EvaluateFunction(functionExpression, midpoint);
+
+        if (Math.Abs(functionValueAtMidpoint) < epsilon)
+          return midpoint;
+
+        if (functionValueAtStart * functionValueAtMidpoint < 0)
+        {
+          intervalEnd = midpoint;
+          functionValueAtEnd = functionValueAtMidpoint;
+        }
         else
-          startInterval = firstPoint;
+        {
+          intervalStart = midpoint;
+          functionValueAtStart = functionValueAtMidpoint;
+        }
 
         iterationCount++;
       }
 
-      if (iterationCount >= MaxIterations)
-      {
-        view.ShowWarning($"Достигнуто максимальное количество итераций ({MaxIterations}). " +
-                       $"Возможно, функция не имеет минимума на данном интервале или требуется увеличить интервал.");
-      }
-
-      double minimumX = (startInterval + endInterval) / 2;
-      double minimumY = EvaluateFunction(function, minimumX);
-
-      return (minimumX, minimumY);
+      return (intervalStart + intervalEnd) / 2;
     }
 
     private double ParseDouble(string text)
