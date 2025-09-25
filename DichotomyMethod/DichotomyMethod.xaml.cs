@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,10 +11,8 @@ namespace NumericalMethodsApp
 {
   public partial class DichotomyMethod : Window, IDichotomyView
   {
-    private DichotomyPresenter presenter;
-    private PlotModel plotModel;
-    private double foundMinimumX;
-    private double foundMinimumY;
+    private DichotomyPresenter _presenter;
+    private PlotModel _plotModel;
 
     public string FunctionExpression => TextBoxFunction.Text;
     public string StartIntervalText => TextBoxA.Text;
@@ -25,7 +23,7 @@ namespace NumericalMethodsApp
     {
       InitializeComponent();
       InitializePlot();
-      presenter = new DichotomyPresenter(this);
+      _presenter = new DichotomyPresenter(this);
       ResultsPanel.Visibility = Visibility.Visible;
       ResultText.Text = "Ответ: ";
 
@@ -38,10 +36,10 @@ namespace NumericalMethodsApp
 
     private void InitializePlot()
     {
-      plotModel = new PlotModel { Title = "" };
-      plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "x", FontSize = 14 });
-      plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "f(x)", FontSize = 14 });
-      PlotView.Model = plotModel;
+      _plotModel = new PlotModel { Title = "" };
+      _plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "x", FontSize = 14 });
+      _plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "f(x)", FontSize = 14 });
+      PlotView.Model = _plotModel;
     }
 
     private void ClearAllButton_Click(object sender, RoutedEventArgs e)
@@ -53,14 +51,14 @@ namespace NumericalMethodsApp
 
       if (result == MessageBoxResult.Yes)
       {
-        presenter.ClearAll();
+        _presenter.ClearAll();
         TextBoxFunction.Focus();
       }
     }
 
     private void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
-      presenter.CalculateMinimum();
+      _presenter.CalculateRoots();
     }
 
     public void SetResult(string result)
@@ -86,18 +84,23 @@ namespace NumericalMethodsApp
 
     public void ClearPlot()
     {
-      plotModel.Series.Clear();
+      _plotModel.Series.Clear();
       PlotView.InvalidatePlot(true);
     }
 
-    public void PlotFunction(double startInterval, double endInterval, double minX, double minY)
+    public void ClearInputs()
     {
-      foundMinimumX = minX;
-      foundMinimumY = minY;
+      TextBoxFunction.Text = "";
+      TextBoxA.Text = "";
+      TextBoxB.Text = "";
+      TextBoxEpsilon.Text = "0.001";
+    }
 
-      plotModel.Series.Clear();
+    public void PlotFunction(double startInterval, double endInterval, double[] roots)
+    {
+      _plotModel.Series.Clear();
 
-      var lineSeries = new LineSeries
+      var functionSeries = new LineSeries
       {
         Title = $"f(x) = {FunctionExpression}",
         Color = OxyColors.Blue,
@@ -105,33 +108,47 @@ namespace NumericalMethodsApp
       };
 
       int pointsCount = 200;
-      double step = (endInterval - startInterval) / pointsCount;
+      double stepSize = (endInterval - startInterval) / pointsCount;
 
       for (int pointIndex = 0; pointIndex <= pointsCount; pointIndex++)
       {
-        double x = startInterval + pointIndex * step;
+        double x = startInterval + pointIndex * stepSize;
         try
         {
-          double y = presenter.EvaluateFunction(FunctionExpression, x);
-          lineSeries.Points.Add(new DataPoint(x, y));
+          double y = _presenter.EvaluateFunction(FunctionExpression, x);
+          functionSeries.Points.Add(new DataPoint(x, y));
         }
         catch
         {
         }
       }
 
-      plotModel.Series.Add(lineSeries);
+      _plotModel.Series.Add(functionSeries);
 
-      var scatterSeries = new ScatterSeries
+      if (roots != null && roots.Length > 0)
       {
-        Title = "Минимум",
-        MarkerType = MarkerType.Circle,
-        MarkerSize = 5,
-        MarkerFill = OxyColors.Red
-      };
-      scatterSeries.Points.Add(new ScatterPoint(minX, minY));
+        var rootsSeries = new ScatterSeries
+        {
+          Title = "Корни",
+          MarkerType = MarkerType.Circle,
+          MarkerSize = 6,
+          MarkerFill = OxyColors.Red
+        };
 
-      plotModel.Series.Add(scatterSeries);
+        foreach (double root in roots)
+        {
+          try
+          {
+            double y = _presenter.EvaluateFunction(FunctionExpression, root);
+            rootsSeries.Points.Add(new ScatterPoint(root, y));
+          }
+          catch
+          {
+          }
+        }
+
+        _plotModel.Series.Add(rootsSeries);
+      }
 
       PlotView.InvalidatePlot(true);
     }
@@ -181,16 +198,16 @@ namespace NumericalMethodsApp
     {
       if (e.Key == Key.Tab)
       {
-        var current = sender as TextBox;
-        if (current != null)
+        var currentTextBox = sender as TextBox;
+        if (currentTextBox != null)
         {
-          if (current == TextBoxFunction)
+          if (currentTextBox == TextBoxFunction)
             TextBoxA.Focus();
-          else if (current == TextBoxA)
+          else if (currentTextBox == TextBoxA)
             TextBoxB.Focus();
-          else if (current == TextBoxB)
+          else if (currentTextBox == TextBoxB)
             TextBoxEpsilon.Focus();
-          else if (current == TextBoxEpsilon)
+          else if (currentTextBox == TextBoxEpsilon)
             CalculateButton.Focus();
 
           e.Handled = true;
@@ -200,7 +217,7 @@ namespace NumericalMethodsApp
 
     private void HelpButton_Click(object sender, RoutedEventArgs e)
     {
-      presenter.ShowHelp();
+      _presenter.ShowHelp();
     }
   }
 }
