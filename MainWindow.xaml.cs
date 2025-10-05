@@ -32,9 +32,16 @@ namespace NumericalMethodsApp
         DichotomyMethod dichotomyWindow = new DichotomyMethod();
         dichotomyWindow.Closed += (s, args) => MethodWindow_Closed(methodName);
         dichotomyWindow.Show();
-
         button.IsEnabled = false;
         openMethodWindows[methodName] = dichotomyWindow;
+      }
+      else if (methodName == "Method5")
+      {
+        LinearEquationsView slauWindow = new LinearEquationsView();
+        slauWindow.Closed += (s, args) => MethodWindow_Closed(methodName);
+        slauWindow.Show();
+        button.IsEnabled = false;
+        openMethodWindows[methodName] = slauWindow;
       }
       else
       {
