@@ -1,1 +1,170 @@
+<Window x:Class="NumericalMethodsApp.LinearEquationsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Решение СЛАУ" Height="500" Width="850" WindowStartupLocation="CenterScreen" Background="#FFF0F0F0">
 
+    <Window.Resources>
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#FF4A6CD4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#FF3A5CB4"/>
+            <Setter Property="Width" Value="125"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF5A7CE4"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#FFCCCCCC"/>
+                    <Setter Property="BorderBrush" Value="#FFAAAAAA"/>
+                    <Setter Property="Foreground" Value="#FF666666"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Header Buttons -->
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Height="35" Margin="0,0,0,10">
+            <Button Content="Справка" Click="HelpButton_Click" 
+                Style="{StaticResource ModernButton}" Margin="0,0,10,0" Width="75" Height="28"/>
+            <Button Content="Очистить все" Click="ClearAllButton_Click" 
+                Style="{StaticResource ModernButton}" Margin="0,0,0,0" Width="95" Height="28"/>
+        </StackPanel>
+
+        <!-- Matrix A -->
+        <Border Grid.Row="1" Grid.Column="0" Margin="5" Background="White" 
+            CornerRadius="5" BorderThickness="1" BorderBrush="#FFDDDDDD">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Матрица А" FontWeight="Bold" Margin="10,8"/>
+                <DataGrid x:Name="MatrixADataGrid" Grid.Row="1" Margin="5" 
+                      AutoGenerateColumns="True" CanUserAddRows="True" 
+                      HeadersVisibility="Column" IsEnabled="False"/>
+            </Grid>
+        </Border>
+
+        <!-- Vector B -->
+        <Border Grid.Row="1" Grid.Column="1" Margin="5" Background="White" 
+            CornerRadius="5" BorderThickness="1" BorderBrush="#FFDDDDDD">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Вектор B" FontWeight="Bold" Margin="10,8"/>
+                <DataGrid x:Name="VectorBDataGrid" Grid.Row="1" Margin="5" 
+                      AutoGenerateColumns="True" CanUserAddRows="True"
+                      HeadersVisibility="Column" IsEnabled="False"/>
+            </Grid>
+        </Border>
+
+        <!-- Vector X -->
+        <Border Grid.Row="1" Grid.Column="2" Margin="5" Background="White" 
+            CornerRadius="5" BorderThickness="1" BorderBrush="#FFDDDDDD">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Вектор X" FontWeight="Bold" Margin="10,8"/>
+                <DataGrid x:Name="VectorXDataGrid" Grid.Row="1" Margin="5" 
+                      AutoGenerateColumns="True" IsReadOnly="True"
+                      Background="#FFF8F9FA" HeadersVisibility="Column" IsEnabled="False"/>
+            </Grid>
+        </Border>
+
+        <!-- Controls -->
+        <Border Grid.Row="2" Grid.Column="0" Margin="5" Background="White" 
+            CornerRadius="5" BorderThickness="1" BorderBrush="#FFDDDDDD">
+            <StackPanel Margin="10">
+                <TextBlock Text="Размерность матрицы:" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="Строки:" Margin="0,0,5,2"/>
+                        <TextBox x:Name="RowsTextBox" Width="50" Text="" TextAlignment="Center"
+                            PreviewTextInput="DimensionTextBox_PreviewTextInput"
+                            TextChanged="DimensionTextBox_TextChanged"
+                            ToolTip="Введите количество строк (2-50)"/>
+                    </StackPanel>
+                    <StackPanel Margin="15,0,0,0">
+                        <TextBlock Text="Столбцы:" Margin="0,0,5,2"/>
+                        <TextBox x:Name="ColsTextBox" Width="50" Text="" TextAlignment="Center"
+                            PreviewTextInput="DimensionTextBox_PreviewTextInput"
+                            TextChanged="DimensionTextBox_TextChanged"
+                            ToolTip="Введите количество столбцов (2-50)"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="Применить размер" Click="ApplyDimensionsButton_Click" 
+                    Margin="0,10,0,0" Style="{StaticResource ModernButton}"
+                    HorizontalAlignment="Center" Height="28" x:Name="ApplyDimensionsButton"/>
+
+                <TextBlock Text="Генерация данных:" FontWeight="SemiBold" Margin="0,15,0,8"/>
+                <Button Content="Случайная генерация" Click="RandomGenerationButton_Click" 
+                    Margin="0,2" Style="{StaticResource ModernButton}" Height="28" Width="136" 
+                    x:Name="RandomGenerationButton" IsEnabled="False"/>
+                <Button Content="Импорт из CSV" Click="ImportFromCsvButton_Click" 
+                    Margin="0,5,0,2" Style="{StaticResource ModernButton}" Height="28" Width="135"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Methods -->
+        <Border Grid.Row="2" Grid.Column="1" Margin="5" Background="White" 
+            CornerRadius="5" BorderThickness="1" BorderBrush="#FFDDDDDD">
+            <StackPanel Margin="10">
+                <TextBlock Text="Методы решения:" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <CheckBox x:Name="GaussCheckBox" Content="Метод Гаусса" Margin="0,4" IsEnabled="False"/>
+                <CheckBox x:Name="JordanGaussCheckBox" Content="Метод Жордана-Гаусса" Margin="0,4" IsEnabled="False"/>
+                <CheckBox x:Name="CramerCheckBox" Content="Метод Крамера" Margin="0,4" IsEnabled="False"/>
+                <Button Content="Решить" Click="SolveButton_Click" 
+                    Margin="0,15,0,0" Style="{StaticResource ModernButton}"
+                    Background="#FF28A745" FontSize="13" Padding="15,8" Height="28" 
+                    x:Name="SolveButton" IsEnabled="False"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Results -->
+        <Border Grid.Row="2" Grid.Column="2" Margin="5" Background="White" 
+            CornerRadius="5" BorderThickness="1" BorderBrush="#FFDDDDDD">
+            <StackPanel Margin="10">
+                <TextBlock Text="Результаты выполнения:" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <DataGrid x:Name="ExecutionResultsDataGrid" Height="120" Margin="0,0,0,10"
+                      AutoGenerateColumns="True" IsReadOnly="True" 
+                      Background="#FFF8F9FA" HeadersVisibility="Column" IsEnabled="False"/>
+
+                <Button Content="Экспорт в CSV" Click="ExportToCsvButton_Click" 
+                    Margin="0,2" Style="{StaticResource ModernButton}" Height="28" 
+                    x:Name="ExportToCsvButton" IsEnabled="False"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
