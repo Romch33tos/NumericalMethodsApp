@@ -6,17 +6,6 @@ using System.Threading.Tasks;
 
 namespace NumericalMethodsApp
 {
-  public class ExecutionResult
-  {
-    public string MethodName { get; set; }
-    public double ExecutionTimeMs { get; set; }
-    public string Status { get; set; }
-  }
-
-  public interface ILinearEquationsModel
-  {
-  }
-
   public class LinearEquationsModel : ILinearEquationsModel
   {
     private readonly Random random;
@@ -26,45 +15,84 @@ namespace NumericalMethodsApp
       random = new Random();
     }
 
-    public void ExportToCsv(string filePath, double[,] matrixA, double[] vectorB, double[] vectorX, List<ExecutionResult> results)
+    public async Task<(double[] solution, double executionTimeMs)> SolveWithGaussAsync(double[,] coefficients, double[] constants)
     {
-      using var writer = new StreamWriter(filePath);
-
-      writer.WriteLine($"# Решение СЛАУ - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-      writer.WriteLine();
-
-      writer.WriteLine("=== Матрица A ===");
-      for (int rowIndex = 0; rowIndex < matrixA.GetLength(0); ++rowIndex)
+      return await Task.Run(() =>
       {
-        var rowValues = new List<string>();
-        for (int columnIndex = 0; columnIndex < matrixA.GetLength(1); ++columnIndex)
+        var startTime = DateTime.Now;
+        try
         {
-          rowValues.Add(Math.Round(matrixA[rowIndex, columnIndex], 3).ToString());
+          var solution = SolveWithGauss(coefficients, constants);
+          var endTime = DateTime.Now;
+          return (solution, (endTime - startTime).TotalMilliseconds);
         }
-        writer.WriteLine(string.Join(",", rowValues));
-      }
-      writer.WriteLine();
-
-      writer.WriteLine("=== Вектор B ===");
-      writer.WriteLine(string.Join(",", vectorB.Select(value => Math.Round(value, 3))));
-      writer.WriteLine();
-
-      if (vectorX != null && vectorX.Length > 0)
-      {
-        writer.WriteLine("=== Вектор X ===");
-        writer.WriteLine(string.Join(",", vectorX.Select(value => Math.Round(value, 3))));
-        writer.WriteLine();
-      }
-
-      if (results != null && results.Count > 0)
-      {
-        writer.WriteLine("=== Результаты ===");
-        writer.WriteLine("Метод,Время (мс),Статус");
-        foreach (var result in results)
+        catch
         {
-          writer.WriteLine($"{result.MethodName},{Math.Round(result.ExecutionTimeMs, 3)},{result.Status}");
+          var endTime = DateTime.Now;
+          throw;
+        }
+      });
+    }
+
+    public async Task<(double[] solution, double executionTimeMs)> SolveWithJordanGaussAsync(double[,] coefficients, double[] constants)
+    {
+      return await Task.Run(() =>
+      {
+        var startTime = DateTime.Now;
+        try
+        {
+          var solution = SolveWithJordanGauss(coefficients, constants);
+          var endTime = DateTime.Now;
+          return (solution, (endTime - startTime).TotalMilliseconds);
+        }
+        catch
+        {
+          var endTime = DateTime.Now;
+          throw;
+        }
+      });
+    }
+
+    public async Task<(double[] solution, double executionTimeMs)> SolveWithCramerAsync(double[,] coefficients, double[] constants)
+    {
+      return await Task.Run(() =>
+      {
+        var startTime = DateTime.Now;
+        try
+        {
+          var solution = SolveWithCramer(coefficients, constants);
+          var endTime = DateTime.Now;
+          return (solution, (endTime - startTime).TotalMilliseconds);
+        }
+        catch
+        {
+          var endTime = DateTime.Now;
+          throw;
+        }
+      });
+    }
+
+    public double[,] GenerateRandomMatrix(int rowCount, int columnCount, int minValue = 1, int maxValue = 15)
+    {
+      var matrix = new double[rowCount, columnCount];
+      for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+      {
+        for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
+        {
+          matrix[rowIndex, columnIndex] = random.Next(minValue, maxValue + 1);
         }
       }
+      return matrix;
+    }
+
+    public double[] GenerateRandomVector(int size, int minValue = 1, int maxValue = 15)
+    {
+      var vector = new double[size];
+      for (int elementIndex = 0; elementIndex < size; ++elementIndex)
+      {
+        vector[elementIndex] = random.Next(minValue, maxValue + 1);
+      }
+      return vector;
     }
 
     public (double[,] matrixA, double[] vectorB) ImportFromCsv(string filePath)
@@ -134,27 +162,45 @@ namespace NumericalMethodsApp
       return (matrixA, vectorB);
     }
 
-    public double[,] GenerateRandomMatrix(int rowCount, int columnCount, int minValue = 1, int maxValue = 15)
+    public void ExportToCsv(string filePath, double[,] matrixA, double[] vectorB, double[] vectorX, List<ExecutionResult> results)
     {
-      var matrix = new double[rowCount, columnCount];
-      for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+      using var writer = new StreamWriter(filePath);
+
+      writer.WriteLine($"# Решение СЛАУ - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+      writer.WriteLine();
+
+      writer.WriteLine("=== Матрица A ===");
+      for (int rowIndex = 0; rowIndex < matrixA.GetLength(0); ++rowIndex)
       {
-        for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
+        var rowValues = new List<string>();
+        for (int columnIndex = 0; columnIndex < matrixA.GetLength(1); ++columnIndex)
         {
-          matrix[rowIndex, columnIndex] = random.Next(minValue, maxValue + 1);
+          rowValues.Add(Math.Round(matrixA[rowIndex, columnIndex], 3).ToString());
+        }
+        writer.WriteLine(string.Join(",", rowValues));
+      }
+      writer.WriteLine();
+
+      writer.WriteLine("=== Вектор B ===");
+      writer.WriteLine(string.Join(",", vectorB.Select(value => Math.Round(value, 3))));
+      writer.WriteLine();
+
+      if (vectorX != null && vectorX.Length > 0)
+      {
+        writer.WriteLine("=== Вектор X ===");
+        writer.WriteLine(string.Join(",", vectorX.Select(value => Math.Round(value, 3))));
+        writer.WriteLine();
+      }
+
+      if (results != null && results.Count > 0)
+      {
+        writer.WriteLine("=== Результаты ===");
+        writer.WriteLine("Метод,Время (мс),Статус");
+        foreach (var result in results)
+        {
+          writer.WriteLine($"{result.MethodName},{Math.Round(result.ExecutionTimeMs, 3)},{result.Status}");
         }
       }
-      return matrix;
-    }
-
-    public double[] GenerateRandomVector(int size, int minValue = 1, int maxValue = 15)
-    {
-      var vector = new double[size];
-      for (int elementIndex = 0; elementIndex < size; ++elementIndex)
-      {
-        vector[elementIndex] = random.Next(minValue, maxValue + 1);
-      }
-      return vector;
     }
 
     public bool ValidateMatrix(double[,] matrix)
@@ -170,63 +216,6 @@ namespace NumericalMethodsApp
     public bool ValidateSystem(double[,] matrixA, double[] vectorB)
     {
       return ValidateMatrix(matrixA) && ValidateVector(vectorB) && matrixA.GetLength(0) == vectorB.Length;
-    }
-
-    public async Task<(double[] solution, double executionTimeMs)> SolveWithGaussAsync(double[,] coefficients, double[] constants)
-    {
-      return await Task.Run(() =>
-      {
-        var startTime = DateTime.Now;
-        try
-        {
-          var solution = SolveWithGauss(coefficients, constants);
-          var endTime = DateTime.Now;
-          return (solution, (endTime - startTime).TotalMilliseconds);
-        }
-        catch
-        {
-          var endTime = DateTime.Now;
-          throw;
-        }
-      });
-    }
-
-    public async Task<(double[] solution, double executionTimeMs)> SolveWithJordanGaussAsync(double[,] coefficients, double[] constants)
-    {
-      return await Task.Run(() =>
-      {
-        var startTime = DateTime.Now;
-        try
-        {
-          var solution = SolveWithJordanGauss(coefficients, constants);
-          var endTime = DateTime.Now;
-          return (solution, (endTime - startTime).TotalMilliseconds);
-        }
-        catch
-        {
-          var endTime = DateTime.Now;
-          throw;
-        }
-      });
-    }
-
-    public async Task<(double[] solution, double executionTimeMs)> SolveWithCramerAsync(double[,] coefficients, double[] constants)
-    {
-      return await Task.Run(() =>
-      {
-        var startTime = DateTime.Now;
-        try
-        {
-          var solution = SolveWithCramer(coefficients, constants);
-          var endTime = DateTime.Now;
-          return (solution, (endTime - startTime).TotalMilliseconds);
-        }
-        catch
-        {
-          var endTime = DateTime.Now;
-          throw;
-        }
-      });
     }
 
     private double[] SolveWithGauss(double[,] coefficients, double[] constants)
