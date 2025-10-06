@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NumericalMethodsApp
@@ -10,6 +13,73 @@ namespace NumericalMethodsApp
     public LinearEquationsModel()
     {
       random = new Random();
+    }
+
+    public (double[,] matrixA, double[] vectorB) ImportFromCsv(string filePath)
+    {
+      var lines = File.ReadAllLines(filePath).Where(line => !string.IsNullOrWhiteSpace(line)).ToArray();
+
+      if (lines.Length < 2)
+      {
+        throw new ArgumentException("Файл должен содержать как минимум 2 строки");
+      }
+
+      int matrixStartLine = -1;
+      int vectorStartLine = -1;
+
+      for (int lineIndex = 0; lineIndex < lines.Length; ++lineIndex)
+      {
+        if (lines[lineIndex].StartsWith("=== Матрица A ==="))
+          matrixStartLine = lineIndex;
+        else if (lines[lineIndex].StartsWith("=== Вектор B ==="))
+          vectorStartLine = lineIndex;
+      }
+
+      if (matrixStartLine == -1 || vectorStartLine == -1)
+      {
+        throw new ArgumentException("Неверный формат CSV файла");
+      }
+
+      var matrixData = new List<string[]>();
+      for (int lineIndex = matrixStartLine + 1; lineIndex < vectorStartLine; ++lineIndex)
+      {
+        if (string.IsNullOrWhiteSpace(lines[lineIndex])) continue;
+        matrixData.Add(lines[lineIndex].Split(','));
+      }
+
+      int rowCount = matrixData.Count;
+      int columnCount = matrixData[0].Length;
+
+      var matrixA = new double[rowCount, columnCount];
+      for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+      {
+        for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
+        {
+          if (!double.TryParse(matrixData[rowIndex][columnIndex], out double value))
+          {
+            throw new ArgumentException($"Неверное значение в матрице A: [{rowIndex}, {columnIndex}]");
+          }
+          matrixA[rowIndex, columnIndex] = Math.Round(value, 3);
+        }
+      }
+
+      var vectorValues = lines[vectorStartLine + 1].Split(',');
+      if (vectorValues.Length != rowCount)
+      {
+        throw new ArgumentException("Размер вектора B не соответствует матрице A");
+      }
+
+      var vectorB = new double[rowCount];
+      for (int elementIndex = 0; elementIndex < rowCount; ++elementIndex)
+      {
+        if (!double.TryParse(vectorValues[elementIndex], out double value))
+        {
+          throw new ArgumentException($"Неверное значение в векторе B: [{elementIndex}]");
+        }
+        vectorB[elementIndex] = Math.Round(value, 3);
+      }
+
+      return (matrixA, vectorB);
     }
 
     public double[,] GenerateRandomMatrix(int rowCount, int columnCount, int minValue = 1, int maxValue = 15)
