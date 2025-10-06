@@ -1,9 +1,67 @@
 using System;
+using System.Threading.Tasks;
 
 namespace NumericalMethodsApp
 {
   public class LinearEquationsModel
   {
+    public async Task<(double[] solution, double executionTimeMs)> SolveWithGaussAsync(double[,] coefficients, double[] constants)
+    {
+      return await Task.Run(() =>
+      {
+        var startTime = DateTime.Now;
+        try
+        {
+          var solution = SolveWithGauss(coefficients, constants);
+          var endTime = DateTime.Now;
+          return (solution, (endTime - startTime).TotalMilliseconds);
+        }
+        catch
+        {
+          var endTime = DateTime.Now;
+          throw;
+        }
+      });
+    }
+
+    public async Task<(double[] solution, double executionTimeMs)> SolveWithJordanGaussAsync(double[,] coefficients, double[] constants)
+    {
+      return await Task.Run(() =>
+      {
+        var startTime = DateTime.Now;
+        try
+        {
+          var solution = SolveWithJordanGauss(coefficients, constants);
+          var endTime = DateTime.Now;
+          return (solution, (endTime - startTime).TotalMilliseconds);
+        }
+        catch
+        {
+          var endTime = DateTime.Now;
+          throw;
+        }
+      });
+    }
+
+    public async Task<(double[] solution, double executionTimeMs)> SolveWithCramerAsync(double[,] coefficients, double[] constants)
+    {
+      return await Task.Run(() =>
+      {
+        var startTime = DateTime.Now;
+        try
+        {
+          var solution = SolveWithCramer(coefficients, constants);
+          var endTime = DateTime.Now;
+          return (solution, (endTime - startTime).TotalMilliseconds);
+        }
+        catch
+        {
+          var endTime = DateTime.Now;
+          throw;
+        }
+      });
+    }
+
     private double[] SolveWithGauss(double[,] coefficients, double[] constants)
     {
       int rowCount = coefficients.GetLength(0);
