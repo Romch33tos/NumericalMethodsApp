@@ -6,13 +6,65 @@ using System.Threading.Tasks;
 
 namespace NumericalMethodsApp
 {
-  public class LinearEquationsModel
+  public class ExecutionResult
+  {
+    public string MethodName { get; set; }
+    public double ExecutionTimeMs { get; set; }
+    public string Status { get; set; }
+  }
+
+  public interface ILinearEquationsModel
+  {
+  }
+
+  public class LinearEquationsModel : ILinearEquationsModel
   {
     private readonly Random random;
 
     public LinearEquationsModel()
     {
       random = new Random();
+    }
+
+    public void ExportToCsv(string filePath, double[,] matrixA, double[] vectorB, double[] vectorX, List<ExecutionResult> results)
+    {
+      using var writer = new StreamWriter(filePath);
+
+      writer.WriteLine($"# Решение СЛАУ - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+      writer.WriteLine();
+
+      writer.WriteLine("=== Матрица A ===");
+      for (int rowIndex = 0; rowIndex < matrixA.GetLength(0); ++rowIndex)
+      {
+        var rowValues = new List<string>();
+        for (int columnIndex = 0; columnIndex < matrixA.GetLength(1); ++columnIndex)
+        {
+          rowValues.Add(Math.Round(matrixA[rowIndex, columnIndex], 3).ToString());
+        }
+        writer.WriteLine(string.Join(",", rowValues));
+      }
+      writer.WriteLine();
+
+      writer.WriteLine("=== Вектор B ===");
+      writer.WriteLine(string.Join(",", vectorB.Select(value => Math.Round(value, 3))));
+      writer.WriteLine();
+
+      if (vectorX != null && vectorX.Length > 0)
+      {
+        writer.WriteLine("=== Вектор X ===");
+        writer.WriteLine(string.Join(",", vectorX.Select(value => Math.Round(value, 3))));
+        writer.WriteLine();
+      }
+
+      if (results != null && results.Count > 0)
+      {
+        writer.WriteLine("=== Результаты ===");
+        writer.WriteLine("Метод,Время (мс),Статус");
+        foreach (var result in results)
+        {
+          writer.WriteLine($"{result.MethodName},{Math.Round(result.ExecutionTimeMs, 3)},{result.Status}");
+        }
+      }
     }
 
     public (double[,] matrixA, double[] vectorB) ImportFromCsv(string filePath)
