@@ -5,6 +5,51 @@ namespace NumericalMethodsApp
 {
   public class LinearEquationsModel
   {
+    private readonly Random random;
+
+    public LinearEquationsModel()
+    {
+      random = new Random();
+    }
+
+    public double[,] GenerateRandomMatrix(int rowCount, int columnCount, int minValue = 1, int maxValue = 15)
+    {
+      var matrix = new double[rowCount, columnCount];
+      for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+      {
+        for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
+        {
+          matrix[rowIndex, columnIndex] = random.Next(minValue, maxValue + 1);
+        }
+      }
+      return matrix;
+    }
+
+    public double[] GenerateRandomVector(int size, int minValue = 1, int maxValue = 15)
+    {
+      var vector = new double[size];
+      for (int elementIndex = 0; elementIndex < size; ++elementIndex)
+      {
+        vector[elementIndex] = random.Next(minValue, maxValue + 1);
+      }
+      return vector;
+    }
+
+    public bool ValidateMatrix(double[,] matrix)
+    {
+      return matrix != null && matrix.GetLength(0) >= 2 && matrix.GetLength(1) >= 2;
+    }
+
+    public bool ValidateVector(double[] vector)
+    {
+      return vector != null && vector.Length >= 2;
+    }
+
+    public bool ValidateSystem(double[,] matrixA, double[] vectorB)
+    {
+      return ValidateMatrix(matrixA) && ValidateVector(vectorB) && matrixA.GetLength(0) == vectorB.Length;
+    }
+
     public async Task<(double[] solution, double executionTimeMs)> SolveWithGaussAsync(double[,] coefficients, double[] constants)
     {
       return await Task.Run(() =>
