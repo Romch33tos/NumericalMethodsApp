@@ -253,5 +253,58 @@ namespace NumericalMethodsApp
         VectorXDataGrid.ItemsSource = table.DefaultView;
       }
     }
+
+    private void DimensionTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+      if (!char.IsDigit(e.Text, 0))
+      {
+        e.Handled = true;
+      }
+    }
+
+    private void DimensionTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+      var textBox = sender as TextBox;
+
+      bool hasRows = !string.IsNullOrWhiteSpace(RowsTextBox.Text) && RowsTextBox.Text != "0";
+      bool hasCols = !string.IsNullOrWhiteSpace(ColsTextBox.Text) && ColsTextBox.Text != "0";
+
+      ApplyDimensionsButton.IsEnabled = hasRows && hasCols;
+    }
+
+    private void ApplyDimensionsButton_Click(object sender, RoutedEventArgs e)
+    {
+      ApplyDimensionsClicked?.Invoke();
+    }
+
+    private void RandomGenerationButton_Click(object sender, RoutedEventArgs e)
+    {
+      RandomGenerationClicked?.Invoke();
+    }
+
+    private void ImportFromCsvButton_Click(object sender, RoutedEventArgs e)
+    {
+      ImportFromCsvClicked?.Invoke();
+    }
+
+    private void SolveButton_Click(object sender, RoutedEventArgs e)
+    {
+      SolveClicked?.Invoke();
+    }
+
+    private void ExportToCsvButton_Click(object sender, RoutedEventArgs e)
+    {
+      ExportToCsvClicked?.Invoke();
+    }
+
+    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
+    {
+      ClearAllClicked?.Invoke();
+    }
+
+    private void HelpButton_Click(object sender, RoutedEventArgs e)
+    {
+      HelpClicked?.Invoke();
+    }
   }
 }
