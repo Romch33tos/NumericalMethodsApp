@@ -284,6 +284,42 @@ namespace NumericalMethodsApp
         return errorMessage;
     }
 
+    private void OnExportToCsv()
+    {
+      try
+      {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+          Filter = "CSV files (*.csv)|*.csv",
+          Title = "Экспорт результатов в CSV"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+          model.ExportToCsv(dialog.FileName, currentMatrix, currentVectorB, currentSolution, executionResults);
+          view.ShowMessage("Данные успешно экспортированы в CSV файл", "Экспорт завершен", MessageBoxImage.Information);
+        }
+      }
+      catch (Exception exception)
+      {
+        view.ShowMessage($"Ошибка при экспорте: {exception.Message}", "Ошибка", MessageBoxImage.Error);
+      }
+    }
+
+    private void OnClearAll()
+    {
+      if (view.ShowConfirmation("Вы уверены, что хотите очистить все данные?", "Подтверждение очистки"))
+      {
+        view.ClearAllData();
+        executionResults.Clear();
+        currentMatrix = null;
+        currentVectorB = null;
+        currentSolution = null;
+
+        InitializeView();
+      }
+    }
+
     private void CreateEmptyMatrix(int rows, int columns)
     {
       currentMatrix = new double[rows, columns];
