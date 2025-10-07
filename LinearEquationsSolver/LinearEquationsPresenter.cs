@@ -82,6 +82,36 @@ namespace NumericalMethodsApp
       }
     }
 
+    private void OnImportFromCsv()
+    {
+      try
+      {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+          Filter = "CSV files (*.csv)|*.csv",
+          Title = "Импорт данных из CSV"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+          var (matrixA, vectorB) = model.ImportFromCsv(dialog.FileName);
+
+          currentMatrix = matrixA;
+          currentVectorB = vectorB;
+          view.MatrixRows = matrixA.GetLength(0);
+          view.MatrixCols = matrixA.GetLength(1);
+          view.MatrixA = matrixA;
+          view.VectorB = vectorB;
+
+          view.UpdateControlsState(true);
+        }
+      }
+      catch (Exception exception)
+      {
+        view.ShowMessage($"Ошибка при импорте: {exception.Message}", "Ошибка", MessageBoxImage.Error);
+      }
+    }
+
     private void CreateEmptyMatrix(int rows, int columns)
     {
       currentMatrix = new double[rows, columns];
