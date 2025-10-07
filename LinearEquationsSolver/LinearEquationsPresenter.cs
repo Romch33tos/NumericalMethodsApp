@@ -66,6 +66,22 @@ namespace NumericalMethodsApp
       }
     }
 
+    private void OnRandomGeneration()
+    {
+      try
+      {
+        currentMatrix = model.GenerateRandomMatrix(view.MatrixRows, view.MatrixCols, 1, 15);
+        currentVectorB = model.GenerateRandomVector(view.MatrixRows, 1, 15);
+
+        view.MatrixA = currentMatrix;
+        view.VectorB = currentVectorB;
+      }
+      catch (Exception exception)
+      {
+        view.ShowMessage($"Ошибка при генерации: {exception.Message}", "Ошибка", MessageBoxImage.Error);
+      }
+    }
+
     private void CreateEmptyMatrix(int rows, int columns)
     {
       currentMatrix = new double[rows, columns];
