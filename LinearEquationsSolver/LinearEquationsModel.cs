@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace NumericalMethodsApp
@@ -9,10 +10,13 @@ namespace NumericalMethodsApp
   public class LinearEquationsModel : ILinearEquationsModel
   {
     private readonly Random random;
+    private readonly HttpClient httpClient;
 
     public LinearEquationsModel()
     {
       random = new Random();
+      httpClient = new HttpClient();
+      httpClient.Timeout = TimeSpan.FromSeconds(30);
     }
 
     public async Task<(double[] solution, double executionTimeMs)> SolveWithGaussAsync(double[,] coefficients, double[] constants)
@@ -162,6 +166,28 @@ namespace NumericalMethodsApp
       return (matrixA, vectorB);
     }
 
+    public (double[,] matrixA, double[] vectorB) ImportFromGoogleSheets(string url)
+    {
+      try
+      {
+        string csvUrl = ConvertGoogleSheetsUrlToCsv(url);
+
+        var response = httpClient.GetAsync(csvUrl).Result;
+        if (!response.IsSuccessStatusCode)
+        {
+          throw new ArgumentException($"Не удалось загрузить данные из Google Таблицы. Статус: {response.StatusCode}");
+        }
+
+        string csvContent = response.Content.ReadAsStringAsync().Result;
+
+        return ParseGoogleSheetsCsvContent(csvContent);
+      }
+      catch (Exception ex)
+      {
+        throw new ArgumentException($"Ошибка при импорте из Google Таблицы: {ex.Message}");
+      }
+    }
+
     public void ExportToCsv(string filePath, double[,] matrixA, double[] vectorB, double[] vectorX, List<ExecutionResult> results)
     {
       using var writer = new StreamWriter(filePath);
@@ -216,6 +242,84 @@ namespace NumericalMethodsApp
     public bool ValidateSystem(double[,] matrixA, double[] vectorB)
     {
       return ValidateMatrix(matrixA) && ValidateVector(vectorB) && matrixA.GetLength(0) == vectorB.Length;
+    }
+
+    private string ConvertGoogleSheetsUrlToCsv(string url)
+    {
+      try
+      {
+        Uri uri = new Uri(url);
+        string path = uri.AbsolutePath;
+
+        var pathParts = path.Split('/');
+        string sheetId = pathParts.Length >= 4 ? pathParts[3] : throw new ArgumentException("Неверный формат ссылки на Google Таблицу");
+
+        string gid = "0";
+        if (uri.Fragment.Contains("gid="))
+        {
+          gid = uri.Fragment.Split('=')[1];
+        }
+
+        return $"https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv&gid={gid}";
+      }
+      catch
+      {
+        throw new ArgumentException("Неверный формат ссылки на Google Таблицу");
+      }
+    }
+
+    private (double[,] matrixA, double[] vectorB) ParseGoogleSheetsCsvContent(string csvContent)
+    {
+      var lines = csvContent.Split('\n')
+                           .Where(line => !string.IsNullOrWhiteSpace(line))
+                           .Select(line => line.Trim())
+                           .ToArray();
+
+      if (lines.Length < 2)
+      {
+        throw new ArgumentException("CSV данные должны содержать как минимум 2 строки");
+      }
+
+      int rowCount = lines.Length;
+      int colCount = lines[0].Split(',').Length;
+
+      if (colCount < 2)
+      {
+        throw new ArgumentException("Матрица должна иметь как минимум 2 столбца");
+      }
+
+      int matrixCols = colCount - 1;
+      var matrixA = new double[rowCount, matrixCols];
+      var vectorB = new double[rowCount];
+
+      for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+      {
+        var values = lines[rowIndex].Split(',')
+                                   .Select(v => v.Trim().Replace("\"", ""))
+                                   .ToArray();
+
+        if (values.Length != colCount)
+        {
+          throw new ArgumentException($"Несовпадение количества столбцов в строке {rowIndex + 1}");
+        }
+
+        for (int colIndex = 0; colIndex < matrixCols; colIndex++)
+        {
+          if (!double.TryParse(values[colIndex], out double value))
+          {
+            throw new ArgumentException($"Неверное значение в матрице A: строка {rowIndex + 1}, столбец {colIndex + 1}");
+          }
+          matrixA[rowIndex, colIndex] = Math.Round(value, 3);
+        }
+
+        if (!double.TryParse(values[matrixCols], out double bValue))
+        {
+          throw new ArgumentException($"Неверное значение в векторе B: строка {rowIndex + 1}");
+        }
+        vectorB[rowIndex] = Math.Round(bValue, 3);
+      }
+
+      return (matrixA, vectorB);
     }
 
     private double[] SolveWithGauss(double[,] coefficients, double[] constants)
