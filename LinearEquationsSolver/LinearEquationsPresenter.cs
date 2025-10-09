@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +33,7 @@ namespace NumericalMethodsApp
       view.ApplyDimensionsClicked += OnApplyDimensions;
       view.RandomGenerationClicked += OnRandomGeneration;
       view.ImportFromCsvClicked += OnImportFromCsv;
+      view.ImportFromGoogleSheetsClicked += OnImportFromGoogleSheets;
       view.SolveClicked += OnSolve;
       view.ExportToCsvClicked += OnExportToCsv;
       view.ClearAllClicked += OnClearAll;
@@ -86,7 +88,7 @@ namespace NumericalMethodsApp
     {
       try
       {
-        var dialog = new Microsoft.Win32.OpenFileDialog
+        var dialog = new OpenFileDialog
         {
           Filter = "CSV files (*.csv)|*.csv",
           Title = "Импорт данных из CSV"
@@ -110,6 +112,42 @@ namespace NumericalMethodsApp
       {
         view.ShowMessage($"Ошибка при импорте: {exception.Message}", "Ошибка", MessageBoxImage.Error);
       }
+    }
+
+    private void OnImportFromGoogleSheets()
+    {
+      try
+      {
+        string url = ShowGoogleSheetsUrlDialog();
+        if (!string.IsNullOrEmpty(url))
+        {
+          var (matrixA, vectorB) = model.ImportFromGoogleSheets(url);
+
+          currentMatrix = matrixA;
+          currentVectorB = vectorB;
+          view.MatrixRows = matrixA.GetLength(0);
+          view.MatrixCols = matrixA.GetLength(1);
+          view.MatrixA = matrixA;
+          view.VectorB = vectorB;
+
+          view.UpdateControlsState(true);
+          view.ShowMessage("Данные успешно импортированы из Google Таблицы", "Импорт завершен", MessageBoxImage.Information);
+        }
+      }
+      catch (Exception exception)
+      {
+        view.ShowMessage($"Ошибка при импорте из Google Таблицы: {exception.Message}", "Ошибка", MessageBoxImage.Error);
+      }
+    }
+
+    private string ShowGoogleSheetsUrlDialog()
+    {
+      var dialog = new GoogleSheetsImportDialog();
+      if (dialog.ShowDialog() == true)
+      {
+        return dialog.Url;
+      }
+      return null;
     }
 
     private async void OnSolve()
@@ -288,7 +326,7 @@ namespace NumericalMethodsApp
     {
       try
       {
-        var dialog = new Microsoft.Win32.SaveFileDialog
+        var dialog = new SaveFileDialog
         {
           Filter = "CSV files (*.csv)|*.csv",
           Title = "Экспорт результатов в CSV"
@@ -322,38 +360,33 @@ namespace NumericalMethodsApp
 
     private void OnHelp()
     {
-      string helpText = @"Руководство по использованию приложения:
+      string helpText = @"РЕШЕНИЕ СИСТЕМ ЛИНЕЙНЫХ АЛГЕБРАИЧЕСКИХ УРАВНЕНИЙ
 
-1. Установка размерности:
-   - Введите количество строк и столбцов (от 2 до 50)
-   - Нажмите 'Применить размерность'
+Формат уравнения: A∙X + B = 0
 
-2. Ввод данных:
-   - Ручной ввод: заполните таблицы матрицы A и вектора B
-   - Случайная генерация: нажмите 'Случайные значения'
-   - Импорт из CSV: нажмите 'Импорт из CSV'
+ИНСТРУКЦИЯ:
+1. Укажите размерность матрицы (от 2 до 50)
+2. Нажмите 'Применить размер'
+3. Заполните матрицу A и вектор B
+4. Выберите методы решения
+5. Нажмите 'Решить СЛАУ'
 
-3. Выбор методов решения:
-   - Метод Гаусса: для систем любого размера
-   - Метод Жордана-Гаусса: для точного решения
-   - Метод Крамера: только для квадратных матриц до 8x8
+ДОСТУПНЫЕ МЕТОДЫ:
+• Метод Гаусса - для любых матриц
+• Метод Жордана-Гаусса - для любых матриц  
+• Метод Крамера - только для квадратных матриц до 8x8
 
-4. Решение системы:
-   - Нажмите 'Решить СЛАУ'
-   - Просмотрите результаты в таблице
+ИМПОРТ ДАННЫХ:
+• Из CSV файла
+• Из Google Таблиц (ссылка должна быть публичной)
 
-5. Экспорт результатов:
-   - Нажмите 'Экспорт в CSV' для сохранения данных
+ВОЗМОЖНЫЕ РЕЗУЛЬТАТЫ:
+• Решение найдено - система имеет единственное решение
+• Система несовместна - решений нет
+• Бесконечное число решений - система имеет множество решений
+• Определитель равен нулю - система вырождена";
 
-6. Очистка:
-   - Нажмите 'Очистить всё' для сброса данных
-
-Формат CSV файла:
-- Первая строка: размерность (строки,столбцы)
-- Следующие строки: матрица A
-- Последняя строка: вектор B";
-
-      view.ShowMessage(helpText, "Справка по использованию", MessageBoxImage.Information);
+      view.ShowMessage(helpText, "Справка", MessageBoxImage.Information);
     }
 
     private void CreateEmptyMatrix(int rows, int columns)
