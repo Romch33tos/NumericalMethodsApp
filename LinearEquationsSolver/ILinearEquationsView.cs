@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 
@@ -19,6 +19,7 @@ namespace NumericalMethodsApp
     event Action ApplyDimensionsClicked;
     event Action RandomGenerationClicked;
     event Action ImportFromCsvClicked;
+    event Action ImportFromGoogleSheetsClicked;
     event Action SolveClicked;
     event Action ExportToCsvClicked;
     event Action ClearAllClicked;
