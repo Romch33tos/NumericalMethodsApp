@@ -78,6 +78,7 @@ namespace NumericalMethodsApp
     public event Action ApplyDimensionsClicked;
     public event Action RandomGenerationClicked;
     public event Action ImportFromCsvClicked;
+    public event Action ImportFromGoogleSheetsClicked;
     public event Action SolveClicked;
     public event Action ExportToCsvClicked;
     public event Action ClearAllClicked;
@@ -285,6 +286,11 @@ namespace NumericalMethodsApp
     private void ImportFromCsvButton_Click(object sender, RoutedEventArgs e)
     {
       ImportFromCsvClicked?.Invoke();
+    }
+
+    private void ImportFromGoogleSheetsButton_Click(object sender, RoutedEventArgs e)
+    {
+      ImportFromGoogleSheetsClicked?.Invoke();
     }
 
     private void SolveButton_Click(object sender, RoutedEventArgs e)
