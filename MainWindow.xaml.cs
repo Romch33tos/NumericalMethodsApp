@@ -27,25 +27,17 @@ namespace NumericalMethodsApp
         return;
       }
 
-      if (methodName == "Method1")
+      presenter.OpenMethod(methodName, button);
+    }
+
+    public void OpenMethodWindow(string methodName, Window window, Button button)
+    {
+      if (window != null)
       {
-        DichotomyMethod dichotomyWindow = new DichotomyMethod();
-        dichotomyWindow.Closed += (s, args) => MethodWindow_Closed(methodName);
-        dichotomyWindow.Show();
+        window.Closed += (s, args) => MethodWindow_Closed(methodName);
+        window.Show();
         button.IsEnabled = false;
-        openMethodWindows[methodName] = dichotomyWindow;
-      }
-      else if (methodName == "Method5")
-      {
-        LinearEquationsView slauWindow = new LinearEquationsView();
-        slauWindow.Closed += (s, args) => MethodWindow_Closed(methodName);
-        slauWindow.Show();
-        button.IsEnabled = false;
-        openMethodWindows[methodName] = slauWindow;
-      }
-      else
-      {
-        presenter.OpenMethod(methodName);
+        openMethodWindows[methodName] = window;
       }
     }
 
