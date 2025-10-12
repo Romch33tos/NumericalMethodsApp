@@ -1,3 +1,4 @@
+<!-- DichotomyMethod.xaml -->
 <Window x:Class="NumericalMethodsApp.DichotomyMethod"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -156,7 +157,7 @@
 
             <StackPanel Grid.Row="5" HorizontalAlignment="Center" Margin="0,39,0,-69">
                 <Button x:Name="CalculateButton" 
-                Content="Вычислить минимум"
+                Content="Вычислить"
                 Click="CalculateButton_Click"
                 Width="200" Height="36"
                 Style="{StaticResource RoundedButtonStyle}"/>

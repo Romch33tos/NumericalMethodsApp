@@ -1,4 +1,8 @@
-<Window x:Class="NumericalMethodsApp.LinearEquationsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Решение СЛАУ" Height="500" Width="850" WindowStartupLocation="CenterScreen" Background="#FFF0F0F0">
+<Window x:Class="NumericalMethodsApp.LinearEquationsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Решение СЛАУ" Height="500" Width="850" 
+        WindowStartupLocation="CenterScreen" Background="#FFF0F0F0">
 
     <Window.Resources>
         <Style x:Key="ModernButton" TargetType="Button">
@@ -130,10 +134,12 @@
 
                 <TextBlock Text="Генерация данных:" FontWeight="SemiBold" Margin="0,15,0,8"/>
                 <Button Content="Случайная генерация" Click="RandomGenerationButton_Click" 
-                    Margin="0,2" Style="{StaticResource ModernButton}" Height="28" Width="136" 
+                    Margin="0,2" Style="{StaticResource ModernButton}" Height="28" Width="164" 
                     x:Name="RandomGenerationButton" IsEnabled="False"/>
                 <Button Content="Импорт из CSV" Click="ImportFromCsvButton_Click" 
-                    Margin="0,5,0,2" Style="{StaticResource ModernButton}" Height="28" Width="135"/>
+                    Margin="0,5,0,2" Style="{StaticResource ModernButton}" Height="28" Width="165"/>
+                <Button Content="Импорт из Google Таблиц" Click="ImportFromGoogleSheetsButton_Click" 
+                    Margin="0,5,0,2" Style="{StaticResource ModernButton}" Height="28" Width="165"/>
             </StackPanel>
         </Border>
 

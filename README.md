@@ -34,7 +34,7 @@
 
 ### Интерфейс окна метода дихотомии
 
-<img width="400" alt="Method" src="https://github.com/user-attachments/assets/e60a4919-77f5-4244-a371-6701efa78e39" />
+<img width="693" height="666" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/9f6f2bbc-a4b0-49f8-a3a5-dfc84371b156" />
 
 ---
 
@@ -77,4 +77,4 @@
 
 ### Интерфейс окна решения СЛАУ
 
-<img width="500" alt="LinearEquations" src="https://github.com/user-attachments/assets/101d28c8-ee26-48b5-9dcf-72c64bd5e352" />
+<img width="1363" height="723" alt="LinearEquations" src="https://github.com/user-attachments/assets/8f9d9d85-a1ba-4cf1-9fee-76bea5067fdf" />
