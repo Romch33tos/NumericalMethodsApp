@@ -27,6 +27,11 @@ namespace NumericalMethodsApp
       ResultsPanel.Visibility = Visibility.Visible;
       ResultText.Text = "Ответ: ";
 
+      TextBoxFunction.Text = "x^2 - 4";
+      TextBoxA.Text = "1";
+      TextBoxB.Text = "3";
+      TextBoxEpsilon.Text = "0.001";
+
       KeyboardNavigation.SetTabIndex(TextBoxFunction, 0);
       KeyboardNavigation.SetTabIndex(TextBoxA, 1);
       KeyboardNavigation.SetTabIndex(TextBoxB, 2);
@@ -100,36 +105,43 @@ namespace NumericalMethodsApp
     {
       _plotModel.Series.Clear();
 
-      var functionSeries = new LineSeries
+      int segmentsCount = 200;
+      double stepSize = (endInterval - startInterval) / segmentsCount;
+
+      LineSeries functionSeries = new LineSeries
       {
-        Title = $"f(x) = {FunctionExpression}",
+        Title = "f(x)",
         Color = OxyColors.Blue,
         StrokeThickness = 2
       };
 
-      int pointsCount = 200;
-      double stepSize = (endInterval - startInterval) / pointsCount;
-
-      for (int pointIndex = 0; pointIndex <= pointsCount; pointIndex++)
+      for (int segmentIndex = 0; segmentIndex <= segmentsCount; ++segmentIndex)
       {
-        double x = startInterval + pointIndex * stepSize;
+        double x = startInterval + segmentIndex * stepSize;
         try
         {
           double y = _presenter.EvaluateFunction(FunctionExpression, x);
-          functionSeries.Points.Add(new DataPoint(x, y));
+
+          if (!double.IsInfinity(y) && !double.IsNaN(y) && Math.Abs(y) < 1e10)
+          {
+            functionSeries.Points.Add(new DataPoint(x, y));
+          }
         }
         catch
         {
         }
       }
 
-      _plotModel.Series.Add(functionSeries);
+      if (functionSeries.Points.Count > 0)
+      {
+        _plotModel.Series.Add(functionSeries);
+      }
 
       if (roots != null && roots.Length > 0)
       {
-        var rootsSeries = new ScatterSeries
+        var rootSeries = new ScatterSeries
         {
-          Title = "Корни",
+          Title = "Корень",
           MarkerType = MarkerType.Circle,
           MarkerSize = 6,
           MarkerFill = OxyColors.Red
@@ -140,15 +152,27 @@ namespace NumericalMethodsApp
           try
           {
             double y = _presenter.EvaluateFunction(FunctionExpression, root);
-            rootsSeries.Points.Add(new ScatterPoint(root, y));
+            rootSeries.Points.Add(new ScatterPoint(root, y));
           }
           catch
           {
+            rootSeries.Points.Add(new ScatterPoint(root, 0));
           }
         }
 
-        _plotModel.Series.Add(rootsSeries);
+        _plotModel.Series.Add(rootSeries);
       }
+
+      var zeroLine = new LineSeries
+      {
+        Title = "y = 0",
+        Color = OxyColors.Gray,
+        StrokeThickness = 1,
+        LineStyle = LineStyle.Dash
+      };
+      zeroLine.Points.Add(new DataPoint(startInterval, 0));
+      zeroLine.Points.Add(new DataPoint(endInterval, 0));
+      _plotModel.Series.Add(zeroLine);
 
       PlotView.InvalidatePlot(true);
     }
