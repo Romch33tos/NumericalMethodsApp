@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using NCalc;
 
@@ -23,11 +22,11 @@ namespace NumericalMethodsApp
           return;
 
         string functionExpression = _view.FunctionExpression.Trim();
-        double intervalStart = ParseDouble(_view.StartIntervalText);
-        double intervalEnd = ParseDouble(_view.EndIntervalText);
+        double startInterval = ParseDouble(_view.StartIntervalText);
+        double endInterval = ParseDouble(_view.EndIntervalText);
         double epsilon = ParseDouble(_view.EpsilonText);
 
-        if (intervalStart >= intervalEnd)
+        if (startInterval >= endInterval)
         {
           _view.ShowError("Начало интервала (a) должно быть меньше конца интервала (b).");
           return;
@@ -39,29 +38,155 @@ namespace NumericalMethodsApp
           return;
         }
 
-        List<double> roots = FindAllRoots(functionExpression, intervalStart, intervalEnd, epsilon);
+        double functionAtStart = EvaluateFunction(functionExpression, startInterval);
+        double functionAtEnd = EvaluateFunction(functionExpression, endInterval);
 
-        if (roots.Count == 0)
+        if (Math.Abs(functionAtStart) < epsilon)
         {
-          _view.SetResult("Корней на заданном интервале не найдено.");
-          _view.PlotFunction(intervalStart, intervalEnd, roots.ToArray());
+          ShowSingleRootResult(functionExpression, startInterval, functionAtStart);
+          return;
         }
-        else
+
+        if (Math.Abs(functionAtEnd) < epsilon)
         {
-          string resultText = $"Найдено корней: {roots.Count}\n";
-          for (int i = 0; i < roots.Count; i++)
+          ShowSingleRootResult(functionExpression, endInterval, functionAtEnd);
+          return;
+        }
+
+        if (functionAtStart * functionAtEnd > 0)
+        {
+          double? possibleRoot = FindPossibleRoot(functionExpression, startInterval, endInterval, epsilon);
+
+          if (possibleRoot.HasValue)
           {
-            resultText += $"Корень {i + 1}: x = {roots[i]:F6}\n";
+            double functionValueAtRoot = EvaluateFunction(functionExpression, possibleRoot.Value);
+            ShowSingleRootResult(functionExpression, possibleRoot.Value, functionValueAtRoot);
+            return;
           }
 
+          string resultText = "На заданном интервале корней нет.";
           _view.SetResult(resultText);
-          _view.PlotFunction(intervalStart, intervalEnd, roots.ToArray());
+          _view.PlotFunction(startInterval, endInterval, new double[0]);
+          return;
         }
+
+        double root = FindRootByDichotomy(functionExpression, startInterval, endInterval, epsilon);
+        double functionValueAtFoundRoot = EvaluateFunction(functionExpression, root);
+
+        ShowSingleRootResult(functionExpression, root, functionValueAtFoundRoot);
       }
       catch (Exception ex)
       {
         _view.ShowError($"Ошибка при вычислениях: {ex.Message}");
       }
+    }
+
+    private double? FindPossibleRoot(string functionExpression, double startInterval, double endInterval, double epsilon)
+    {
+      try
+      {
+        int checkPoints = 100;
+        double step = (endInterval - startInterval) / (checkPoints + 1);
+
+        double previousValue = EvaluateFunction(functionExpression, startInterval);
+
+        for (int pointIndex = 1; pointIndex <= checkPoints; ++pointIndex)
+        {
+          double currentX = startInterval + pointIndex * step;
+          double currentValue;
+
+          try
+          {
+            currentValue = EvaluateFunction(functionExpression, currentX);
+          }
+          catch
+          {
+            continue;
+          }
+
+          if (Math.Abs(currentValue) < epsilon * 10)
+          {
+            return currentX;
+          }
+
+          if (previousValue * currentValue < 0)
+          {
+            double subStart = startInterval + (pointIndex - 1) * step;
+            double subEnd = currentX;
+
+            try
+            {
+              return FindRootByDichotomy(functionExpression, subStart, subEnd, epsilon);
+            }
+            catch
+            {
+            }
+          }
+
+          previousValue = currentValue;
+        }
+
+        return null;
+      }
+      catch
+      {
+        return null;
+      }
+    }
+
+    private double FindRootByDichotomy(string functionExpression, double startInterval, double endInterval, double epsilon)
+    {
+      double functionAtStart = EvaluateFunction(functionExpression, startInterval);
+      double functionAtEnd = EvaluateFunction(functionExpression, endInterval);
+      int iterationCount = 0;
+
+      double currentStart = startInterval;
+      double currentEnd = endInterval;
+      double functionAtCurrentStart = functionAtStart;
+
+      while (Math.Abs(currentEnd - currentStart) > epsilon && iterationCount < MaxIterationsCount)
+      {
+        double midpoint = (currentStart + currentEnd) / 2;
+        double functionAtMidpoint;
+
+        try
+        {
+          functionAtMidpoint = EvaluateFunction(functionExpression, midpoint);
+        }
+        catch
+        {
+          midpoint = (currentStart + currentEnd * 0.99) / 2;
+          functionAtMidpoint = EvaluateFunction(functionExpression, midpoint);
+        }
+
+        if (Math.Abs(functionAtMidpoint) < epsilon)
+          return midpoint;
+
+        if (functionAtCurrentStart * functionAtMidpoint < 0)
+        {
+          currentEnd = midpoint;
+          functionAtEnd = functionAtMidpoint;
+        }
+        else
+        {
+          currentStart = midpoint;
+          functionAtCurrentStart = functionAtMidpoint;
+        }
+
+        ++iterationCount;
+      }
+
+      return (currentStart + currentEnd) / 2;
+    }
+
+    private void ShowSingleRootResult(string functionExpression, double root, double functionValue)
+    {
+      string resultText = $"Найден корень уравнения: x = {Math.Round(root, 3)}";
+      _view.SetResult(resultText);
+
+      double startInterval = ParseDouble(_view.StartIntervalText);
+      double endInterval = ParseDouble(_view.EndIntervalText);
+      _view.PlotFunction(startInterval, endInterval, new double[] { root });
     }
 
     public void ClearAll()
@@ -77,23 +202,33 @@ namespace NumericalMethodsApp
 
 Метод дихотомии (половинного деления) используется для поиска корней уравнения на заданном интервале.
 
+Условия применения:
+• Функция должна быть непрерывной на [a,b]
+• f(a) * f(b) < 0 (функция имеет разные знаки на концах интервала)
+
 Параметры:
 • Функция f(x): математическое выражение
 • Начало интервала (a): левая граница интервала поиска
-• Конец интервала (b): правая граница интервала поиска
+• Конец интервала (b): правая граница интервала поиска  
 • Точность (ε): желаемая точность нахождения корня
 
+Результаты:
+• Единственный корень: отображается значение корня
+• Нет корней: информация о значениях функции на концах интервала
+
 Доступные функции:
-• Основные операторы: +, -, *, /
+• Основные операторы: +, -, *, /, ^
 • Тригонометрические: sin(x), cos(x), tan(x)
 • Экспоненциальные: exp(x), log(x), log10(x)
 • Другие: sqrt(x), abs(x), pow(x,y)
 
-Инструкция:
-1. Введите функцию и параметры
-2. Используйте Tab для перехода между полями
-3. Нажмите Вычислить/Enter для ввода данных
-4. Для очистки полей используйте кнопку Очистить все";
+Примеры:
+• x^2 - 4
+• sin(x)
+• exp(x) - 2
+• 1/x + 1
+
+Примечание: для функций с разрывами (например, 1/x) выбирайте интервал, не включающий точку разрыва.";
 
       _view.ShowInformation(helpText);
     }
@@ -103,31 +238,77 @@ namespace NumericalMethodsApp
       try
       {
         string expression = functionExpression.Trim();
+        expression = expression.Replace(',', '.');
+
+        expression = System.Text.RegularExpressions.Regex.Replace(
+          expression,
+          @"(\w+)\s*\^\s*(\w+)",
+          "pow($1, $2)"
+        );
+
+        if (Math.Abs(xValue) < 1e-15)
+        {
+          if (expression.Contains("/x") || expression.Contains("/ x") ||
+              expression.Contains("/  x") || expression.Contains("/  x"))
+          {
+            throw new ArgumentException("Деление на ноль");
+          }
+        }
 
         NCalc.Expression ncalcExpression = new NCalc.Expression(expression);
         ncalcExpression.Parameters["x"] = xValue;
 
+        ncalcExpression.EvaluateParameter += delegate (string name, ParameterArgs args)
+        {
+          if (name == "x")
+          {
+            args.Result = xValue;
+          }
+        };
+
         ncalcExpression.EvaluateFunction += delegate (string name, FunctionArgs args)
         {
-          if (name.Equals("sin", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Sin(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("cos", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Cos(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("tan", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Tan(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("exp", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Exp(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("log", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Log(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("log10", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Log10(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("sqrt", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Sqrt(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("abs", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Abs(Convert.ToDouble(args.Parameters[0].Evaluate()));
-          else if (name.Equals("pow", StringComparison.OrdinalIgnoreCase))
-            args.Result = Math.Pow(Convert.ToDouble(args.Parameters[0].Evaluate()),
-                                  Convert.ToDouble(args.Parameters[1].Evaluate()));
+          try
+          {
+            if (name.Equals("sin", StringComparison.OrdinalIgnoreCase))
+              args.Result = Math.Sin(Convert.ToDouble(args.Parameters[0].Evaluate()));
+            else if (name.Equals("cos", StringComparison.OrdinalIgnoreCase))
+              args.Result = Math.Cos(Convert.ToDouble(args.Parameters[0].Evaluate()));
+            else if (name.Equals("tan", StringComparison.OrdinalIgnoreCase))
+              args.Result = Math.Tan(Convert.ToDouble(args.Parameters[0].Evaluate()));
+            else if (name.Equals("exp", StringComparison.OrdinalIgnoreCase))
+              args.Result = Math.Exp(Convert.ToDouble(args.Parameters[0].Evaluate()));
+            else if (name.Equals("log", StringComparison.OrdinalIgnoreCase))
+            {
+              double argument = Convert.ToDouble(args.Parameters[0].Evaluate());
+              if (argument <= 0) throw new ArgumentException("Логарифм от неположительного числа");
+              args.Result = Math.Log(argument);
+            }
+            else if (name.Equals("log10", StringComparison.OrdinalIgnoreCase))
+            {
+              double argument = Convert.ToDouble(args.Parameters[0].Evaluate());
+              if (argument <= 0) throw new ArgumentException("Логарифм от неположительного числа");
+              args.Result = Math.Log10(argument);
+            }
+            else if (name.Equals("sqrt", StringComparison.OrdinalIgnoreCase))
+            {
+              double argument = Convert.ToDouble(args.Parameters[0].Evaluate());
+              if (argument < 0) throw new ArgumentException("Квадратный корень от отрицательного числа");
+              args.Result = Math.Sqrt(argument);
+            }
+            else if (name.Equals("abs", StringComparison.OrdinalIgnoreCase))
+              args.Result = Math.Abs(Convert.ToDouble(args.Parameters[0].Evaluate()));
+            else if (name.Equals("pow", StringComparison.OrdinalIgnoreCase))
+            {
+              double baseValue = Convert.ToDouble(args.Parameters[0].Evaluate());
+              double exponent = Convert.ToDouble(args.Parameters[1].Evaluate());
+              args.Result = Math.Pow(baseValue, exponent);
+            }
+          }
+          catch (Exception ex)
+          {
+            throw new ArgumentException($"Ошибка вычисления функции {name}: {ex.Message}");
+          }
         };
 
         object result = ncalcExpression.Evaluate();
@@ -135,7 +316,12 @@ namespace NumericalMethodsApp
         if (result == null)
           throw new ArgumentException("Не удалось вычислить выражение");
 
-        return Convert.ToDouble(result);
+        double value = Convert.ToDouble(result);
+
+        if (double.IsInfinity(value) || double.IsNaN(value))
+          throw new ArgumentException("Функция не определена в данной точке");
+
+        return value;
       }
       catch (Exception ex)
       {
@@ -175,124 +361,24 @@ namespace NumericalMethodsApp
 
       try
       {
-        double intervalStart = ParseDouble(_view.StartIntervalText);
-        double intervalEnd = ParseDouble(_view.EndIntervalText);
-        double testValue1 = intervalStart;
-        double testValue2 = (intervalStart + intervalEnd) / 2;
-        double testValue3 = intervalEnd;
+        double startInterval = ParseDouble(_view.StartIntervalText);
+        double endInterval = ParseDouble(_view.EndIntervalText);
 
-        EvaluateFunction(_view.FunctionExpression, testValue1);
-        EvaluateFunction(_view.FunctionExpression, testValue2);
-        EvaluateFunction(_view.FunctionExpression, testValue3);
+        EvaluateFunction(_view.FunctionExpression, startInterval);
+        EvaluateFunction(_view.FunctionExpression, endInterval);
+
+        EvaluateFunction(_view.FunctionExpression, (startInterval + endInterval) / 4);
+        EvaluateFunction(_view.FunctionExpression, (startInterval + endInterval) / 2);
+        EvaluateFunction(_view.FunctionExpression, (3 * startInterval + endInterval) / 4);
       }
       catch (Exception ex)
       {
-        _view.ShowError($"Некорректный синтаксис функции: {ex.Message}\n\nИспользуйте доступные математические функции: sin(x), cos(x), exp(x), log(x), sqrt(x), abs(x), pow(x,y) и др.");
+        _view.ShowError($"Ошибка вычисления функции: {ex.Message}\n\nВыберите другой интервал, исключающий точки разрыва функции.");
         _view.FocusFunctionTextBox();
         return false;
       }
 
       return true;
-    }
-
-    private List<double> FindAllRoots(string functionExpression, double intervalStart, double intervalEnd, double epsilon)
-    {
-      List<double> roots = new List<double>();
-
-      int segmentsCount = 1000;
-      double stepSize = (intervalEnd - intervalStart) / segmentsCount;
-
-      double[] functionValues = new double[segmentsCount + 1];
-      double[] xValues = new double[segmentsCount + 1];
-
-      for (int i = 0; i <= segmentsCount; i++)
-      {
-        xValues[i] = intervalStart + i * stepSize;
-        functionValues[i] = EvaluateFunction(functionExpression, xValues[i]);
-      }
-
-      for (int i = 0; i <= segmentsCount; i++)
-      {
-        double x = xValues[i];
-        double functionValue = functionValues[i];
-
-        if (Math.Abs(functionValue) < epsilon)
-        {
-          if (!IsRootAlreadyFound(roots, x, epsilon * 10))
-          {
-            roots.Add(x);
-            i += (int)(segmentsCount * 0.01);
-          }
-          continue;
-        }
-
-        if (i < segmentsCount)
-        {
-          double nextX = xValues[i + 1];
-          double nextFunctionValue = functionValues[i + 1];
-
-          if (functionValue * nextFunctionValue < 0)
-          {
-            double root = FindSingleRoot(functionExpression, x, nextX, epsilon);
-            if (!IsRootAlreadyFound(roots, root, epsilon * 10))
-            {
-              roots.Add(root);
-              i += (int)(segmentsCount * 0.01);
-            }
-          }
-        }
-      }
-
-      roots.Sort();
-      return roots;
-    }
-
-    private bool IsRootAlreadyFound(List<double> roots, double root, double tolerance)
-    {
-      foreach (double existingRoot in roots)
-      {
-        if (Math.Abs(existingRoot - root) < tolerance)
-          return true;
-      }
-      return false;
-    }
-
-    private double FindSingleRoot(string functionExpression, double intervalStart, double intervalEnd, double epsilon)
-    {
-      double functionValueAtStart = EvaluateFunction(functionExpression, intervalStart);
-      double functionValueAtEnd = EvaluateFunction(functionExpression, intervalEnd);
-
-      if (Math.Abs(functionValueAtStart) < epsilon)
-        return intervalStart;
-      if (Math.Abs(functionValueAtEnd) < epsilon)
-        return intervalEnd;
-
-      int iterationCount = 0;
-      double midpoint = 0;
-
-      while (Math.Abs(intervalEnd - intervalStart) > epsilon && iterationCount < MaxIterationsCount)
-      {
-        midpoint = (intervalStart + intervalEnd) / 2;
-        double functionValueAtMidpoint = EvaluateFunction(functionExpression, midpoint);
-
-        if (Math.Abs(functionValueAtMidpoint) < epsilon)
-          return midpoint;
-
-        if (functionValueAtStart * functionValueAtMidpoint < 0)
-        {
-          intervalEnd = midpoint;
-          functionValueAtEnd = functionValueAtMidpoint;
-        }
-        else
-        {
-          intervalStart = midpoint;
-          functionValueAtStart = functionValueAtMidpoint;
-        }
-
-        iterationCount++;
-      }
-
-      return (intervalStart + intervalEnd) / 2;
     }
 
     private double ParseDouble(string text)
