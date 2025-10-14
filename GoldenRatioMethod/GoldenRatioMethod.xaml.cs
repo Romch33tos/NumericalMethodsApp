@@ -1,33 +1,36 @@
-﻿using System.Windows;
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Controls;
+using OxyPlot;
+using NumericalMethodsApp.Presenters;
 
-namespace NumericalMethodsApp
+namespace NumericalMethodsApp.Views
 {
-  public partial class GoldenRatioView : Window
+  public partial class GoldenRatioMethod : Window, IGoldenRatioView, INotifyPropertyChanged
   {
-    public GoldenRatioView()
+    private string _functionExpression;
+    private string _lowerBound;
+    private string _upperBound;
+    private string _epsilon = "0.001";
+    private bool _findMinimum;
+    private bool _findMaximum;
+    private string _resultText;
+
+    public GoldenRatioPresenter Presenter { get; private set; }
+
+    public GoldenRatioMethod()
     {
       InitializeComponent();
+      Presenter = new GoldenRatioPresenter(this);
     }
 
-    private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
-
-    }
-
-    private void Button_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
-
-    private void CheckBox_Checked(object sender, RoutedEventArgs e)
-    {
-
-    }
-
-    private void TextBox_TextChanged_1(object sender, TextChangedEventArgs e)
-    {
-
+      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
   }
 }
