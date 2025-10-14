@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace NumericalMethodsApp.Models
@@ -48,7 +49,7 @@ namespace NumericalMethodsApp.Models
 
       while (Math.Abs(currentUpper - currentLower) > epsilonValue)
       {
-        iterationCounter++;
+        ++iterationCounter;
 
         double leftPoint = currentUpper - (currentUpper - currentLower) / GoldenRatioConstant;
         double rightPoint = currentLower + (currentUpper - currentLower) / GoldenRatioConstant;
@@ -125,18 +126,34 @@ namespace NumericalMethodsApp.Models
                 functionArgs.Result = Math.Log10(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
                 break;
               case "exp":
-                functionArgs.Result = Math.Exp(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                double expArg = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                if (expArg > 100) functionArgs.Result = double.PositiveInfinity;
+                else if (expArg < -100) functionArgs.Result = 0.0;
+                else functionArgs.Result = Math.Exp(expArg);
                 break;
               case "sqrt":
-                functionArgs.Result = Math.Sqrt(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                double sqrtArg = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                if (sqrtArg < 0) throw new Exception("Квадратный корень из отрицательного числа");
+                functionArgs.Result = Math.Sqrt(sqrtArg);
                 break;
               case "abs":
                 functionArgs.Result = Math.Abs(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
                 break;
               case "pow":
-                functionArgs.Result = Math.Pow(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()), Convert.ToDouble(functionArgs.Parameters[1].Evaluate()));
+                double baseValue = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                double exponentValue = Convert.ToDouble(functionArgs.Parameters[1].Evaluate());
+
+                if (baseValue == 0 && exponentValue > 0) functionArgs.Result = 0.0;
+                else if (baseValue == 0 && exponentValue <= 0) throw new Exception("Ноль в отрицательной степени");
+                else if (Math.Abs(baseValue) < 1e-10 && exponentValue > 100) functionArgs.Result = 0.0;
+                else if (Math.Abs(baseValue) > 1e10 && exponentValue > 100) functionArgs.Result = double.PositiveInfinity;
+                else functionArgs.Result = Math.Pow(baseValue, exponentValue);
                 break;
             }
+          }
+          catch (OverflowException)
+          {
+            functionArgs.Result = double.PositiveInfinity;
           }
           catch (Exception ex)
           {
@@ -190,6 +207,36 @@ namespace NumericalMethodsApp.Models
         expression = Regex.Replace(expression, pattern, "pow($1, $2)");
       }
       return expression;
+    }
+
+    private bool ValidateInput()
+    {
+      if (string.IsNullOrWhiteSpace(FunctionExpression))
+        return false;
+
+      if (LowerBound >= UpperBound)
+        return false;
+
+      if (Epsilon <= 0)
+        return false;
+
+      EvaluateFunction(LowerBound);
+      EvaluateFunction(UpperBound);
+      EvaluateFunction((LowerBound + UpperBound) / 2);
+
+      return true;
+    }
+
+    public static double ParseDouble(string text)
+    {
+      text = text.Replace(",", ".");
+      return double.Parse(text, CultureInfo.InvariantCulture);
+    }
+
+    public static bool TryParseDouble(string text, out double result)
+    {
+      text = text.Replace(",", ".");
+      return double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out result);
     }
   }
 
