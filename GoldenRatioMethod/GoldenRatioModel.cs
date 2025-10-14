@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace NumericalMethodsApp.Models
 {
@@ -47,7 +48,7 @@ namespace NumericalMethodsApp.Models
 
       while (Math.Abs(currentUpper - currentLower) > epsilonValue)
       {
-        ++iterationCounter;
+        iterationCounter++;
 
         double leftPoint = currentUpper - (currentUpper - currentLower) / GoldenRatioConstant;
         double rightPoint = currentLower + (currentUpper - currentLower) / GoldenRatioConstant;
@@ -94,10 +95,54 @@ namespace NumericalMethodsApp.Models
         string expressionText = FunctionExpression.Replace(" ", "");
         expressionText = ConvertToNCalcExpression(expressionText);
 
+        expressionText = expressionText.Replace("e^-", "exp(-");
+        expressionText = expressionText.Replace("e^", "exp(");
+
         NCalc.Expression functionExpression = new NCalc.Expression(expressionText);
         functionExpression.Parameters["x"] = inputValue;
         functionExpression.Parameters["e"] = Math.E;
         functionExpression.Parameters["pi"] = Math.PI;
+
+        functionExpression.EvaluateFunction += (functionName, functionArgs) =>
+        {
+          try
+          {
+            switch (functionName.ToLower())
+            {
+              case "sin":
+                functionArgs.Result = Math.Sin(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "cos":
+                functionArgs.Result = Math.Cos(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "tan":
+                functionArgs.Result = Math.Tan(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "log":
+                functionArgs.Result = Math.Log(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "log10":
+                functionArgs.Result = Math.Log10(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "exp":
+                functionArgs.Result = Math.Exp(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "sqrt":
+                functionArgs.Result = Math.Sqrt(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "abs":
+                functionArgs.Result = Math.Abs(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
+                break;
+              case "pow":
+                functionArgs.Result = Math.Pow(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()), Convert.ToDouble(functionArgs.Parameters[1].Evaluate()));
+                break;
+            }
+          }
+          catch (Exception ex)
+          {
+            throw new Exception($"Ошибка в функции {functionName}: {ex.Message}");
+          }
+        };
 
         object resultObject = functionExpression.Evaluate();
 
@@ -133,6 +178,17 @@ namespace NumericalMethodsApp.Models
     private string ConvertToNCalcExpression(string expression)
     {
       expression = expression.Replace(" ", "");
+      expression = ConvertPowerOperators(expression);
+      return expression;
+    }
+
+    private string ConvertPowerOperators(string expression)
+    {
+      var pattern = @"([a-zA-Z0-9\.\(\)]+)\^([a-zA-Z0-9\.\(\)]+)";
+      while (Regex.IsMatch(expression, pattern))
+      {
+        expression = Regex.Replace(expression, pattern, "pow($1, $2)");
+      }
       return expression;
     }
   }
