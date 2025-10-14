@@ -51,10 +51,29 @@ namespace NumericalMethodsApp.Presenters
       _view.FindMinimum = false;
       _view.FindMaximum = false;
       _view.ResultText = "";
+      _view.ClearPlot();
     }
 
     private void OnHelpRequested(object sender, EventArgs e)
     {
+      string helpText = @"Метод золотого сечения
+
+Инструкция:
+1. Введите функцию f(x) в поле 'Функция f(x)'
+2. Укажите границы интервала [a, b]
+3. Задайте точность вычисления ε
+4. Выберите режим поиска (минимум или максимум)
+5. Нажмите 'Вычислить'
+
+Примеры функций:
+• x^2 + 2*x + 1
+• sin(x) + cos(x)
+• exp(-x^2)
+• log(x) (для x > 0)
+
+Примечание: используйте точку как разделитель дробной части.";
+
+      _view.ShowInfo(helpText);
     }
 
     private void OnModeChanged(object sender, EventArgs e)
