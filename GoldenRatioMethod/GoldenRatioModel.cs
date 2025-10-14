@@ -19,6 +19,73 @@ namespace NumericalMethodsApp.Models
       Epsilon = 0.001;
       CalculationResult = new CalculationResult();
     }
+
+    public void Calculate()
+    {
+      if (!ValidateInput())
+      {
+        throw new InvalidOperationException("Некорректные входные данные");
+      }
+
+      double resultPoint = GoldenRatioSearch(LowerBound, UpperBound, Epsilon, FindMinimum);
+      double functionValue = EvaluateFunction(resultPoint);
+
+      CalculationResult = new CalculationResult
+      {
+        Point = resultPoint,
+        Value = functionValue,
+        IsMinimum = FindMinimum,
+        Success = true
+      };
+    }
+
+    private double GoldenRatioSearch(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
+    {
+      int iterationCounter = 0;
+      double currentLower = lowerBound;
+      double currentUpper = upperBound;
+
+      while (Math.Abs(currentUpper - currentLower) > epsilonValue)
+      {
+        ++iterationCounter;
+
+        double leftPoint = currentUpper - (currentUpper - currentLower) / GoldenRatioConstant;
+        double rightPoint = currentLower + (currentUpper - currentLower) / GoldenRatioConstant;
+
+        double leftFunctionValue = EvaluateFunction(leftPoint);
+        double rightFunctionValue = EvaluateFunction(rightPoint);
+
+        if (findMinimum)
+        {
+          if (leftFunctionValue >= rightFunctionValue)
+          {
+            currentLower = leftPoint;
+          }
+          else
+          {
+            currentUpper = rightPoint;
+          }
+        }
+        else
+        {
+          if (leftFunctionValue <= rightFunctionValue)
+          {
+            currentLower = leftPoint;
+          }
+          else
+          {
+            currentUpper = rightPoint;
+          }
+        }
+
+        if (iterationCounter > 1000)
+        {
+          throw new Exception("Превышено максимальное количество итераций. Проверьте корректность функции и интервала.");
+        }
+      }
+
+      return (currentLower + currentUpper) / 2;
+    }
   }
 
   public class CalculationResult
