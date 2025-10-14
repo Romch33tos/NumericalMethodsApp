@@ -86,6 +86,55 @@ namespace NumericalMethodsApp.Models
 
       return (currentLower + currentUpper) / 2;
     }
+
+    public double EvaluateFunction(double inputValue)
+    {
+      try
+      {
+        string expressionText = FunctionExpression.Replace(" ", "");
+        expressionText = ConvertToNCalcExpression(expressionText);
+
+        NCalc.Expression functionExpression = new NCalc.Expression(expressionText);
+        functionExpression.Parameters["x"] = inputValue;
+        functionExpression.Parameters["e"] = Math.E;
+        functionExpression.Parameters["pi"] = Math.PI;
+
+        object resultObject = functionExpression.Evaluate();
+
+        if (resultObject is double doubleResult)
+        {
+          if (double.IsInfinity(doubleResult) || double.IsNaN(doubleResult))
+            throw new Exception("Результат вычисления функции не является конечным числом");
+          return doubleResult;
+        }
+        else if (resultObject is int intResult)
+        {
+          return intResult;
+        }
+        else if (resultObject is decimal decimalResult)
+        {
+          return (double)decimalResult;
+        }
+        else if (resultObject is long longResult)
+        {
+          return longResult;
+        }
+        else
+        {
+          throw new Exception($"Неподдерживаемый тип результата: {resultObject.GetType()}");
+        }
+      }
+      catch (Exception evaluationException)
+      {
+        throw new Exception($"Ошибка вычисления функции в точке x={inputValue}: {evaluationException.Message}");
+      }
+    }
+
+    private string ConvertToNCalcExpression(string expression)
+    {
+      expression = expression.Replace(" ", "");
+      return expression;
+    }
   }
 
   public class CalculationResult
