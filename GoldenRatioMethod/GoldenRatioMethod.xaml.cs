@@ -12,6 +12,9 @@ namespace NumericalMethodsApp.Views
     private string _lowerBound;
     private string _upperBound;
     private string _epsilon = "0.001";
+    private bool _findMinimum;
+    private bool _findMaximum;
+    private string _resultText;
 
     public GoldenRatioPresenter Presenter { get; private set; }
 
@@ -57,6 +60,36 @@ namespace NumericalMethodsApp.Views
       set
       {
         _epsilon = value;
+        OnPropertyChanged();
+      }
+    }
+
+    public bool FindMinimum
+    {
+      get => _findMinimum;
+      set
+      {
+        _findMinimum = value;
+        OnPropertyChanged();
+      }
+    }
+
+    public bool FindMaximum
+    {
+      get => _findMaximum;
+      set
+      {
+        _findMaximum = value;
+        OnPropertyChanged();
+      }
+    }
+
+    public string ResultText
+    {
+      get => _resultText;
+      set
+      {
+        _resultText = value;
         OnPropertyChanged();
       }
     }
