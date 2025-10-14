@@ -196,7 +196,121 @@ namespace NumericalMethodsApp.Presenters
     public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
     {
       _plotModel.Series.Clear();
-      _plotModel.InvalidatePlot(true);
+
+      try
+      {
+        var lineSeries = new LineSeries
+        {
+          Title = "f(x)",
+          Color = OxyColors.Blue,
+          StrokeThickness = 2
+        };
+
+        int pointsCount = 100;
+        double stepSize = (upperBound - lowerBound) / pointsCount;
+
+        for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
+        {
+          double currentX = lowerBound + pointIndex * stepSize;
+          try
+          {
+            double currentY = _model.EvaluateFunction(currentX);
+            if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
+            {
+              lineSeries.Points.Add(new DataPoint(currentX, currentY));
+            }
+          }
+          catch
+          {
+          }
+        }
+
+        _plotModel.Series.Add(lineSeries);
+
+        var pointSeries = new ScatterSeries
+        {
+          Title = isMinimum ? "Минимум" : "Максимум",
+          MarkerType = MarkerType.Circle,
+          MarkerSize = 8,
+          MarkerFill = isMinimum ? OxyColors.Red : OxyColors.Green
+        };
+
+        pointSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
+        _plotModel.Series.Add(pointSeries);
+
+        AdjustPlotBounds(lowerBound, upperBound, extremumY);
+
+        _plotModel.InvalidatePlot(true);
+      }
+      catch (Exception ex)
+      {
+        System.Diagnostics.Debug.WriteLine($"Ошибка при обновлении графика: {ex.Message}");
+      }
+    }
+
+    private void AdjustPlotBounds(double lowerBound, double upperBound, double extremumY)
+    {
+      double xMargin = (upperBound - lowerBound) * 0.1;
+      double yRange = GetFunctionValueRange(lowerBound, upperBound);
+      double yMargin = yRange * 0.1;
+
+      var xAxis = _plotModel.Axes[0] as LinearAxis;
+      var yAxis = _plotModel.Axes[1] as LinearAxis;
+
+      if (xAxis != null)
+      {
+        xAxis.Minimum = lowerBound - xMargin;
+        xAxis.Maximum = upperBound + xMargin;
+      }
+
+      if (yAxis != null)
+      {
+        double minY = double.MaxValue;
+        double maxY = double.MinValue;
+
+        foreach (var series in _plotModel.Series)
+        {
+          if (series is LineSeries lineSeries)
+          {
+            foreach (var point in lineSeries.Points)
+            {
+              if (point.Y < minY) minY = point.Y;
+              if (point.Y > maxY) maxY = point.Y;
+            }
+          }
+        }
+
+        if (extremumY < minY) minY = extremumY;
+        if (extremumY > maxY) maxY = extremumY;
+
+        yAxis.Minimum = minY - yMargin;
+        yAxis.Maximum = maxY + yMargin;
+      }
+    }
+
+    private double GetFunctionValueRange(double lowerBound, double upperBound)
+    {
+      double minValue = double.MaxValue;
+      double maxValue = double.MinValue;
+
+      int pointsCount = 50;
+      double stepSize = (upperBound - lowerBound) / pointsCount;
+
+      for (int index = 0; index <= pointsCount; ++index)
+      {
+        double currentX = lowerBound + index * stepSize;
+        try
+        {
+          double currentY = _model.EvaluateFunction(currentX);
+          if (currentY < minValue) minValue = currentY;
+          if (currentY > maxValue) maxValue = currentY;
+        }
+        catch
+        {
+        }
+      }
+
+      return maxValue - minValue;
     }
   }
 }
