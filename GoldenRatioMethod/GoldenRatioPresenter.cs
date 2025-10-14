@@ -1,6 +1,9 @@
 using System;
 using NumericalMethodsApp.Models;
 using NumericalMethodsApp.Views;
+using OxyPlot;
+using OxyPlot.Series;
+using OxyPlot.Axes;
 
 namespace NumericalMethodsApp.Presenters
 {
@@ -8,11 +11,13 @@ namespace NumericalMethodsApp.Presenters
   {
     private readonly IGoldenRatioView _view;
     private readonly GoldenRatioModel _model;
+    private PlotModel _plotModel;
 
     public GoldenRatioPresenter(IGoldenRatioView view)
     {
       _view = view;
       _model = new GoldenRatioModel();
+      InitializePlot();
       SubscribeToEvents();
     }
 
@@ -35,6 +40,9 @@ namespace NumericalMethodsApp.Presenters
         _model.Calculate();
 
         DisplayResult();
+        _view.UpdatePlot(_model.LowerBound, _model.UpperBound,
+            _model.CalculationResult.Point, _model.CalculationResult.Value,
+            _model.FindMinimum);
       }
       catch (Exception ex)
       {
@@ -144,6 +152,51 @@ namespace NumericalMethodsApp.Presenters
       string extremumType = result.IsMinimum ? "минимум" : "максимум";
       _view.ResultText = $"Найден {extremumType}:\n" +
                        $"x = {Math.Round(result.Point, 3)}, f(x) = {Math.Round(result.Value, 3)}";
+    }
+
+    private void InitializePlot()
+    {
+      _plotModel = new PlotModel
+      {
+        TitleFontSize = 14,
+        TitleFontWeight = OxyPlot.FontWeights.Bold,
+        PlotAreaBorderColor = OxyColors.LightGray,
+        PlotAreaBorderThickness = new OxyThickness(1),
+        IsLegendVisible = false
+      };
+
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Title = "x",
+        TitleFontSize = 12,
+        MajorGridlineStyle = LineStyle.Dot,
+        MajorGridlineColor = OxyColors.LightGray,
+        IsPanEnabled = false,
+        IsZoomEnabled = false
+      });
+
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Left,
+        Title = "f(x)",
+        TitleFontSize = 12,
+        MajorGridlineStyle = LineStyle.Dot,
+        MajorGridlineColor = OxyColors.LightGray,
+        IsPanEnabled = false,
+        IsZoomEnabled = false
+      });
+
+      if (_view is GoldenRatioMethod wpfView)
+      {
+        wpfView.PlotViewControl.Model = _plotModel;
+      }
+    }
+
+    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
+    {
+      _plotModel.Series.Clear();
+      _plotModel.InvalidatePlot(true);
     }
   }
 }
