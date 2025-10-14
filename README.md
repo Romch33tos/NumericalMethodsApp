@@ -10,7 +10,7 @@
 
 ## Интерфейс приложения
 
-<img width="300" alt="MainWindow" src="https://github.com/user-attachments/assets/c695a415-e8b6-4f49-b17f-11b142b757d1" />
+<img width="280" alt="MainWindow" src="https://github.com/user-attachments/assets/c695a415-e8b6-4f49-b17f-11b142b757d1" />
 
 ---
 
@@ -34,7 +34,7 @@
 
 ### Интерфейс окна метода дихотомии
 
-<img width="693" height="666" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/9f6f2bbc-a4b0-49f8-a3a5-dfc84371b156" />
+<img width="650" height="620" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/9f6f2bbc-a4b0-49f8-a3a5-dfc84371b156" />
 
 ---
 
@@ -77,4 +77,29 @@
 
 ### Интерфейс окна решения СЛАУ
 
-<img width="1363" height="723" alt="LinearEquations" src="https://github.com/user-attachments/assets/8f9d9d85-a1ba-4cf1-9fee-76bea5067fdf" />
+<img width="1250" height="660" alt="LinearEquations" src="https://github.com/user-attachments/assets/8f9d9d85-a1ba-4cf1-9fee-76bea5067fdf" />
+
+## ✨ Метод золотого сечения
+
+### Принцип работы
+
+Метод золотого сечения — это алгоритм, используемый для поиска экстремума (минимума или максимума) функции на заданном интервале. Метод основан на делении интервала в пропорции золотого сечения, что обеспечивает более быструю сходимость по сравнению с методом дихотомии.
+
+**Алгоритм для поиска минимума функции:**
+
+1. Задаётся начальный интервал `[a, b]` и точность `ε`.
+2. Вычисляются две внутренние точки по формулам золотого сечения:
+   - `x₁ = b - (b - a) / φ`
+   - `x₂ = a + (b - a) / φ`
+   где `φ = (1 + √5) / 2 ≈ 1.618` — золотое сечение
+3. Вычисляются значения функции в точках `x₁` и `x₂`:
+   - Если `f(x₁) > f(x₂)`, то минимум находится в интервале `[x₁, b]`
+   - Если `f(x₁) < f(x₂)`, то минимум находится в интервале `[a, x₂]`
+   - Если `f(x₁) = f(x₂)`, то минимум находится в интервале `[x₁, x₂]`
+4. Процесс повторяется до тех пор, пока длина интервала не станет меньше заданной точности `ε`.
+
+### Интерфейс окна метода золотого сечения
+
+<img width="850" height="620" alt="GoldenRatio" src="https://github.com/user-attachments/assets/5d15c329-db98-4527-a59c-2319f871f078" />
+
+---
