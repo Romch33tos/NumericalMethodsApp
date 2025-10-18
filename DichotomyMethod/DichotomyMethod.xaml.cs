@@ -24,8 +24,6 @@ namespace NumericalMethodsApp
       InitializeComponent();
       InitializePlot();
       _presenter = new DichotomyPresenter(this);
-      ResultsPanel.Visibility = Visibility.Visible;
-      ResultText.Text = "Ответ: ";
 
       TextBoxFunction.Text = "x^2 - 4";
       TextBoxA.Text = "1";
@@ -47,20 +45,6 @@ namespace NumericalMethodsApp
       PlotView.Model = _plotModel;
     }
 
-    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
-    {
-      MessageBoxResult result = MessageBox.Show("Вы действительно хотите очистить все данные?",
-                                               "Подтверждение очистки",
-                                               MessageBoxButton.YesNo,
-                                               MessageBoxImage.Question);
-
-      if (result == MessageBoxResult.Yes)
-      {
-        _presenter.ClearAll();
-        TextBoxFunction.Focus();
-      }
-    }
-
     private void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
       _presenter.CalculateRoots();
@@ -69,7 +53,6 @@ namespace NumericalMethodsApp
     public void SetResult(string result)
     {
       ResultText.Text = result;
-      ResultsPanel.Visibility = Visibility.Visible;
     }
 
     public void ShowError(string message)
@@ -117,14 +100,13 @@ namespace NumericalMethodsApp
 
       for (int segmentIndex = 0; segmentIndex <= segmentsCount; ++segmentIndex)
       {
-        double x = startInterval + segmentIndex * stepSize;
+        double currentX = startInterval + segmentIndex * stepSize;
         try
         {
-          double y = _presenter.EvaluateFunction(FunctionExpression, x);
-
-          if (!double.IsInfinity(y) && !double.IsNaN(y) && Math.Abs(y) < 1e10)
+          double functionValue = _presenter.EvaluateFunction(FunctionExpression, currentX);
+          if (!double.IsInfinity(functionValue) && !double.IsNaN(functionValue) && Math.Abs(functionValue) < 1e10)
           {
-            functionSeries.Points.Add(new DataPoint(x, y));
+            functionSeries.Points.Add(new DataPoint(currentX, functionValue));
           }
         }
         catch
@@ -151,8 +133,8 @@ namespace NumericalMethodsApp
         {
           try
           {
-            double y = _presenter.EvaluateFunction(FunctionExpression, root);
-            rootSeries.Points.Add(new ScatterPoint(root, y));
+            double functionValue = _presenter.EvaluateFunction(FunctionExpression, root);
+            rootSeries.Points.Add(new ScatterPoint(root, functionValue));
           }
           catch
           {
@@ -218,30 +200,24 @@ namespace NumericalMethodsApp
       }
     }
 
-    private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
-    {
-      if (e.Key == Key.Tab)
-      {
-        var currentTextBox = sender as TextBox;
-        if (currentTextBox != null)
-        {
-          if (currentTextBox == TextBoxFunction)
-            TextBoxA.Focus();
-          else if (currentTextBox == TextBoxA)
-            TextBoxB.Focus();
-          else if (currentTextBox == TextBoxB)
-            TextBoxEpsilon.Focus();
-          else if (currentTextBox == TextBoxEpsilon)
-            CalculateButton.Focus();
-
-          e.Handled = true;
-        }
-      }
-    }
-
     private void HelpButton_Click(object sender, RoutedEventArgs e)
     {
       _presenter.ShowHelp();
+    }
+
+    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
+    {
+      MessageBoxResult result = MessageBox.Show(
+        "Вы действительно хотите очистить все данные?",
+        "Подтверждение очистки",
+        MessageBoxButton.YesNo,
+        MessageBoxImage.Question);
+
+      if (result == MessageBoxResult.Yes)
+      {
+        _presenter.ClearAll();
+        TextBoxFunction.Focus();
+      }
     }
   }
 }
