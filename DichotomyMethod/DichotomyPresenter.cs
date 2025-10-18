@@ -99,15 +99,7 @@ namespace NumericalMethodsApp
 • Основные операторы: +, -, *, /, ^
 • Тригонометрические: sin(x), cos(x), tan(x)
 • Экспоненциальные: exp(x), log(x), log10(x)
-• Другие: sqrt(x), abs(x), pow(x,y)
-
-Примеры:
-• x^2 - 4
-• sin(x)
-• exp(x) - 2
-• 1/x + 1
-
-Примечание: для функций с разрывами (например, 1/x) выбирайте интервал, не включающий точку разрыва.";
+• Другие: sqrt(x), abs(x), pow(x,y)";
 
       _view.ShowInformation(helpText);
     }
