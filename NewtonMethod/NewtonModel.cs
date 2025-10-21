@@ -116,6 +116,122 @@ namespace NumericalMethodsApp.Models
       CalculationComplete = true;
     }
 
+    public bool PerformNextStep()
+    {
+      if (CalculationComplete)
+      {
+        return false;
+      }
+
+      if (!StepModeStarted)
+      {
+        StepModeStarted = true;
+        CurrentStepIndex = -1;
+        IterationSteps.Clear();
+
+        double firstDerivative = CalculateFirstDerivative(InitialPoint);
+        double secondDerivative = CalculateSecondDerivative(InitialPoint);
+
+        IterationStep initialStep = new IterationStep
+        {
+          IterationNumber = 0,
+          Point = InitialPoint,
+          FunctionValue = EvaluateFunction(InitialPoint),
+          FirstDerivative = firstDerivative,
+          SecondDerivative = secondDerivative,
+          NextPoint = InitialPoint - firstDerivative / secondDerivative
+        };
+
+        IterationSteps.Add(initialStep);
+        CurrentStepIndex = 0;
+        return true;
+      }
+
+      if (CurrentStepIndex >= IterationSteps.Count - 1)
+      {
+        IterationStep currentStep = IterationSteps[CurrentStepIndex];
+
+        double firstDerivative = CalculateFirstDerivative(currentStep.NextPoint);
+        double secondDerivative = CalculateSecondDerivative(currentStep.NextPoint);
+
+        if (Math.Abs(secondDerivative) < 1e-15)
+        {
+          throw new Exception("Вторая производная близка к нулю. Метод Ньютона не может быть применен.");
+        }
+
+        double nextPoint = currentStep.NextPoint - firstDerivative / secondDerivative;
+
+        IterationStep newStep = new IterationStep
+        {
+          IterationNumber = CurrentStepIndex + 1,
+          Point = currentStep.NextPoint,
+          FunctionValue = EvaluateFunction(currentStep.NextPoint),
+          FirstDerivative = firstDerivative,
+          SecondDerivative = secondDerivative,
+          NextPoint = nextPoint
+        };
+
+        IterationSteps.Add(newStep);
+        ++CurrentStepIndex;
+
+        if (Math.Abs(firstDerivative) < Epsilon || Math.Abs(nextPoint - currentStep.NextPoint) < Epsilon)
+        {
+          CalculationComplete = true;
+          double resultPoint = newStep.Point;
+          double functionValue = newStep.FunctionValue;
+          double finalSecondDerivative = newStep.SecondDerivative;
+
+          bool isActuallyMinimum = finalSecondDerivative > 0;
+          bool isActuallyMaximum = finalSecondDerivative < 0;
+          bool isExtremum = Math.Abs(finalSecondDerivative) > 1e-10;
+
+          bool success = isExtremum &&
+                  (Math.Abs(firstDerivative) < Epsilon) &&
+                  ((FindMinimum && isActuallyMinimum) || (FindMaximum && isActuallyMaximum));
+
+          CalculationResult = new CalculationResultModel
+          {
+            Point = Math.Round(resultPoint, 6),
+            Value = Math.Round(functionValue, 6),
+            IsMinimum = isActuallyMinimum,
+            Success = success
+          };
+        }
+
+        return true;
+      }
+
+      ++CurrentStepIndex;
+      return true;
+    }
+
+    public bool CanGoToNextStep()
+    {
+      return !CalculationComplete;
+    }
+
+    public bool CanGoToPreviousStep()
+    {
+      return StepModeStarted && CurrentStepIndex > 0;
+    }
+
+    public void GoToPreviousStep()
+    {
+      if (CanGoToPreviousStep())
+      {
+        --CurrentStepIndex;
+      }
+    }
+
+    public void ResetCalculation()
+    {
+      IterationSteps.Clear();
+      CurrentStepIndex = -1;
+      CalculationComplete = false;
+      StepModeStarted = false;
+      CalculationResult = new CalculationResultModel();
+    }
+
     public double CalculateFirstDerivative(double point)
     {
       const double step = 1e-6;
