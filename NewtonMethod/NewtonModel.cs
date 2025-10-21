@@ -29,6 +29,93 @@ namespace NumericalMethodsApp.Models
       StepModeStarted = false;
     }
 
+    public void Calculate()
+    {
+      if (!ValidateInput())
+      {
+        throw new InvalidOperationException("Некорректные входные данные");
+      }
+
+      IterationSteps.Clear();
+      CurrentStepIndex = -1;
+      CalculationComplete = false;
+      StepModeStarted = false;
+
+      double currentPoint = InitialPoint;
+      int iterationCounter = 0;
+      double previousPoint = currentPoint;
+
+      while (iterationCounter < 1000)
+      {
+        ++iterationCounter;
+
+        double firstDerivative = CalculateFirstDerivative(currentPoint);
+        double secondDerivative = CalculateSecondDerivative(currentPoint);
+
+        if (Math.Abs(secondDerivative) < 1e-15)
+        {
+          throw new Exception("Вторая производная близка к нулю. Метод Ньютона не может быть применен.");
+        }
+
+        double nextPoint = currentPoint - firstDerivative / secondDerivative;
+
+        IterationSteps.Add(new IterationStep
+        {
+          IterationNumber = iterationCounter,
+          Point = currentPoint,
+          FunctionValue = EvaluateFunction(currentPoint),
+          FirstDerivative = firstDerivative,
+          SecondDerivative = secondDerivative,
+          NextPoint = nextPoint
+        });
+
+        if (Math.Abs(firstDerivative) < Epsilon)
+        {
+          break;
+        }
+
+        if (Math.Abs(nextPoint - currentPoint) < Epsilon)
+        {
+          break;
+        }
+
+        if (double.IsInfinity(nextPoint) || double.IsNaN(nextPoint))
+        {
+          throw new Exception("Метод расходится. Попробуйте другое начальное приближение.");
+        }
+
+        if (iterationCounter > 1 && Math.Abs(nextPoint - previousPoint) < 1e-15)
+        {
+          break;
+        }
+
+        previousPoint = currentPoint;
+        currentPoint = nextPoint;
+      }
+
+      double resultPoint = currentPoint;
+      double functionValue = EvaluateFunction(resultPoint);
+      double finalSecondDerivative = CalculateSecondDerivative(resultPoint);
+
+      bool isActuallyMinimum = finalSecondDerivative > 0;
+      bool isActuallyMaximum = finalSecondDerivative < 0;
+      bool isExtremum = Math.Abs(finalSecondDerivative) > 1e-10;
+
+      bool success = isExtremum &&
+              (Math.Abs(CalculateFirstDerivative(resultPoint)) < Epsilon) &&
+              ((FindMinimum && isActuallyMinimum) || (FindMaximum && isActuallyMaximum));
+
+      CalculationResult = new CalculationResultModel
+      {
+        Point = Math.Round(resultPoint, 6),
+        Value = Math.Round(functionValue, 6),
+        IsMinimum = isActuallyMinimum,
+        Success = success
+      };
+
+      CalculationComplete = true;
+    }
+
     public double CalculateFirstDerivative(double point)
     {
       const double step = 1e-6;
