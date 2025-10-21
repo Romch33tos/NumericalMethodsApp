@@ -194,6 +194,76 @@ namespace NumericalMethodsApp.Models
       }
       return expression;
     }
+
+    private bool ValidateInput()
+    {
+      if (string.IsNullOrWhiteSpace(FunctionExpression))
+        return false;
+
+      if (IsConstantFunction(FunctionExpression))
+        return false;
+
+      if (!TryParseDouble(InitialPoint.ToString(), out double initialPoint))
+        return false;
+
+      if (Epsilon <= 0)
+        return false;
+
+      try
+      {
+        EvaluateFunction(initialPoint);
+        CalculateFirstDerivative(initialPoint);
+        CalculateSecondDerivative(initialPoint);
+      }
+      catch
+      {
+        return false;
+      }
+
+      return true;
+    }
+
+    public bool IsConstantFunction(string expression)
+    {
+      string cleanExpression = expression.Replace(" ", "").ToLower();
+
+      if (!cleanExpression.Contains("x"))
+        return true;
+
+      if (cleanExpression == "x")
+        return false;
+
+      string testExpression = cleanExpression.Replace("x", "");
+
+      if (string.IsNullOrWhiteSpace(testExpression))
+        return false;
+
+      try
+      {
+        NCalc.Expression testExpr = new NCalc.Expression(testExpression);
+        testExpr.Parameters["e"] = Math.E;
+        testExpr.Parameters["pi"] = Math.PI;
+
+        object result1 = testExpr.Evaluate();
+        return result1 != null;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+
+    public static double ParseDouble(string text)
+    {
+      text = text.Replace(",", ".");
+      return double.Parse(text, CultureInfo.InvariantCulture);
+    }
+
+    public static bool TryParseDouble(string text, out double result)
+    {
+      text = text.Replace(",", ".");
+      return double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+    }
   }
 
   public class IterationStep
