@@ -176,6 +176,42 @@ namespace NumericalMethodsApp.Views
       NextStepRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    public void ShowError(string message)
+    {
+      MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+
+    public void ShowInfo(string message)
+    {
+      MessageBox.Show(message, "Справка", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
+    {
+      Presenter.UpdatePlot(lowerBound, upperBound, extremumX, extremumY, isMinimum);
+    }
+
+    public void ClearPlot()
+    {
+      PlotViewControl.Model?.Series.Clear();
+      PlotViewControl.Model?.InvalidatePlot(true);
+    }
+
+    public void UpdateButtonStates()
+    {
+      CalculateFullButton.IsEnabled = !CalculationInProgress && !StepModeActive;
+      NextStepButton.IsEnabled = !CalculationInProgress;
+      ClearAllButton.IsEnabled = true;
+
+      MaxRadioButton.IsEnabled = !CalculationInProgress && !StepModeActive;
+      MinRadioButton.IsEnabled = !CalculationInProgress && !StepModeActive;
+    }
+
+    public void SetStepModeActive(bool active)
+    {
+      StepModeActive = active;
+    }
+
     public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
