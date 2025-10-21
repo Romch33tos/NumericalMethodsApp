@@ -139,6 +139,43 @@ namespace NumericalMethodsApp.Views
     public event EventHandler ModeChanged;
     public event EventHandler NextStepRequested;
 
+    private void CalculateButton_Click(object sender, RoutedEventArgs e)
+    {
+      CalculateRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
+    {
+      MessageBoxResult confirmationResult = MessageBox.Show(
+          "Вы уверены, что хотите очистить все данные?",
+          "Подтверждение очистки",
+          MessageBoxButton.YesNo,
+          MessageBoxImage.Question);
+
+      if (confirmationResult == MessageBoxResult.Yes)
+      {
+        ClearAllRequested?.Invoke(this, EventArgs.Empty);
+      }
+    }
+
+    private void Help_Click(object sender, RoutedEventArgs e)
+    {
+      HelpRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RadioButton_Checked(object sender, RoutedEventArgs e)
+    {
+      if (!CalculationInProgress && !StepModeActive)
+      {
+        ModeChanged?.Invoke(this, EventArgs.Empty);
+      }
+    }
+
+    private void NextStepButton_Click(object sender, RoutedEventArgs e)
+    {
+      NextStepRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
