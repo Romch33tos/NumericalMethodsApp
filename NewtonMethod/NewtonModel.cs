@@ -26,6 +26,28 @@ namespace NumericalMethodsApp.Models
       CalculationComplete = false;
       StepModeStarted = false;
     }
+
+    public double CalculateFirstDerivative(double point)
+    {
+      const double step = 1e-6;
+      double forwardPoint = EvaluateFunction(point + step);
+      double backwardPoint = EvaluateFunction(point - step);
+      return (forwardPoint - backwardPoint) / (2 * step);
+    }
+
+    public double CalculateSecondDerivative(double point)
+    {
+      const double step = 1e-6;
+      double forwardPoint = EvaluateFunction(point + step);
+      double centerPoint = EvaluateFunction(point);
+      double backwardPoint = EvaluateFunction(point - step);
+      return (forwardPoint - 2 * centerPoint + backwardPoint) / (step * step);
+    }
+
+    public double EvaluateFunction(double inputValue)
+    {
+      return inputValue;
+    }
   }
 
   public class IterationStep
