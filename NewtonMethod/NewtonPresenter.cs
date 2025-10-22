@@ -32,6 +32,27 @@ namespace NumericalMethodsApp.Presenters
 
     private void OnCalculateRequested(object sender, EventArgs e)
     {
+      try
+      {
+        if (!ValidateInput())
+          return;
+
+        SetCalculationInProgress(true);
+        _view.SetStepModeActive(false);
+
+        UpdateModelFromView();
+        _model.Calculate();
+
+        DisplayResult();
+        UpdatePlotForCurrentStep();
+
+        SetCalculationInProgress(false);
+      }
+      catch (Exception ex)
+      {
+        _view.ShowError($"Ошибка при вычислении: {ex.Message}");
+        SetCalculationInProgress(false);
+      }
     }
 
     private void OnNextStepRequested(object sender, EventArgs e)
@@ -153,9 +174,117 @@ namespace NumericalMethodsApp.Presenters
       _model.FindMaximum = _view.FindMaximum;
     }
 
+    private void DisplayResult()
+    {
+      if (_model.CalculationResult.Success)
+      {
+        string extremumType = _model.CalculationResult.IsMinimum ? "минимум" : "максимум";
+        _view.ResultText = $"Найден {extremumType} функции: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
+      }
+      else
+      {
+        double firstDeriv = _model.CalculateFirstDerivative(_model.CalculationResult.Point);
+        double secondDeriv = _model.CalculateSecondDerivative(_model.CalculationResult.Point);
+
+        if (Math.Abs(firstDeriv) < _model.Epsilon)
+        {
+          if (Math.Abs(secondDeriv) < 1e-10)
+          {
+            _view.ResultText = $"Найдена точка перегиба: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
+          }
+          else if (secondDeriv > 0)
+          {
+            _view.ResultText = $"Найден минимум: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
+          }
+          else
+          {
+            _view.ResultText = $"Найден максимум: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
+          }
+        }
+        else
+        {
+          _view.ResultText = $"Метод сошелся к точке: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}, но f'(x) = {firstDeriv:F6} ≠ 0";
+        }
+      }
+    }
+
     private void SetCalculationInProgress(bool inProgress)
     {
       _view.CalculationInProgress = inProgress;
+    }
+
+    private void UpdatePlotForCurrentStep()
+    {
+      try
+      {
+        double plotLowerBound = NewtonModel.TryParseDouble(_view.DisplayIntervalStart, out double start) ? start : -5;
+        double plotUpperBound = NewtonModel.TryParseDouble(_view.DisplayIntervalEnd, out double end) ? end : 5;
+
+        double currentX = _model.CalculationResult.Point;
+        double currentY = _model.CalculationResult.Value;
+
+        UpdatePlot(plotLowerBound, plotUpperBound, currentX, currentY, _model.CalculationResult.IsMinimum);
+      }
+      catch (Exception ex)
+      {
+        _view.ShowError($"Ошибка при обновлении графика: {ex.Message}");
+      }
+    }
+
+    private void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
+    {
+      try
+      {
+        _plotModel.Series.Clear();
+
+        LineSeries functionSeries = new LineSeries
+        {
+          Color = OxyColors.Blue,
+          StrokeThickness = 2,
+          Title = "f(x)"
+        };
+
+        int pointCount = 200;
+        for (int pointIndex = 0; pointIndex <= pointCount; ++pointIndex)
+        {
+          double xValue = lowerBound + (upperBound - lowerBound) * pointIndex / pointCount;
+          try
+          {
+            double yValue = _model.EvaluateFunction(xValue);
+            if (!double.IsInfinity(yValue) && !double.IsNaN(yValue))
+            {
+              functionSeries.Points.Add(new DataPoint(xValue, yValue));
+            }
+          }
+          catch
+          {
+          }
+        }
+
+        _plotModel.Series.Add(functionSeries);
+
+        if (!double.IsInfinity(extremumX) && !double.IsNaN(extremumX) &&
+            !double.IsInfinity(extremumY) && !double.IsNaN(extremumY))
+        {
+          ScatterSeries extremumSeries = new ScatterSeries
+          {
+            MarkerType = MarkerType.Circle,
+            MarkerSize = 8,
+            MarkerStroke = OxyColors.Black,
+            MarkerStrokeThickness = 2,
+            MarkerFill = isMinimum ? OxyColors.Green : OxyColors.Red,
+            Title = isMinimum ? "Текущая точка (минимум)" : "Текущая точка (максимум)"
+          };
+          extremumSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
+          _plotModel.Series.Add(extremumSeries);
+        }
+
+        _plotModel.InvalidatePlot(true);
+      }
+      catch (Exception ex)
+      {
+        _view.ShowError($"Ошибка при обновлении графика: {ex.Message}");
+      }
     }
 
     private void InitializePlot()
