@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using NumericalMethodsApp.Models;
 using NumericalMethodsApp.Views;
 using OxyPlot;
@@ -29,6 +28,14 @@ namespace NumericalMethodsApp.Presenters
       _view.HelpRequested += OnHelpRequested;
       _view.ModeChanged += OnModeChanged;
       _view.NextStepRequested += OnNextStepRequested;
+    }
+
+    private void OnCalculateRequested(object sender, EventArgs e)
+    {
+    }
+
+    private void OnNextStepRequested(object sender, EventArgs e)
+    {
     }
 
     private void OnClearAllRequested(object sender, EventArgs e)
@@ -78,9 +85,129 @@ namespace NumericalMethodsApp.Presenters
       _view.SetStepModeActive(false);
     }
 
+    private bool ValidateInput()
+    {
+      if (string.IsNullOrWhiteSpace(_view.FunctionExpression))
+      {
+        _view.ShowError("Введите функцию f(x)");
+        return false;
+      }
+
+      if (_model.IsConstantFunction(_view.FunctionExpression))
+      {
+        _view.ShowError("Функция должна зависеть от переменной x. Введите выражение с переменной x.");
+        return false;
+      }
+
+      if (!NewtonModel.TryParseDouble(_view.InitialPoint, out double initialPoint))
+      {
+        _view.ShowError("Начальная точка должна быть вещественным числом");
+        return false;
+      }
+
+      if (!NewtonModel.TryParseDouble(_view.Epsilon, out double epsilonValue) || epsilonValue <= 0)
+      {
+        _view.ShowError("Точность ε должна быть положительным вещественным числом");
+        return false;
+      }
+
+      if (!NewtonModel.TryParseDouble(_view.DisplayIntervalStart, out double intervalStart) ||
+          !NewtonModel.TryParseDouble(_view.DisplayIntervalEnd, out double intervalEnd))
+      {
+        _view.ShowError("Интервал отображения должен состоять из двух вещественных чисел");
+        return false;
+      }
+
+      if (intervalStart >= intervalEnd)
+      {
+        _view.ShowError("Начало интервала должно быть меньше его конца");
+        return false;
+      }
+
+      try
+      {
+        _model.FunctionExpression = _view.FunctionExpression;
+        _model.InitialPoint = initialPoint;
+        double testValue = _model.EvaluateFunction(initialPoint);
+        if (double.IsInfinity(testValue) || double.IsNaN(testValue))
+        {
+          _view.ShowError("Функция не определена в начальной точке");
+          return false;
+        }
+      }
+      catch (Exception ex)
+      {
+        _view.ShowError($"Ошибка в функции: {ex.Message}");
+        return false;
+      }
+
+      return true;
+    }
+
+    private void UpdateModelFromView()
+    {
+      _model.FunctionExpression = _view.FunctionExpression;
+      _model.InitialPoint = NewtonModel.ParseDouble(_view.InitialPoint);
+      _model.Epsilon = NewtonModel.ParseDouble(_view.Epsilon);
+      _model.FindMinimum = _view.FindMinimum;
+      _model.FindMaximum = _view.FindMaximum;
+    }
+
     private void SetCalculationInProgress(bool inProgress)
     {
       _view.CalculationInProgress = inProgress;
+    }
+
+    private void InitializePlot()
+    {
+      _plotModel = new PlotModel
+      {
+        Title = "",
+        Background = OxyColors.White,
+        PlotAreaBorderColor = OxyColors.LightGray,
+        PlotAreaBorderThickness = new OxyThickness(1)
+      };
+
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Title = "x",
+        TitleColor = OxyColors.Black,
+        TitleFontSize = 12,
+        AxislineColor = OxyColors.Black,
+        TicklineColor = OxyColors.LightGray,
+        MajorGridlineColor = OxyColors.LightGray,
+        MajorGridlineStyle = LineStyle.Dash,
+        MinorGridlineColor = OxyColors.LightGray,
+        MinorGridlineStyle = LineStyle.Dot,
+        FontSize = 10
+      });
+
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Left,
+        Title = "f(x)",
+        TitleColor = OxyColors.Black,
+        TitleFontSize = 12,
+        AxislineColor = OxyColors.Black,
+        TicklineColor = OxyColors.LightGray,
+        MajorGridlineColor = OxyColors.LightGray,
+        MajorGridlineStyle = LineStyle.Dash,
+        MinorGridlineColor = OxyColors.LightGray,
+        MinorGridlineStyle = LineStyle.Dot,
+        FontSize = 10
+      });
+
+      if (_view is NewtonMethod newtonView)
+      {
+        newtonView.PlotViewControl.Model = _plotModel;
+      }
+    }
+
+    private void ClearPlot()
+    {
+      _plotModel.Series.Clear();
+      _plotModel.InvalidatePlot(true);
     }
   }
 }
