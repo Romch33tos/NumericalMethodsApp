@@ -22,5 +22,7 @@ namespace NumericalMethodsApp.Views
 
     void ShowError(string message);
     void ShowInfo(string message);
+    void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum);
+    void ClearPlot();
   }
 }
