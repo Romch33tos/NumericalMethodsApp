@@ -24,5 +24,7 @@ namespace NumericalMethodsApp.Views
     void ShowInfo(string message);
     void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum);
     void ClearPlot();
+    void UpdateButtonStates();
+    void SetStepModeActive(bool active);
   }
 }
