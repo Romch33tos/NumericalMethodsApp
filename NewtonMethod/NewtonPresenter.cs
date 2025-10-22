@@ -57,6 +57,41 @@ namespace NumericalMethodsApp.Presenters
 
     private void OnNextStepRequested(object sender, EventArgs e)
     {
+      try
+      {
+        if (!ValidateInput())
+          return;
+
+        if (!_model.StepModeStarted)
+        {
+          SetCalculationInProgress(true);
+          _view.SetStepModeActive(true);
+          UpdateModelFromView();
+        }
+
+        bool hasNextStep = _model.PerformNextStep();
+
+        if (hasNextStep)
+        {
+          DisplayStepResult();
+          UpdatePlotForCurrentStep();
+        }
+        else
+        {
+          if (_model.CalculationComplete)
+          {
+            DisplayResult();
+            SetCalculationInProgress(false);
+            _view.SetStepModeActive(false);
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        _view.ShowError($"Ошибка при выполнении шага: {ex.Message}");
+        SetCalculationInProgress(false);
+        _view.SetStepModeActive(false);
+      }
     }
 
     private void OnClearAllRequested(object sender, EventArgs e)
@@ -205,6 +240,39 @@ namespace NumericalMethodsApp.Presenters
         {
           _view.ResultText = $"Метод сошелся к точке: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}, но f'(x) = {firstDeriv:F6} ≠ 0";
         }
+      }
+    }
+
+    private void DisplayStepResult()
+    {
+      if (_model.CalculationComplete && _model.CalculationResult.Success)
+      {
+        string extremumType = _model.CalculationResult.IsMinimum ? "минимум" : "максимум";
+        _view.ResultText = $"Найден {extremumType} функции: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
+      }
+      else if (_model.CurrentStepIndex >= 0 && _model.CurrentStepIndex < _model.IterationSteps.Count)
+      {
+        IterationStep currentStep = _model.IterationSteps[_model.CurrentStepIndex];
+
+        string pointType = currentStep.SecondDerivative > 0 ? "минимум" :
+                          currentStep.SecondDerivative < 0 ? "максимум" : "точка перегиба";
+
+        _view.ResultText = $"Шаг {currentStep.IterationNumber}: " +
+                          $"x = {currentStep.Point:F6}, " +
+                          $"f(x) = {currentStep.FunctionValue:F6}, " +
+                          $"f'(x) = {currentStep.FirstDerivative:F6}, " +
+                          $"тип: {pointType}";
+      }
+      else
+      {
+        double secondDeriv = _model.CalculateSecondDerivative(_model.InitialPoint);
+        string pointType = secondDeriv > 0 ? "минимум" :
+                          secondDeriv < 0 ? "максимум" : "точка перегиба";
+
+        _view.ResultText = $"Начальная точка: " +
+                          $"x = {_model.InitialPoint:F6}, " +
+                          $"f(x) = {_model.EvaluateFunction(_model.InitialPoint):F6}, " +
+                          $"тип: {pointType}";
       }
     }
 
