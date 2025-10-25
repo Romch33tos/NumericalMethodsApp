@@ -91,15 +91,33 @@ namespace NumericalMethodsApp.Models
 
     public double EvaluateFunction(double inputValue)
     {
+      NCalc.Expression functionExpression = null;
+
       try
       {
         string expressionText = FunctionExpression.Replace(" ", "");
+
+        if (expressionText.ToLower() == "x" || expressionText.ToLower() == "y=x")
+        {
+          return inputValue;
+        }
+
+        if (expressionText.ToLower().StartsWith("y="))
+        {
+          expressionText = expressionText.Substring(2);
+        }
+
+        if (expressionText.Trim() == "x")
+        {
+          return inputValue;
+        }
+
         expressionText = ConvertToNCalcExpression(expressionText);
 
         expressionText = expressionText.Replace("e^-", "exp(-");
         expressionText = expressionText.Replace("e^", "exp(");
 
-        NCalc.Expression functionExpression = new NCalc.Expression(expressionText);
+        functionExpression = new NCalc.Expression(expressionText);
         functionExpression.Parameters["x"] = inputValue;
         functionExpression.Parameters["e"] = Math.E;
         functionExpression.Parameters["pi"] = Math.PI;
@@ -195,6 +213,17 @@ namespace NumericalMethodsApp.Models
     private string ConvertToNCalcExpression(string expression)
     {
       expression = expression.Replace(" ", "");
+
+      if (expression.ToLower() == "x" || expression.ToLower() == "y=x")
+      {
+        return "x";
+      }
+
+      if (expression.ToLower().StartsWith("y="))
+      {
+        expression = expression.Substring(2);
+      }
+
       expression = ConvertPowerOperators(expression);
       return expression;
     }
@@ -214,17 +243,126 @@ namespace NumericalMethodsApp.Models
       if (string.IsNullOrWhiteSpace(FunctionExpression))
         return false;
 
+      if (IsConstantFunction(FunctionExpression))
+        return false;
+
+      if (IsTrivialExpression(FunctionExpression))
+        return false;
+
       if (LowerBound >= UpperBound)
         return false;
 
       if (Epsilon <= 0)
         return false;
 
-      EvaluateFunction(LowerBound);
-      EvaluateFunction(UpperBound);
-      EvaluateFunction((LowerBound + UpperBound) / 2);
+      string processedExpression = ConvertToNCalcExpression(FunctionExpression);
+      if (string.IsNullOrWhiteSpace(processedExpression))
+        return false;
+
+      string discontinuityCheckResult = CheckForDiscontinuities(LowerBound, UpperBound);
+      if (!string.IsNullOrEmpty(discontinuityCheckResult))
+      {
+        throw new Exception($"Обнаружен разрыв функции: {discontinuityCheckResult}");
+      }
+
+      try
+      {
+        EvaluateFunction(LowerBound);
+        EvaluateFunction(UpperBound);
+        EvaluateFunction((LowerBound + UpperBound) / 2);
+      }
+      catch
+      {
+        return false;
+      }
 
       return true;
+    }
+
+    public bool IsConstantFunction(string expression)
+    {
+      string cleanExpression = expression.Replace(" ", "").ToLower();
+
+      if (!cleanExpression.Contains("x"))
+        return true;
+
+      if (cleanExpression == "x")
+        return false;
+
+      string testExpression = cleanExpression.Replace("x", "");
+
+      if (string.IsNullOrWhiteSpace(testExpression))
+        return false;
+
+      try
+      {
+        var testExpr = new NCalc.Expression(testExpression);
+        testExpr.Parameters["e"] = Math.E;
+        testExpr.Parameters["pi"] = Math.PI;
+
+        var result1 = testExpr.Evaluate();
+        return result1 != null;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+
+    private bool IsTrivialExpression(string expression)
+    {
+      string cleanExpression = expression.Replace(" ", "").ToLower();
+
+      if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+        return true;
+
+      string[] trivialPatterns = {
+        "x*0", "0*x", "x-x", "x/x", "x^0", "0^x",
+        "x*1", "1*x", "x+0", "0+x", "x-0"
+      };
+
+      foreach (string pattern in trivialPatterns)
+      {
+        if (cleanExpression.Contains(pattern))
+          return true;
+      }
+
+      return false;
+    }
+
+    private string CheckForDiscontinuities(double lowerBound, double upperBound)
+    {
+      const int testPointsCount = 50;
+      double step = (upperBound - lowerBound) / testPointsCount;
+      double? previousValue = null;
+
+      for (int counter = 0; counter <= testPointsCount; ++counter)
+      {
+        double testPoint = lowerBound + counter * step;
+        try
+        {
+          double currentValue = EvaluateFunction(testPoint);
+
+          if (previousValue.HasValue)
+          {
+            double difference = Math.Abs(currentValue - previousValue.Value);
+            double maxAllowedDifference = Math.Max(Math.Abs(previousValue.Value) * 10, 1000);
+
+            if (difference > maxAllowedDifference && !double.IsInfinity(currentValue) && !double.IsInfinity(previousValue.Value))
+            {
+              return $"Резкое изменение значения функции между x={testPoint - step} и x={testPoint}";
+            }
+          }
+
+          previousValue = currentValue;
+        }
+        catch (Exception ex)
+        {
+          return $"Функция не определена в точке x={testPoint}: {ex.Message}";
+        }
+      }
+
+      return null;
     }
 
     public static double ParseDouble(string text)

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using NumericalMethodsApp.Models;
 using NumericalMethodsApp.Views;
 using OxyPlot;
@@ -46,7 +47,7 @@ namespace NumericalMethodsApp.Presenters
       }
       catch (Exception ex)
       {
-        _view.ShowError($"Ошибка при вычислении: {ex.Message}");
+        _view.ShowError($"Ошибка при вычислении: {ex.Message}\nРекомендация: попробуйте изменить интервал поиска.");
       }
     }
 
@@ -59,7 +60,7 @@ namespace NumericalMethodsApp.Presenters
       _view.FindMinimum = false;
       _view.FindMaximum = false;
       _view.ResultText = "";
-      _view.ClearPlot();
+      ClearPlot();
     }
 
     private void OnHelpRequested(object sender, EventArgs e)
@@ -71,15 +72,7 @@ namespace NumericalMethodsApp.Presenters
 2. Укажите границы интервала [a, b]
 3. Задайте точность вычисления ε
 4. Выберите режим поиска (минимум или максимум)
-5. Нажмите 'Вычислить'
-
-Примеры функций:
-• x^2 + 2*x + 1
-• sin(x) + cos(x)
-• exp(-x^2)
-• log(x) (для x > 0)
-
-Примечание: используйте точку как разделитель дробной части.";
+5. Нажмите 'Вычислить'";
 
       _view.ShowInfo(helpText);
     }
@@ -93,6 +86,18 @@ namespace NumericalMethodsApp.Presenters
       if (string.IsNullOrWhiteSpace(_view.FunctionExpression))
       {
         _view.ShowError("Введите функцию f(x)");
+        return false;
+      }
+
+      if (_model.IsConstantFunction(_view.FunctionExpression))
+      {
+        _view.ShowError("Функция должна зависеть от переменной x. Введите выражение с переменной x.");
+        return false;
+      }
+
+      if (IsTrivialExpression(_view.FunctionExpression))
+      {
+        _view.ShowError("Введите содержательное математическое выражение.");
         return false;
       }
 
@@ -130,11 +135,32 @@ namespace NumericalMethodsApp.Presenters
       }
       catch (Exception functionException)
       {
-        _view.ShowError($"Ошибка в функции: {functionException.Message}");
+        _view.ShowError($"Ошибка в функции: {functionException.Message}\nПопробуйте изменить интервал поиска.");
         return false;
       }
 
       return true;
+    }
+
+    private bool IsTrivialExpression(string expression)
+    {
+      string cleanExpression = expression.Replace(" ", "").ToLower();
+
+      if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+        return true;
+
+      string[] trivialPatterns = {
+        "x*0", "0*x", "x-x", "x/x", "x^0", "0^x",
+        "x*1", "1*x", "x+0", "0+x", "x-0", "x+1-1"
+      };
+
+      foreach (string pattern in trivialPatterns)
+      {
+        if (cleanExpression.Contains(pattern))
+          return true;
+      }
+
+      return false;
     }
 
     private void UpdateModelFromView()
@@ -151,7 +177,7 @@ namespace NumericalMethodsApp.Presenters
       var result = _model.CalculationResult;
       string extremumType = result.IsMinimum ? "минимум" : "максимум";
       _view.ResultText = $"Найден {extremumType}:\n" +
-                       $"x = {Math.Round(result.Point, 3)}, f(x) = {Math.Round(result.Value, 3)}";
+                       $"x = {Math.Round(result.Point, 5)}, f(x) = {Math.Round(result.Value, 5)}";
     }
 
     private void InitializePlot()
@@ -199,7 +225,7 @@ namespace NumericalMethodsApp.Presenters
 
       try
       {
-        var lineSeries = new LineSeries
+        var functionSeries = new LineSeries
         {
           Title = "f(x)",
           Color = OxyColors.Blue,
@@ -217,7 +243,7 @@ namespace NumericalMethodsApp.Presenters
             double currentY = _model.EvaluateFunction(currentX);
             if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
             {
-              lineSeries.Points.Add(new DataPoint(currentX, currentY));
+              functionSeries.Points.Add(new DataPoint(currentX, currentY));
             }
           }
           catch
@@ -225,9 +251,9 @@ namespace NumericalMethodsApp.Presenters
           }
         }
 
-        _plotModel.Series.Add(lineSeries);
+        _plotModel.Series.Add(functionSeries);
 
-        var pointSeries = new ScatterSeries
+        var extremumSeries = new ScatterSeries
         {
           Title = isMinimum ? "Минимум" : "Максимум",
           MarkerType = MarkerType.Circle,
@@ -235,8 +261,8 @@ namespace NumericalMethodsApp.Presenters
           MarkerFill = isMinimum ? OxyColors.Red : OxyColors.Green
         };
 
-        pointSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
-        _plotModel.Series.Add(pointSeries);
+        extremumSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
+        _plotModel.Series.Add(extremumSeries);
 
         AdjustPlotBounds(lowerBound, upperBound, extremumY);
 
@@ -246,6 +272,12 @@ namespace NumericalMethodsApp.Presenters
       {
         System.Diagnostics.Debug.WriteLine($"Ошибка при обновлении графика: {ex.Message}");
       }
+    }
+
+    private void ClearPlot()
+    {
+      _plotModel?.Series.Clear();
+      _plotModel?.InvalidatePlot(true);
     }
 
     private void AdjustPlotBounds(double lowerBound, double upperBound, double extremumY)

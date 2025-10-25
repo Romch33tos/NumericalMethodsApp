@@ -27,8 +27,8 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Image Source="/6458450.png" Height="140" 
-               VerticalAlignment="Center" Margin="1,0,20,0"/>
+                <Image Source="/Calculator.png" Height="140" 
+                       VerticalAlignment="Center" Margin="1,0,20,0"/>
 
                 <TextBlock
                   TextWrapping="Wrap" 

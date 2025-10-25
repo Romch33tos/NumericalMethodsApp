@@ -101,14 +101,23 @@ namespace NumericalMethodsApp.Views
     public event EventHandler HelpRequested;
     public event EventHandler ModeChanged;
 
-    private void Button_Click(object sender, RoutedEventArgs e)
+    private void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
       CalculateRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ClearAll_Click(object sender, RoutedEventArgs e)
+    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
     {
-      ClearAllRequested?.Invoke(this, EventArgs.Empty);
+      MessageBoxResult confirmationResult = MessageBox.Show(
+        "Вы уверены, что хотите очистить все данные?",
+        "Подтверждение очистки",
+        MessageBoxButton.YesNo,
+        MessageBoxImage.Question);
+
+      if (confirmationResult == MessageBoxResult.Yes)
+      {
+        ClearAllRequested?.Invoke(this, EventArgs.Empty);
+      }
     }
 
     private void Help_Click(object sender, RoutedEventArgs e)
@@ -116,16 +125,8 @@ namespace NumericalMethodsApp.Views
       HelpRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private void CheckBox_Checked(object sender, RoutedEventArgs e)
+    private void RadioButton_Checked(object sender, RoutedEventArgs e)
     {
-      if (sender == MinCheckBox && MinCheckBox.IsChecked == true)
-      {
-        MaxCheckBox.IsChecked = false;
-      }
-      else if (sender == MaxCheckBox && MaxCheckBox.IsChecked == true)
-      {
-        MinCheckBox.IsChecked = false;
-      }
       ModeChanged?.Invoke(this, EventArgs.Empty);
     }
 
