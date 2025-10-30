@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using NumericalMethodsApp.Views;
 
 namespace NumericalMethodsApp
 {
@@ -21,12 +22,16 @@ namespace NumericalMethodsApp
           view.OpenMethodWindow(methodName, dichotomyWindow, button);
           break;
         case "Method2":
-          GoldenRatioView goldenRatioWindow = new GoldenRatioView();
+          GoldenRatioMethod goldenRatioWindow = new GoldenRatioMethod();
           view.OpenMethodWindow(methodName, goldenRatioWindow, button);
           break;
         case "Method5":
           LinearEquationsView slauWindow = new LinearEquationsView();
           view.OpenMethodWindow(methodName, slauWindow, button);
+          break;
+        case "Method6":
+          NewtonMethod newtonWindow = new NewtonMethod();
+          view.OpenMethodWindow(methodName, newtonWindow, button);
           break;
         default:
           string message = $"Метод {methodName} будет реализован в будущем.";

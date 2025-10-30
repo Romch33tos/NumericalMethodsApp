@@ -10,134 +10,146 @@ namespace NumericalMethodsApp.Views
 {
   public partial class NewtonMethod : Window, INewtonView, INotifyPropertyChanged
   {
-    private string _functionExpression;
-    private string _initialPoint;
-    private string _displayIntervalStart = "-5";
-    private string _displayIntervalEnd = "5";
-    private string _epsilon = "0.001";
-    private bool _findMinimum = true;
-    private bool _findMaximum;
-    private string _resultText;
-    private bool _calculationInProgress;
-    private bool _stepModeActive;
+    private string functionExpression = string.Empty;
+    private string lowerBound = string.Empty;
+    private string upperBound = string.Empty;
+    private string epsilon = "0.001";
+    private bool findMinimum;
+    private bool findMaximum;
+    private string resultText = string.Empty;
+    private int currentStep;
+    private int totalSteps;
+    private bool isModeLocked;
 
     public NewtonPresenter Presenter { get; private set; }
+
+    public event EventHandler CalculateRequested;
+    public event EventHandler ClearAllRequested;
+    public event EventHandler HelpRequested;
+    public event EventHandler ModeChanged;
+    public event EventHandler<int> StepChanged;
+    public event PropertyChangedEventHandler PropertyChanged;
 
     public NewtonMethod()
     {
       InitializeComponent();
-      DataContext = this;
       Presenter = new NewtonPresenter(this);
-      UpdateButtonStates();
+      UpdateStepButtons();
     }
 
     public string FunctionExpression
     {
-      get => _functionExpression;
+      get => functionExpression;
       set
       {
-        _functionExpression = value;
+        functionExpression = value;
         OnPropertyChanged();
       }
     }
 
-    public string InitialPoint
+    public string LowerBound
     {
-      get => _initialPoint;
+      get => lowerBound;
       set
       {
-        _initialPoint = value;
+        lowerBound = value;
         OnPropertyChanged();
       }
     }
 
-    public string DisplayIntervalStart
+    public string UpperBound
     {
-      get => _displayIntervalStart;
+      get => upperBound;
       set
       {
-        _displayIntervalStart = value;
-        OnPropertyChanged();
-      }
-    }
-
-    public string DisplayIntervalEnd
-    {
-      get => _displayIntervalEnd;
-      set
-      {
-        _displayIntervalEnd = value;
+        upperBound = value;
         OnPropertyChanged();
       }
     }
 
     public string Epsilon
     {
-      get => _epsilon;
+      get => epsilon;
       set
       {
-        _epsilon = value;
+        epsilon = value;
         OnPropertyChanged();
       }
     }
 
     public bool FindMinimum
     {
-      get => _findMinimum;
+      get => findMinimum;
       set
       {
-        _findMinimum = value;
+        findMinimum = value;
         OnPropertyChanged();
       }
     }
 
     public bool FindMaximum
     {
-      get => _findMaximum;
+      get => findMaximum;
       set
       {
-        _findMaximum = value;
+        findMaximum = value;
         OnPropertyChanged();
       }
     }
 
     public string ResultText
     {
-      get => _resultText;
+      get => resultText;
       set
       {
-        _resultText = value;
+        resultText = value;
         OnPropertyChanged();
       }
     }
 
-    public bool CalculationInProgress
+    public int CurrentStep
     {
-      get => _calculationInProgress;
+      get => currentStep;
       set
       {
-        _calculationInProgress = value;
+        currentStep = value;
         OnPropertyChanged();
-        UpdateButtonStates();
+        UpdateStepInfo();
+        UpdateStepButtons();
       }
     }
 
-    public bool StepModeActive
+    public int TotalSteps
     {
-      get => _stepModeActive;
+      get => totalSteps;
       set
       {
-        _stepModeActive = value;
+        totalSteps = value;
         OnPropertyChanged();
-        UpdateButtonStates();
+        UpdateStepInfo();
+        UpdateStepButtons();
       }
     }
 
-    public event EventHandler CalculateRequested;
-    public event EventHandler ClearAllRequested;
-    public event EventHandler HelpRequested;
-    public event EventHandler ModeChanged;
-    public event EventHandler NextStepRequested;
+    public bool IsModeLocked
+    {
+      get => isModeLocked;
+      set
+      {
+        isModeLocked = value;
+        OnPropertyChanged();
+      }
+    }
+
+    public PlotModel GetPlotModel()
+    {
+      return PlotViewControl.Model;
+    }
+
+    public void SetPlotModel(PlotModel model)
+    {
+      PlotViewControl.Model = model;
+    }
 
     private void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
@@ -154,7 +166,10 @@ namespace NumericalMethodsApp.Views
 
       if (confirmationResult == MessageBoxResult.Yes)
       {
+        IsModeLocked = false;
         ClearAllRequested?.Invoke(this, EventArgs.Empty);
+        CurrentStep = 0;
+        TotalSteps = 0;
       }
     }
 
@@ -165,15 +180,46 @@ namespace NumericalMethodsApp.Views
 
     private void RadioButton_Checked(object sender, RoutedEventArgs e)
     {
-      if (!CalculationInProgress && !StepModeActive)
+      if (!string.IsNullOrEmpty(ResultText))
       {
-        ModeChanged?.Invoke(this, EventArgs.Empty);
+        ResultText = "";
+        ClearPlot();
+        CurrentStep = 0;
+        TotalSteps = 0;
+
+        Presenter?.ResetModel();
+      }
+
+      ModeChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void StepBackButton_Click(object sender, RoutedEventArgs e)
+    {
+      if (CurrentStep > 0)
+      {
+        CurrentStep--;
+        StepChanged?.Invoke(this, CurrentStep);
       }
     }
 
-    private void NextStepButton_Click(object sender, RoutedEventArgs e)
+    private void StepForwardButton_Click(object sender, RoutedEventArgs e)
     {
-      NextStepRequested?.Invoke(this, EventArgs.Empty);
+      if (CurrentStep < TotalSteps)
+      {
+        CurrentStep++;
+        StepChanged?.Invoke(this, CurrentStep);
+      }
+    }
+
+    private void UpdateStepInfo()
+    {
+      StepInfoLabel.Content = $"Шаг: {CurrentStep}/{TotalSteps}";
+    }
+
+    private void UpdateStepButtons()
+    {
+      StepBackButton.IsEnabled = CurrentStep > 0;
+      StepForwardButton.IsEnabled = CurrentStep < TotalSteps;
     }
 
     public void ShowError(string message)
@@ -188,7 +234,7 @@ namespace NumericalMethodsApp.Views
 
     public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
     {
-      Presenter.UpdatePlot(lowerBound, upperBound, extremumX, extremumY, isMinimum);
+      Presenter?.UpdatePlot(lowerBound, upperBound, extremumX, extremumY, isMinimum);
     }
 
     public void ClearPlot()
@@ -196,23 +242,6 @@ namespace NumericalMethodsApp.Views
       PlotViewControl.Model?.Series.Clear();
       PlotViewControl.Model?.InvalidatePlot(true);
     }
-
-    public void UpdateButtonStates()
-    {
-      CalculateFullButton.IsEnabled = !CalculationInProgress && !StepModeActive;
-      NextStepButton.IsEnabled = !CalculationInProgress;
-      ClearAllButton.IsEnabled = true;
-
-      MaxRadioButton.IsEnabled = !CalculationInProgress && !StepModeActive;
-      MinRadioButton.IsEnabled = !CalculationInProgress && !StepModeActive;
-    }
-
-    public void SetStepModeActive(bool active)
-    {
-      StepModeActive = active;
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {

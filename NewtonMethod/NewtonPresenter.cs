@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using NumericalMethodsApp.Models;
 using NumericalMethodsApp.Views;
 using OxyPlot;
@@ -9,25 +10,27 @@ namespace NumericalMethodsApp.Presenters
 {
   public class NewtonPresenter
   {
-    private readonly INewtonView _view;
-    private readonly NewtonModel _model;
-    private PlotModel _plotModel;
+    private readonly INewtonView view;
+    private readonly NewtonModel model;
+    private PlotModel plotModel;
+    private bool calculationSuccessful;
 
     public NewtonPresenter(INewtonView view)
     {
-      _view = view;
-      _model = new NewtonModel();
+      this.view = view;
+      model = new NewtonModel();
+      calculationSuccessful = false;
       InitializePlot();
       SubscribeToEvents();
     }
 
     private void SubscribeToEvents()
     {
-      _view.CalculateRequested += OnCalculateRequested;
-      _view.ClearAllRequested += OnClearAllRequested;
-      _view.HelpRequested += OnHelpRequested;
-      _view.ModeChanged += OnModeChanged;
-      _view.NextStepRequested += OnNextStepRequested;
+      view.CalculateRequested += OnCalculateRequested;
+      view.ClearAllRequested += OnClearAllRequested;
+      view.HelpRequested += OnHelpRequested;
+      view.ModeChanged += OnModeChanged;
+      view.StepChanged += OnStepChanged;
     }
 
     private void OnCalculateRequested(object sender, EventArgs e)
@@ -37,163 +40,241 @@ namespace NumericalMethodsApp.Presenters
         if (!ValidateInput())
           return;
 
-        SetCalculationInProgress(true);
-        _view.SetStepModeActive(false);
-
         UpdateModelFromView();
-        _model.Calculate();
+        model.Calculate();
 
-        DisplayResult();
-        UpdatePlotForCurrentStep();
+        calculationSuccessful = true;
+        view.IsModeLocked = true;
 
-        SetCalculationInProgress(false);
+        DisplayFinalResult();
+        view.TotalSteps = model.IterationSteps.Count;
+        view.CurrentStep = model.IterationSteps.Count;
+
+        view.UpdatePlot(model.LowerBound, model.UpperBound,
+            model.CalculationResult.Point, model.CalculationResult.Value,
+            model.FindMinimum);
       }
       catch (Exception ex)
       {
-        _view.ShowError($"Ошибка при вычислении: {ex.Message}");
-        SetCalculationInProgress(false);
+        calculationSuccessful = false;
+        view.IsModeLocked = false;
+        view.ShowError($"Ошибка при вычислении: {ex.Message}\nРекомендация: попробуйте изменить интервал поиска.");
       }
     }
 
-    private void OnNextStepRequested(object sender, EventArgs e)
+    private void OnStepChanged(object sender, int stepIndex)
     {
-      try
+      if (stepIndex >= 0 && stepIndex <= model.IterationSteps.Count)
       {
-        if (!ValidateInput())
-          return;
-
-        if (!_model.StepModeStarted)
+        if (stepIndex == model.IterationSteps.Count)
         {
-          SetCalculationInProgress(true);
-          _view.SetStepModeActive(true);
-          UpdateModelFromView();
-        }
-
-        bool hasNextStep = _model.PerformNextStep();
-
-        if (hasNextStep)
-        {
-          DisplayStepResult();
-          UpdatePlotForCurrentStep();
+          DisplayFinalResult();
+          view.UpdatePlot(model.LowerBound, model.UpperBound,
+              model.CalculationResult.Point, model.CalculationResult.Value,
+              model.FindMinimum);
         }
         else
         {
-          if (_model.CalculationComplete)
+          var step = model.IterationSteps[stepIndex];
+          double currentEstimate = step.CurrentEstimate;
+          double functionValue = model.EvaluateFunction(currentEstimate);
+
+          UpdateStepPlot(step, currentEstimate, functionValue);
+
+          string extremumType = model.FindMinimum ? "Минимум" : "Максимум";
+          view.ResultText = $"Шаг {step.Iteration}:\n" +
+                           $"Интервал: [{Math.Round(step.LowerBound, 5)}, {Math.Round(step.UpperBound, 5)}]\n" +
+                           $"Длина интервала: {Math.Round(step.IntervalLength, 5)}\n" +
+                           $"{extremumType}: x = {Math.Round(currentEstimate, 5)}";
+        }
+      }
+    }
+
+    private void DisplayFinalResult()
+    {
+      string extremumType = model.FindMinimum ? "минимум" : "максимум";
+      view.ResultText = $"Найден {extremumType}:\n" +
+                       $"x = {Math.Round(model.CalculationResult.Point, 5)}, " +
+                       $"f(x) = {Math.Round(model.CalculationResult.Value, 5)}\n" +
+                       $"Количество итераций: {model.IterationSteps.Count}";
+    }
+
+    private void UpdateStepPlot(NewtonIterationStep step, double currentEstimate, double functionValue)
+    {
+      plotModel.Series.Clear();
+
+      try
+      {
+        var functionSeries = new LineSeries
+        {
+          Title = "f(x)",
+          Color = OxyColors.Blue,
+          StrokeThickness = 2
+        };
+
+        int pointsCount = 100;
+        double stepSize = (model.UpperBound - model.LowerBound) / pointsCount;
+
+        for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
+        {
+          double currentX = model.LowerBound + pointIndex * stepSize;
+          try
           {
-            DisplayResult();
-            SetCalculationInProgress(false);
-            _view.SetStepModeActive(false);
+            double currentY = model.EvaluateFunction(currentX);
+            if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
+            {
+              functionSeries.Points.Add(new DataPoint(currentX, currentY));
+            }
+          }
+          catch
+          {
           }
         }
+
+        plotModel.Series.Add(functionSeries);
+
+        var intervalSeries = new LineSeries
+        {
+          Title = "Текущий интервал",
+          Color = OxyColors.Gray,
+          StrokeThickness = 3
+        };
+
+        double minY = double.MaxValue;
+        double maxY = double.MinValue;
+
+        for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
+        {
+          double currentX = model.LowerBound + pointIndex * stepSize;
+          try
+          {
+            double currentY = model.EvaluateFunction(currentX);
+            if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
+            {
+              minY = Math.Min(minY, currentY);
+              maxY = Math.Max(maxY, currentY);
+            }
+          }
+          catch
+          {
+          }
+        }
+
+        double intervalY = minY - 0.1 * (maxY - minY);
+        intervalSeries.Points.Add(new DataPoint(step.LowerBound, intervalY));
+        intervalSeries.Points.Add(new DataPoint(step.UpperBound, intervalY));
+
+        plotModel.Series.Add(intervalSeries);
+
+        var estimateSeries = new ScatterSeries
+        {
+          Title = "Текущая оценка",
+          MarkerType = MarkerType.Circle,
+          MarkerSize = 8,
+          MarkerFill = OxyColors.Red
+        };
+
+        estimateSeries.Points.Add(new ScatterPoint(currentEstimate, functionValue));
+
+        plotModel.Series.Add(estimateSeries);
+
+        plotModel.InvalidatePlot(true);
+        view.SetPlotModel(plotModel);
       }
       catch (Exception ex)
       {
-        _view.ShowError($"Ошибка при выполнении шага: {ex.Message}");
-        SetCalculationInProgress(false);
-        _view.SetStepModeActive(false);
+        view.ShowError($"Ошибка при построении графика: {ex.Message}");
       }
     }
 
     private void OnClearAllRequested(object sender, EventArgs e)
     {
-      _view.FunctionExpression = "";
-      _view.InitialPoint = "";
-      _view.DisplayIntervalStart = "-5";
-      _view.DisplayIntervalEnd = "5";
-      _view.Epsilon = "0.001";
-      _view.FindMinimum = true;
-      _view.FindMaximum = false;
-      _view.ResultText = "";
-
-      _model.ResetCalculation();
-      SetCalculationInProgress(false);
-      _view.SetStepModeActive(false);
-      ClearPlot();
+      model.Reset();
+      view.FunctionExpression = string.Empty;
+      view.LowerBound = string.Empty;
+      view.UpperBound = string.Empty;
+      view.Epsilon = "0.001";
+      view.ResultText = string.Empty;
+      view.CurrentStep = 0;
+      view.TotalSteps = 0;
+      view.IsModeLocked = false;
+      calculationSuccessful = false;
+      view.ClearPlot();
     }
 
     private void OnHelpRequested(object sender, EventArgs e)
     {
-      string helpText = @"Метод Ньютона для оптимизации
+      string helpMessage = "Метод Ньютона\n\n" +
+                          "Поддерживаемые функции:\n" +
+                          "- Тригонометрические: sin(x), cos(x), tan(x)\n" +
+                          "- Экспоненциальные: exp(x), e^x\n" +
+                          "- Логарифмические: log(x) - натуральный, log10(x) - десятичный\n" +
+                          "- Степенные: x^2, pow(x, y)\n" +
+                          "- Квадратный корень: sqrt(x)\n" +
+                          "- Модуль: abs(x)\n\n" +
+                         
+                          "Инструкция:\n" +
+                          "1. Введите функцию f(x)\n" +
+                          "2. Укажите интервал поиска [A, B]\n" +
+                          "3. Задайте точность ε\n" +
+                          "4. Выберите тип экстремума\n" +
+                          "5. Нажмите 'Вычислить'";
 
-Инструкция:
-1. Введите функцию f(x) в поле 'Функция f(x)'
-2. Укажите начальное приближение x₀
-3. Задайте интервал отображения графика
-4. Задайте точность вычисления ε
-5. Выберите режим поиска (минимум или максимум)
-6. Нажмите 'Вычислить полностью' для полного расчета
-7. Используйте 'Следующий шаг' для пошагового просмотра
-
-Примечание: 
-- Метод Ньютона ищет точки, где первая производная равна нулю
-- Тип экстремума определяется по знаку второй производной
-- Для пошагового режима начните с кнопки 'Следующий шаг'
-- После начала пошагового режима кнопка 'Вычислить полностью' блокируется
-- Для нового расчета используйте 'Очистить все'";
-
-      _view.ShowInfo(helpText);
+      view.ShowInfo(helpMessage);
     }
 
     private void OnModeChanged(object sender, EventArgs e)
     {
-      _model.ResetCalculation();
-      SetCalculationInProgress(false);
-      _view.SetStepModeActive(false);
+      if (!calculationSuccessful)
+      {
+        view.ClearPlot();
+        view.ResultText = string.Empty;
+        view.CurrentStep = 0;
+        view.TotalSteps = 0;
+      }
     }
 
     private bool ValidateInput()
     {
-      if (string.IsNullOrWhiteSpace(_view.FunctionExpression))
+      if (string.IsNullOrWhiteSpace(view.FunctionExpression))
       {
-        _view.ShowError("Введите функцию f(x)");
+        view.ShowError("Введите функцию для вычисления");
         return false;
       }
 
-      if (_model.IsConstantFunction(_view.FunctionExpression))
+      if (!NewtonModel.TryParseDouble(view.LowerBound, out double lowerBound))
       {
-        _view.ShowError("Функция должна зависеть от переменной x. Введите выражение с переменной x.");
+        view.ShowError("Некорректное значение нижней границы интервала");
         return false;
       }
 
-      if (!NewtonModel.TryParseDouble(_view.InitialPoint, out double initialPoint))
+      if (!NewtonModel.TryParseDouble(view.UpperBound, out double upperBound))
       {
-        _view.ShowError("Начальная точка должна быть вещественным числом");
+        view.ShowError("Некорректное значение верхней границы интервала");
         return false;
       }
 
-      if (!NewtonModel.TryParseDouble(_view.Epsilon, out double epsilonValue) || epsilonValue <= 0)
+      if (lowerBound >= upperBound)
       {
-        _view.ShowError("Точность ε должна быть положительным вещественным числом");
+        view.ShowError("Нижняя граница должна быть меньше верхней");
         return false;
       }
 
-      if (!NewtonModel.TryParseDouble(_view.DisplayIntervalStart, out double intervalStart) ||
-          !NewtonModel.TryParseDouble(_view.DisplayIntervalEnd, out double intervalEnd))
+      if (!NewtonModel.TryParseDouble(view.Epsilon, out double epsilon))
       {
-        _view.ShowError("Интервал отображения должен состоять из двух вещественных чисел");
+        view.ShowError("Некорректное значение точности ε");
         return false;
       }
 
-      if (intervalStart >= intervalEnd)
+      if (epsilon <= 0)
       {
-        _view.ShowError("Начало интервала должно быть меньше его конца");
+        view.ShowError("Точность ε должна быть положительным числом");
         return false;
       }
 
-      try
+      if (!view.FindMinimum && !view.FindMaximum)
       {
-        _model.FunctionExpression = _view.FunctionExpression;
-        _model.InitialPoint = initialPoint;
-        double testValue = _model.EvaluateFunction(initialPoint);
-        if (double.IsInfinity(testValue) || double.IsNaN(testValue))
-        {
-          _view.ShowError("Функция не определена в начальной точке");
-          return false;
-        }
-      }
-      catch (Exception ex)
-      {
-        _view.ShowError($"Ошибка в функции: {ex.Message}");
+        view.ShowError("Выберите тип экстремума для поиска");
         return false;
       }
 
@@ -202,126 +283,78 @@ namespace NumericalMethodsApp.Presenters
 
     private void UpdateModelFromView()
     {
-      _model.FunctionExpression = _view.FunctionExpression;
-      _model.InitialPoint = NewtonModel.ParseDouble(_view.InitialPoint);
-      _model.Epsilon = NewtonModel.ParseDouble(_view.Epsilon);
-      _model.FindMinimum = _view.FindMinimum;
-      _model.FindMaximum = _view.FindMaximum;
+      model.FunctionExpression = view.FunctionExpression;
+      model.LowerBound = NewtonModel.ParseDouble(view.LowerBound);
+      model.UpperBound = NewtonModel.ParseDouble(view.UpperBound);
+      model.Epsilon = NewtonModel.ParseDouble(view.Epsilon);
+      model.FindMinimum = view.FindMinimum;
     }
 
-    private void DisplayResult()
+    private void InitializePlot()
     {
-      if (_model.CalculationResult.Success)
+      plotModel = new PlotModel
       {
-        string extremumType = _model.CalculationResult.IsMinimum ? "минимум" : "максимум";
-        _view.ResultText = $"Найден {extremumType} функции: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
-      }
-      else
-      {
-        double firstDeriv = _model.CalculateFirstDerivative(_model.CalculationResult.Point);
-        double secondDeriv = _model.CalculateSecondDerivative(_model.CalculationResult.Point);
+        Title = "",
+        TitleColor = OxyColors.Black,
+        TitleFontSize = 14,
+        TitleFontWeight = FontWeights.Bold
+      };
 
-        if (Math.Abs(firstDeriv) < _model.Epsilon)
-        {
-          if (Math.Abs(secondDeriv) < 1e-10)
-          {
-            _view.ResultText = $"Найдена точка перегиба: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
-          }
-          else if (secondDeriv > 0)
-          {
-            _view.ResultText = $"Найден минимум: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
-          }
-          else
-          {
-            _view.ResultText = $"Найден максимум: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
-          }
-        }
-        else
-        {
-          _view.ResultText = $"Метод сошелся к точке: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}, но f'(x) = {firstDeriv:F6} ≠ 0";
-        }
-      }
+      var xAxis = new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Title = "x",
+        TitleColor = OxyColors.Black,
+        TitleFontSize = 12,
+        AxislineColor = OxyColors.Black,
+        TicklineColor = OxyColors.Black,
+        MajorGridlineColor = OxyColors.LightGray,
+        MajorGridlineStyle = LineStyle.Dash
+      };
+
+      var yAxis = new LinearAxis
+      {
+        Position = AxisPosition.Left,
+        Title = "f(x)",
+        TitleColor = OxyColors.Black,
+        TitleFontSize = 12,
+        AxislineColor = OxyColors.Black,
+        TicklineColor = OxyColors.Black,
+        MajorGridlineColor = OxyColors.LightGray,
+        MajorGridlineStyle = LineStyle.Dash
+      };
+
+      plotModel.Axes.Add(xAxis);
+      plotModel.Axes.Add(yAxis);
+
+      view.SetPlotModel(plotModel);
     }
 
-    private void DisplayStepResult()
-    {
-      if (_model.CalculationComplete && _model.CalculationResult.Success)
-      {
-        string extremumType = _model.CalculationResult.IsMinimum ? "минимум" : "максимум";
-        _view.ResultText = $"Найден {extremumType} функции: x = {_model.CalculationResult.Point:F6}, f(x) = {_model.CalculationResult.Value:F6}";
-      }
-      else if (_model.CurrentStepIndex >= 0 && _model.CurrentStepIndex < _model.IterationSteps.Count)
-      {
-        IterationStep currentStep = _model.IterationSteps[_model.CurrentStepIndex];
-
-        string pointType = currentStep.SecondDerivative > 0 ? "минимум" :
-                          currentStep.SecondDerivative < 0 ? "максимум" : "точка перегиба";
-
-        _view.ResultText = $"Шаг {currentStep.IterationNumber}: " +
-                          $"x = {currentStep.Point:F6}, " +
-                          $"f(x) = {currentStep.FunctionValue:F6}, " +
-                          $"f'(x) = {currentStep.FirstDerivative:F6}, " +
-                          $"тип: {pointType}";
-      }
-      else
-      {
-        double secondDeriv = _model.CalculateSecondDerivative(_model.InitialPoint);
-        string pointType = secondDeriv > 0 ? "минимум" :
-                          secondDeriv < 0 ? "максимум" : "точка перегиба";
-
-        _view.ResultText = $"Начальная точка: " +
-                          $"x = {_model.InitialPoint:F6}, " +
-                          $"f(x) = {_model.EvaluateFunction(_model.InitialPoint):F6}, " +
-                          $"тип: {pointType}";
-      }
-    }
-
-    private void SetCalculationInProgress(bool inProgress)
-    {
-      _view.CalculationInProgress = inProgress;
-    }
-
-    private void UpdatePlotForCurrentStep()
+    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
     {
       try
       {
-        double plotLowerBound = NewtonModel.TryParseDouble(_view.DisplayIntervalStart, out double start) ? start : -5;
-        double plotUpperBound = NewtonModel.TryParseDouble(_view.DisplayIntervalEnd, out double end) ? end : 5;
+        plotModel.Series.Clear();
 
-        double currentX = _model.CalculationResult.Point;
-        double currentY = _model.CalculationResult.Value;
-
-        UpdatePlot(plotLowerBound, plotUpperBound, currentX, currentY, _model.CalculationResult.IsMinimum);
-      }
-      catch (Exception ex)
-      {
-        _view.ShowError($"Ошибка при обновлении графика: {ex.Message}");
-      }
-    }
-
-    private void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
-    {
-      try
-      {
-        _plotModel.Series.Clear();
-
-        LineSeries functionSeries = new LineSeries
+        var functionSeries = new LineSeries
         {
+          Title = "f(x)",
           Color = OxyColors.Blue,
-          StrokeThickness = 2,
-          Title = "f(x)"
+          StrokeThickness = 2
         };
 
-        int pointCount = 200;
-        for (int pointIndex = 0; pointIndex <= pointCount; ++pointIndex)
+        int pointsCount = 200;
+        double stepSize = (upperBound - lowerBound) / pointsCount;
+
+        for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
         {
-          double xValue = lowerBound + (upperBound - lowerBound) * pointIndex / pointCount;
+          double currentX = lowerBound + pointIndex * stepSize;
           try
           {
-            double yValue = _model.EvaluateFunction(xValue);
-            if (!double.IsInfinity(yValue) && !double.IsNaN(yValue))
+            double currentY = model.EvaluateFunction(currentX);
+            if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
             {
-              functionSeries.Points.Add(new DataPoint(xValue, yValue));
+              functionSeries.Points.Add(new DataPoint(currentX, currentY));
             }
           }
           catch
@@ -329,82 +362,34 @@ namespace NumericalMethodsApp.Presenters
           }
         }
 
-        _plotModel.Series.Add(functionSeries);
+        plotModel.Series.Add(functionSeries);
 
-        if (!double.IsInfinity(extremumX) && !double.IsNaN(extremumX) &&
-            !double.IsInfinity(extremumY) && !double.IsNaN(extremumY))
+        var extremumSeries = new ScatterSeries
         {
-          ScatterSeries extremumSeries = new ScatterSeries
-          {
-            MarkerType = MarkerType.Circle,
-            MarkerSize = 8,
-            MarkerStroke = OxyColors.Black,
-            MarkerStrokeThickness = 2,
-            MarkerFill = isMinimum ? OxyColors.Green : OxyColors.Red,
-            Title = isMinimum ? "Текущая точка (минимум)" : "Текущая точка (максимум)"
-          };
-          extremumSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
-          _plotModel.Series.Add(extremumSeries);
-        }
+          Title = isMinimum ? "Минимум" : "Максимум",
+          MarkerType = MarkerType.Circle,
+          MarkerSize = 8,
+          MarkerFill = isMinimum ? OxyColors.Green : OxyColors.Red
+        };
 
-        _plotModel.InvalidatePlot(true);
+        extremumSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
+
+        plotModel.Series.Add(extremumSeries);
+
+        plotModel.InvalidatePlot(true);
+        view.SetPlotModel(plotModel);
       }
       catch (Exception ex)
       {
-        _view.ShowError($"Ошибка при обновлении графика: {ex.Message}");
+        view.ShowError($"Ошибка при построении графика: {ex.Message}");
       }
     }
 
-    private void InitializePlot()
+    public void ResetModel()
     {
-      _plotModel = new PlotModel
-      {
-        Title = "",
-        Background = OxyColors.White,
-        PlotAreaBorderColor = OxyColors.LightGray,
-        PlotAreaBorderThickness = new OxyThickness(1)
-      };
-
-      _plotModel.Axes.Add(new LinearAxis
-      {
-        Position = AxisPosition.Bottom,
-        Title = "x",
-        TitleColor = OxyColors.Black,
-        TitleFontSize = 12,
-        AxislineColor = OxyColors.Black,
-        TicklineColor = OxyColors.LightGray,
-        MajorGridlineColor = OxyColors.LightGray,
-        MajorGridlineStyle = LineStyle.Dash,
-        MinorGridlineColor = OxyColors.LightGray,
-        MinorGridlineStyle = LineStyle.Dot,
-        FontSize = 10
-      });
-
-      _plotModel.Axes.Add(new LinearAxis
-      {
-        Position = AxisPosition.Left,
-        Title = "f(x)",
-        TitleColor = OxyColors.Black,
-        TitleFontSize = 12,
-        AxislineColor = OxyColors.Black,
-        TicklineColor = OxyColors.LightGray,
-        MajorGridlineColor = OxyColors.LightGray,
-        MajorGridlineStyle = LineStyle.Dash,
-        MinorGridlineColor = OxyColors.LightGray,
-        MinorGridlineStyle = LineStyle.Dot,
-        FontSize = 10
-      });
-
-      if (_view is NewtonMethod newtonView)
-      {
-        newtonView.PlotViewControl.Model = _plotModel;
-      }
-    }
-
-    private void ClearPlot()
-    {
-      _plotModel.Series.Clear();
-      _plotModel.InvalidatePlot(true);
+      model.Reset();
+      calculationSuccessful = false;
+      view.IsModeLocked = false;
     }
   }
 }

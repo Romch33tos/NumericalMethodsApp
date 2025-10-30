@@ -36,9 +36,36 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="#FF3498DB"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center" 
+                                             Margin="12,8"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#FF2980B9"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF21618C"/>
+                    <Setter Property="RenderTransform">
+                        <Setter.Value>
+                            <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#FFEEEEEE"/>
+                    <Setter Property="Foreground" Value="#FF888888"/>
+                    <Setter Property="Cursor" Value="Arrow"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -170,33 +197,9 @@
                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" 
                            HorizontalAlignment="Center" Margin="0,8,0,8">
                     <Button Content="Вычислить" Click="CalculateButton_Click" Width="136" 
-                           Background="#FF27AE60" FontSize="13">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}" 
-                                        CornerRadius="6" 
-                                        BorderThickness="0">
-                                    <ContentPresenter HorizontalAlignment="Center" 
-                                                     VerticalAlignment="Center" 
-                                                     Margin="12,8"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                           Background="#FF27AE60" FontSize="13" Margin="8,0"/>
                     <Button Content="Очистить все" Click="ClearAllButton_Click" Width="135" 
-                           Background="#FF3498DB" FontSize="13">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border Background="{TemplateBinding Background}" 
-                                        CornerRadius="6" 
-                                        BorderThickness="0">
-                                    <ContentPresenter HorizontalAlignment="Center" 
-                                                     VerticalAlignment="Center" 
-                                                     Margin="12,8"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                           Background="#FF3498DB" FontSize="13" Margin="8,0"/>
                 </StackPanel>
 
                 <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="8">
