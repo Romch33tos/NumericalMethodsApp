@@ -76,16 +76,18 @@ namespace NumericalMethodsApp.Presenters
         else
         {
           var step = model.IterationSteps[stepIndex];
-          double currentEstimate = step.CurrentEstimate;
-          double functionValue = model.EvaluateFunction(currentEstimate);
+          double currentPoint = step.CurrentPoint;
+          double functionValue = step.FunctionValue;
 
-          UpdateStepPlot(step, currentEstimate, functionValue);
+          UpdateStepPlot(step, currentPoint, functionValue);
 
           string extremumType = model.FindMinimum ? "Минимум" : "Максимум";
           view.ResultText = $"Шаг {step.Iteration}:\n" +
-                           $"Интервал: [{Math.Round(step.LowerBound, 5)}, {Math.Round(step.UpperBound, 5)}]\n" +
-                           $"Длина интервала: {Math.Round(step.IntervalLength, 5)}\n" +
-                           $"{extremumType}: x = {Math.Round(currentEstimate, 5)}";
+                           $"Текущая точка: x = {Math.Round(step.CurrentPoint, 5)}\n" +
+                           $"Следующая точка: x = {Math.Round(step.NextPoint, 5)}\n" +
+                           $"Первая производная: {Math.Round(step.FirstDerivative, 5)}\n" +
+                           $"Вторая производная: {Math.Round(step.SecondDerivative, 5)}\n" +
+                           $"{extremumType}: f(x) = {Math.Round(functionValue, 5)}";
         }
       }
     }
@@ -99,7 +101,7 @@ namespace NumericalMethodsApp.Presenters
                        $"Количество итераций: {model.IterationSteps.Count}";
     }
 
-    private void UpdateStepPlot(NewtonIterationStep step, double currentEstimate, double functionValue)
+    private void UpdateStepPlot(NewtonIterationStep step, double currentPoint, double functionValue)
     {
       plotModel.Series.Clear();
 
@@ -133,50 +135,37 @@ namespace NumericalMethodsApp.Presenters
 
         plotModel.Series.Add(functionSeries);
 
-        var intervalSeries = new LineSeries
+        var tangentSeries = new LineSeries
         {
-          Title = "Текущий интервал",
-          Color = OxyColors.Gray,
-          StrokeThickness = 3
+          Title = "Касательная",
+          Color = OxyColors.Red,
+          StrokeThickness = 1,
+          LineStyle = LineStyle.Dash
         };
 
-        double minY = double.MaxValue;
-        double maxY = double.MinValue;
+        double tangentSlope = step.FirstDerivative;
+        double tangentIntercept = functionValue - tangentSlope * currentPoint;
 
-        for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
+        for (int pointIndex = 0; pointIndex <= pointsCount; pointIndex += 10)
         {
           double currentX = model.LowerBound + pointIndex * stepSize;
-          try
-          {
-            double currentY = model.EvaluateFunction(currentX);
-            if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
-            {
-              minY = Math.Min(minY, currentY);
-              maxY = Math.Max(maxY, currentY);
-            }
-          }
-          catch
-          {
-          }
+          double tangentY = tangentSlope * currentX + tangentIntercept;
+          tangentSeries.Points.Add(new DataPoint(currentX, tangentY));
         }
 
-        double intervalY = minY - 0.1 * (maxY - minY);
-        intervalSeries.Points.Add(new DataPoint(step.LowerBound, intervalY));
-        intervalSeries.Points.Add(new DataPoint(step.UpperBound, intervalY));
+        plotModel.Series.Add(tangentSeries);
 
-        plotModel.Series.Add(intervalSeries);
-
-        var estimateSeries = new ScatterSeries
+        var currentPointSeries = new ScatterSeries
         {
-          Title = "Текущая оценка",
+          Title = "Текущая точка",
           MarkerType = MarkerType.Circle,
           MarkerSize = 8,
           MarkerFill = OxyColors.Red
         };
 
-        estimateSeries.Points.Add(new ScatterPoint(currentEstimate, functionValue));
+        currentPointSeries.Points.Add(new ScatterPoint(currentPoint, functionValue));
 
-        plotModel.Series.Add(estimateSeries);
+        plotModel.Series.Add(currentPointSeries);
 
         plotModel.InvalidatePlot(true);
         view.SetPlotModel(plotModel);
@@ -205,6 +194,11 @@ namespace NumericalMethodsApp.Presenters
     private void OnHelpRequested(object sender, EventArgs e)
     {
       string helpMessage = "Метод Ньютона\n\n" +
+                          "Принцип работы:\n" +
+                          "- Использует первую и вторую производные для поиска экстремума\n" +
+                          "- Итерационная формула: xₙ₊₁ = xₙ - f'(xₙ)/f''(xₙ)\n" +
+                          "- Для максимума: xₙ₊₁ = xₙ + f'(xₙ)/f''(xₙ)\n\n" +
+
                           "Поддерживаемые функции:\n" +
                           "- Тригонометрические: sin(x), cos(x), tan(x)\n" +
                           "- Экспоненциальные: exp(x), e^x\n" +
@@ -212,7 +206,7 @@ namespace NumericalMethodsApp.Presenters
                           "- Степенные: x^2, pow(x, y)\n" +
                           "- Квадратный корень: sqrt(x)\n" +
                           "- Модуль: abs(x)\n\n" +
-                         
+
                           "Инструкция:\n" +
                           "1. Введите функцию f(x)\n" +
                           "2. Укажите интервал поиска [A, B]\n" +
