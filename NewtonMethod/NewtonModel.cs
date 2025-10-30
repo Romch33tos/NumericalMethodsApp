@@ -7,8 +7,6 @@ namespace NumericalMethodsApp.Models
 {
   public class NewtonModel
   {
-    public const double GoldenRatioConstant = 1.618033988749895;
-
     public string FunctionExpression { get; set; } = string.Empty;
     public double LowerBound { get; set; }
     public double UpperBound { get; set; }
@@ -33,7 +31,7 @@ namespace NumericalMethodsApp.Models
       }
 
       IterationSteps.Clear();
-      double resultPoint = NewtonSearch(LowerBound, UpperBound, Epsilon, FindMinimum);
+      double resultPoint = NewtonOptimization(LowerBound, UpperBound, Epsilon, FindMinimum);
       double functionValue = EvaluateFunction(resultPoint);
 
       CalculationResult = new NewtonCalculationResult
@@ -45,35 +43,82 @@ namespace NumericalMethodsApp.Models
       };
     }
 
-    private double NewtonSearch(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
+    private double NewtonOptimization(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
     {
       int iterationCounter = 0;
-      double currentLower = lowerBound;
-      double currentUpper = upperBound;
+      double currentPoint = (lowerBound + upperBound) / 2;
 
-      while (Math.Abs(currentUpper - currentLower) > epsilonValue)
+      while (true)
       {
         ++iterationCounter;
 
-        double leftPoint = currentUpper - (currentUpper - currentLower) / GoldenRatioConstant;
-        double rightPoint = currentLower + (currentUpper - currentLower) / GoldenRatioConstant;
+        double firstDerivative = CalculateFirstDerivative(currentPoint);
+        double secondDerivative = CalculateSecondDerivative(currentPoint);
 
-        double leftFunctionValue = EvaluateFunction(leftPoint);
-        double rightFunctionValue = EvaluateFunction(rightPoint);
+        if (Math.Abs(firstDerivative) < epsilonValue || Math.Abs(secondDerivative) < 1e-10)
+        {
+          break;
+        }
+
+        double nextPoint = currentPoint - firstDerivative / secondDerivative;
+
+        if (!findMinimum)
+        {
+          nextPoint = currentPoint + firstDerivative / secondDerivative;
+        }
+
+        if (nextPoint < lowerBound || nextPoint > upperBound || double.IsInfinity(nextPoint) || double.IsNaN(nextPoint))
+        {
+          nextPoint = GoldenSectionFallback(lowerBound, upperBound, epsilonValue, findMinimum);
+          break;
+        }
 
         var step = new NewtonIterationStep
         {
           Iteration = iterationCounter,
-          LowerBound = currentLower,
-          UpperBound = currentUpper,
-          LeftPoint = leftPoint,
-          RightPoint = rightPoint,
-          LeftValue = leftFunctionValue,
-          RightValue = rightFunctionValue,
-          IntervalLength = currentUpper - currentLower
+          CurrentPoint = currentPoint,
+          NextPoint = nextPoint,
+          FirstDerivative = firstDerivative,
+          SecondDerivative = secondDerivative,
+          FunctionValue = EvaluateFunction(currentPoint)
         };
 
         IterationSteps.Add(step);
+
+        if (Math.Abs(nextPoint - currentPoint) < epsilonValue)
+        {
+          currentPoint = nextPoint;
+          break;
+        }
+
+        currentPoint = nextPoint;
+
+        if (iterationCounter > 1000)
+        {
+          currentPoint = GoldenSectionFallback(lowerBound, upperBound, epsilonValue, findMinimum);
+          break;
+        }
+      }
+
+      return currentPoint;
+    }
+
+    private double GoldenSectionFallback(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
+    {
+      double goldenRatio = 1.618033988749895;
+      double currentLower = lowerBound;
+      double currentUpper = upperBound;
+      int fallbackIterations = 0;
+
+      while (Math.Abs(currentUpper - currentLower) > epsilonValue && fallbackIterations < 100)
+      {
+        fallbackIterations++;
+
+        double leftPoint = currentUpper - (currentUpper - currentLower) / goldenRatio;
+        double rightPoint = currentLower + (currentUpper - currentLower) / goldenRatio;
+
+        double leftFunctionValue = EvaluateFunction(leftPoint);
+        double rightFunctionValue = EvaluateFunction(rightPoint);
 
         if (findMinimum)
         {
@@ -97,14 +142,21 @@ namespace NumericalMethodsApp.Models
             currentUpper = rightPoint;
           }
         }
-
-        if (iterationCounter > 1000)
-        {
-          throw new Exception("Превышено максимальное количество итераций. Проверьте корректность функции и интервала.");
-        }
       }
 
       return (currentLower + currentUpper) / 2;
+    }
+
+    private double CalculateFirstDerivative(double x)
+    {
+      double h = 1e-6;
+      return (EvaluateFunction(x + h) - EvaluateFunction(x - h)) / (2 * h);
+    }
+
+    private double CalculateSecondDerivative(double x)
+    {
+      double h = 1e-6;
+      return (EvaluateFunction(x + h) - 2 * EvaluateFunction(x) + EvaluateFunction(x - h)) / (h * h);
     }
 
     public NewtonIterationStep GetStep(int stepIndex)
@@ -333,27 +385,6 @@ namespace NumericalMethodsApp.Models
       }
     }
 
-    private bool IsTrivialExpression(string expression)
-    {
-      string cleanExpression = expression.Replace(" ", "").ToLower();
-
-      if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
-        return true;
-
-      string[] trivialPatterns = {
-                "x*0", "0*x", "x-x", "x/x", "x^0", "0^x",
-                "x*1", "1*x", "x+0", "0+x", "x-0"
-            };
-
-      foreach (string pattern in trivialPatterns)
-      {
-        if (cleanExpression.Contains(pattern))
-          return true;
-      }
-
-      return false;
-    }
-
     private string CheckForDiscontinuities(double lowerBound, double upperBound)
     {
       const int testPointsCount = 50;
@@ -425,13 +456,10 @@ namespace NumericalMethodsApp.Models
   public class NewtonIterationStep
   {
     public int Iteration { get; set; }
-    public double LowerBound { get; set; }
-    public double UpperBound { get; set; }
-    public double LeftPoint { get; set; }
-    public double RightPoint { get; set; }
-    public double LeftValue { get; set; }
-    public double RightValue { get; set; }
-    public double IntervalLength { get; set; }
-    public double CurrentEstimate => (LowerBound + UpperBound) / 2;
+    public double CurrentPoint { get; set; }
+    public double NextPoint { get; set; }
+    public double FirstDerivative { get; set; }
+    public double SecondDerivative { get; set; }
+    public double FunctionValue { get; set; }
   }
 }
