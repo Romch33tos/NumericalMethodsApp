@@ -11,7 +11,7 @@ namespace NumericalMethodsApp.Models
     public double LowerBound { get; set; }
     public double UpperBound { get; set; }
     public double Epsilon { get; set; }
-    public bool FindMinimum { get; set; }
+    public bool FindMinimum { get; set; } = true;
 
     public NewtonCalculationResult CalculationResult { get; private set; }
     public List<NewtonIterationStep> IterationSteps { get; private set; }
@@ -45,12 +45,12 @@ namespace NumericalMethodsApp.Models
 
     private double NewtonOptimization(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
     {
-      int iterationCounter = 0;
+      int iterationCount = 0;
       double currentPoint = (lowerBound + upperBound) / 2;
 
       while (true)
       {
-        ++iterationCounter;
+        ++iterationCount;
 
         double firstDerivative = CalculateFirstDerivative(currentPoint);
         double secondDerivative = CalculateSecondDerivative(currentPoint);
@@ -62,11 +62,6 @@ namespace NumericalMethodsApp.Models
 
         double nextPoint = currentPoint - firstDerivative / secondDerivative;
 
-        if (!findMinimum)
-        {
-          nextPoint = currentPoint + firstDerivative / secondDerivative;
-        }
-
         if (nextPoint < lowerBound || nextPoint > upperBound || double.IsInfinity(nextPoint) || double.IsNaN(nextPoint))
         {
           nextPoint = GoldenSectionFallback(lowerBound, upperBound, epsilonValue, findMinimum);
@@ -75,7 +70,7 @@ namespace NumericalMethodsApp.Models
 
         var step = new NewtonIterationStep
         {
-          Iteration = iterationCounter,
+          Iteration = iterationCount,
           CurrentPoint = currentPoint,
           NextPoint = nextPoint,
           FirstDerivative = firstDerivative,
@@ -93,7 +88,7 @@ namespace NumericalMethodsApp.Models
 
         currentPoint = nextPoint;
 
-        if (iterationCounter > 1000)
+        if (iterationCount > 1000)
         {
           currentPoint = GoldenSectionFallback(lowerBound, upperBound, epsilonValue, findMinimum);
           break;
@@ -108,11 +103,11 @@ namespace NumericalMethodsApp.Models
       double goldenRatio = 1.618033988749895;
       double currentLower = lowerBound;
       double currentUpper = upperBound;
-      int fallbackIterations = 0;
+      int fallbackIterationCount = 0;
 
-      while (Math.Abs(currentUpper - currentLower) > epsilonValue && fallbackIterations < 100)
+      while (Math.Abs(currentUpper - currentLower) > epsilonValue && fallbackIterationCount < 100)
       {
-        fallbackIterations++;
+        ++fallbackIterationCount;
 
         double leftPoint = currentUpper - (currentUpper - currentLower) / goldenRatio;
         double rightPoint = currentLower + (currentUpper - currentLower) / goldenRatio;
@@ -149,23 +144,14 @@ namespace NumericalMethodsApp.Models
 
     private double CalculateFirstDerivative(double x)
     {
-      double h = 1e-6;
-      return (EvaluateFunction(x + h) - EvaluateFunction(x - h)) / (2 * h);
+      double stepSize = 1e-6;
+      return (EvaluateFunction(x + stepSize) - EvaluateFunction(x - stepSize)) / (2 * stepSize);
     }
 
     private double CalculateSecondDerivative(double x)
     {
-      double h = 1e-6;
-      return (EvaluateFunction(x + h) - 2 * EvaluateFunction(x) + EvaluateFunction(x - h)) / (h * h);
-    }
-
-    public NewtonIterationStep GetStep(int stepIndex)
-    {
-      if (stepIndex >= 0 && stepIndex < IterationSteps.Count)
-      {
-        return IterationSteps[stepIndex];
-      }
-      return null;
+      double stepSize = 1e-6;
+      return (EvaluateFunction(x + stepSize) - 2 * EvaluateFunction(x) + EvaluateFunction(x - stepSize)) / (stepSize * stepSize);
     }
 
     public double EvaluateFunction(double inputValue)
@@ -174,29 +160,29 @@ namespace NumericalMethodsApp.Models
 
       try
       {
-        string expressionText = FunctionExpression.Replace(" ", "");
+        string processedExpression = FunctionExpression.Replace(" ", "");
 
-        if (expressionText.ToLower() == "x" || expressionText.ToLower() == "y=x")
+        if (processedExpression.ToLower() == "x" || processedExpression.ToLower() == "y=x")
         {
           return inputValue;
         }
 
-        if (expressionText.ToLower().StartsWith("y="))
+        if (processedExpression.ToLower().StartsWith("y="))
         {
-          expressionText = expressionText.Substring(2);
+          processedExpression = processedExpression.Substring(2);
         }
 
-        if (expressionText.Trim() == "x")
+        if (processedExpression.Trim() == "x")
         {
           return inputValue;
         }
 
-        expressionText = ConvertToNCalcExpression(expressionText);
+        processedExpression = ConvertToNCalcExpression(processedExpression);
 
-        expressionText = expressionText.Replace("e^-", "exp(-");
-        expressionText = expressionText.Replace("e^", "exp(");
+        processedExpression = processedExpression.Replace("e^-", "exp(-");
+        processedExpression = processedExpression.Replace("e^", "exp(");
 
-        functionExpression = new NCalc.Expression(expressionText);
+        functionExpression = new NCalc.Expression(processedExpression);
         functionExpression.Parameters["x"] = inputValue;
         functionExpression.Parameters["e"] = Math.E;
         functionExpression.Parameters["pi"] = Math.PI;
@@ -223,15 +209,15 @@ namespace NumericalMethodsApp.Models
                 functionArgs.Result = Math.Log10(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
                 break;
               case "exp":
-                double expArg = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
-                if (expArg > 100) functionArgs.Result = double.PositiveInfinity;
-                else if (expArg < -100) functionArgs.Result = 0.0;
-                else functionArgs.Result = Math.Exp(expArg);
+                double exponentArgument = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                if (exponentArgument > 100) functionArgs.Result = double.PositiveInfinity;
+                else if (exponentArgument < -100) functionArgs.Result = 0.0;
+                else functionArgs.Result = Math.Exp(exponentArgument);
                 break;
               case "sqrt":
-                double sqrtArg = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
-                if (sqrtArg < 0) throw new Exception("Квадратный корень из отрицательного числа");
-                functionArgs.Result = Math.Sqrt(sqrtArg);
+                double sqrtArgument = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                if (sqrtArgument < 0) throw new Exception("Квадратный корень из отрицательного числа");
+                functionArgs.Result = Math.Sqrt(sqrtArgument);
                 break;
               case "abs":
                 functionArgs.Result = Math.Abs(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
@@ -258,29 +244,29 @@ namespace NumericalMethodsApp.Models
           }
         };
 
-        object resultObject = functionExpression.Evaluate();
+        object evaluationResult = functionExpression.Evaluate();
 
-        if (resultObject is double doubleResult)
+        if (evaluationResult is double doubleResult)
         {
           if (double.IsInfinity(doubleResult) || double.IsNaN(doubleResult))
             throw new Exception("Результат вычисления функции не является конечным числом");
           return doubleResult;
         }
-        else if (resultObject is int intResult)
+        else if (evaluationResult is int intResult)
         {
           return intResult;
         }
-        else if (resultObject is decimal decimalResult)
+        else if (evaluationResult is decimal decimalResult)
         {
           return (double)decimalResult;
         }
-        else if (resultObject is long longResult)
+        else if (evaluationResult is long longResult)
         {
           return longResult;
         }
         else
         {
-          throw new Exception($"Неподдерживаемый тип результата: {resultObject.GetType()}");
+          throw new Exception($"Неподдерживаемый тип результата: {evaluationResult.GetType()}");
         }
       }
       catch (Exception evaluationException)
@@ -309,10 +295,10 @@ namespace NumericalMethodsApp.Models
 
     private string ConvertPowerOperators(string expression)
     {
-      var pattern = @"([a-zA-Z0-9\.\(\)]+)\^([a-zA-Z0-9\.\(\)]+)";
-      while (Regex.IsMatch(expression, pattern))
+      var powerPattern = @"([a-zA-Z0-9\.\(\)]+)\^([a-zA-Z0-9\.\(\)]+)";
+      while (Regex.IsMatch(expression, powerPattern))
       {
-        expression = Regex.Replace(expression, pattern, "pow($1, $2)");
+        expression = Regex.Replace(expression, powerPattern, "pow($1, $2)");
       }
       return expression;
     }
@@ -376,8 +362,8 @@ namespace NumericalMethodsApp.Models
         testExpr.Parameters["e"] = Math.E;
         testExpr.Parameters["pi"] = Math.PI;
 
-        var result1 = testExpr.Evaluate();
-        return result1 != null;
+        var result = testExpr.Evaluate();
+        return result != null;
       }
       catch
       {
@@ -388,12 +374,12 @@ namespace NumericalMethodsApp.Models
     private string CheckForDiscontinuities(double lowerBound, double upperBound)
     {
       const int testPointsCount = 50;
-      double step = (upperBound - lowerBound) / testPointsCount;
+      double stepSize = (upperBound - lowerBound) / testPointsCount;
       double? previousValue = null;
 
-      for (int counter = 0; counter <= testPointsCount; ++counter)
+      for (int pointIndex = 0; pointIndex <= testPointsCount; ++pointIndex)
       {
-        double testPoint = lowerBound + counter * step;
+        double testPoint = lowerBound + pointIndex * stepSize;
         try
         {
           double currentValue = EvaluateFunction(testPoint);
@@ -405,7 +391,7 @@ namespace NumericalMethodsApp.Models
 
             if (difference > maxAllowedDifference && !double.IsInfinity(currentValue) && !double.IsInfinity(previousValue.Value))
             {
-              return $"Резкое изменение значения функции между x={testPoint - step} и x={testPoint}";
+              return $"Резкое изменение значения функции между x={testPoint - stepSize} и x={testPoint}";
             }
           }
 
@@ -428,7 +414,7 @@ namespace NumericalMethodsApp.Models
       LowerBound = 0;
       UpperBound = 0;
       Epsilon = 0.001;
-      FindMinimum = false;
+      FindMinimum = true;
     }
 
     public static double ParseDouble(string text)
