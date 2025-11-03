@@ -29,7 +29,6 @@ namespace NumericalMethodsApp.Presenters
       view.CalculateRequested += OnCalculateRequested;
       view.ClearAllRequested += OnClearAllRequested;
       view.HelpRequested += OnHelpRequested;
-      view.ModeChanged += OnModeChanged;
       view.StepChanged += OnStepChanged;
     }
 
@@ -51,8 +50,7 @@ namespace NumericalMethodsApp.Presenters
         view.CurrentStep = model.IterationSteps.Count;
 
         view.UpdatePlot(model.LowerBound, model.UpperBound,
-            model.CalculationResult.Point, model.CalculationResult.Value,
-            model.FindMinimum);
+            model.CalculationResult.Point, model.CalculationResult.Value);
       }
       catch (Exception ex)
       {
@@ -70,8 +68,7 @@ namespace NumericalMethodsApp.Presenters
         {
           DisplayFinalResult();
           view.UpdatePlot(model.LowerBound, model.UpperBound,
-              model.CalculationResult.Point, model.CalculationResult.Value,
-              model.FindMinimum);
+              model.CalculationResult.Point, model.CalculationResult.Value);
         }
         else
         {
@@ -81,7 +78,7 @@ namespace NumericalMethodsApp.Presenters
 
           UpdateStepPlot(step, currentPoint, functionValue);
 
-          string extremumType = model.FindMinimum ? "Минимум" : "Максимум";
+          string extremumType = "Минимум";
           view.ResultText = $"Шаг {step.Iteration}:\n" +
                            $"Текущая точка: x = {Math.Round(step.CurrentPoint, 5)}\n" +
                            $"Следующая точка: x = {Math.Round(step.NextPoint, 5)}\n" +
@@ -94,7 +91,7 @@ namespace NumericalMethodsApp.Presenters
 
     private void DisplayFinalResult()
     {
-      string extremumType = model.FindMinimum ? "минимум" : "максимум";
+      string extremumType = "минимум";
       view.ResultText = $"Найден {extremumType}:\n" +
                        $"x = {Math.Round(model.CalculationResult.Point, 5)}, " +
                        $"f(x) = {Math.Round(model.CalculationResult.Value, 5)}\n" +
@@ -167,6 +164,8 @@ namespace NumericalMethodsApp.Presenters
 
         plotModel.Series.Add(currentPointSeries);
 
+        UpdatePlotScale();
+
         plotModel.InvalidatePlot(true);
         view.SetPlotModel(plotModel);
       }
@@ -211,21 +210,14 @@ namespace NumericalMethodsApp.Presenters
                           "1. Введите функцию f(x)\n" +
                           "2. Укажите интервал поиска [A, B]\n" +
                           "3. Задайте точность ε\n" +
-                          "4. Выберите тип экстремума\n" +
-                          "5. Нажмите 'Вычислить'";
+                          "4. Нажмите 'Вычислить'\n\n" +
+
+                          "Управление графиком:\n" +
+                          "- Перетаскивание: зажмите левую кнопку мыши и двигайте\n" +
+                          "- Масштаб: прокрутка колесиком мыши\n" +
+                          "- Сброс масштаба: двойной щелчок";
 
       view.ShowInfo(helpMessage);
-    }
-
-    private void OnModeChanged(object sender, EventArgs e)
-    {
-      if (!calculationSuccessful)
-      {
-        view.ClearPlot();
-        view.ResultText = string.Empty;
-        view.CurrentStep = 0;
-        view.TotalSteps = 0;
-      }
     }
 
     private bool ValidateInput()
@@ -266,12 +258,6 @@ namespace NumericalMethodsApp.Presenters
         return false;
       }
 
-      if (!view.FindMinimum && !view.FindMaximum)
-      {
-        view.ShowError("Выберите тип экстремума для поиска");
-        return false;
-      }
-
       return true;
     }
 
@@ -281,7 +267,7 @@ namespace NumericalMethodsApp.Presenters
       model.LowerBound = NewtonModel.ParseDouble(view.LowerBound);
       model.UpperBound = NewtonModel.ParseDouble(view.UpperBound);
       model.Epsilon = NewtonModel.ParseDouble(view.Epsilon);
-      model.FindMinimum = view.FindMinimum;
+      model.FindMinimum = true;
     }
 
     private void InitializePlot()
@@ -303,7 +289,9 @@ namespace NumericalMethodsApp.Presenters
         AxislineColor = OxyColors.Black,
         TicklineColor = OxyColors.Black,
         MajorGridlineColor = OxyColors.LightGray,
-        MajorGridlineStyle = LineStyle.Dash
+        MajorGridlineStyle = LineStyle.Dash,
+        IsPanEnabled = true,
+        IsZoomEnabled = true
       };
 
       var yAxis = new LinearAxis
@@ -315,7 +303,9 @@ namespace NumericalMethodsApp.Presenters
         AxislineColor = OxyColors.Black,
         TicklineColor = OxyColors.Black,
         MajorGridlineColor = OxyColors.LightGray,
-        MajorGridlineStyle = LineStyle.Dash
+        MajorGridlineStyle = LineStyle.Dash,
+        IsPanEnabled = true,
+        IsZoomEnabled = true
       };
 
       plotModel.Axes.Add(xAxis);
@@ -324,7 +314,7 @@ namespace NumericalMethodsApp.Presenters
       view.SetPlotModel(plotModel);
     }
 
-    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
+    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY)
     {
       try
       {
@@ -360,15 +350,17 @@ namespace NumericalMethodsApp.Presenters
 
         var extremumSeries = new ScatterSeries
         {
-          Title = isMinimum ? "Минимум" : "Максимум",
+          Title = "Экстремум",
           MarkerType = MarkerType.Circle,
           MarkerSize = 8,
-          MarkerFill = isMinimum ? OxyColors.Green : OxyColors.Red
+          MarkerFill = OxyColors.Green
         };
 
         extremumSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
 
         plotModel.Series.Add(extremumSeries);
+
+        UpdatePlotScale();
 
         plotModel.InvalidatePlot(true);
         view.SetPlotModel(plotModel);
@@ -376,6 +368,62 @@ namespace NumericalMethodsApp.Presenters
       catch (Exception ex)
       {
         view.ShowError($"Ошибка при построении графика: {ex.Message}");
+      }
+    }
+
+    private void UpdatePlotScale()
+    {
+      if (plotModel.Series.Count == 0) return;
+
+      double minX = double.MaxValue;
+      double maxX = double.MinValue;
+      double minY = double.MaxValue;
+      double maxY = double.MinValue;
+
+      foreach (var series in plotModel.Series)
+      {
+        if (series is LineSeries lineSeries)
+        {
+          foreach (var point in lineSeries.Points)
+          {
+            minX = Math.Min(minX, point.X);
+            maxX = Math.Max(maxX, point.X);
+            minY = Math.Min(minY, point.Y);
+            maxY = Math.Max(maxY, point.Y);
+          }
+        }
+        else if (series is ScatterSeries scatterSeries)
+        {
+          foreach (var point in scatterSeries.Points)
+          {
+            minX = Math.Min(minX, point.X);
+            maxX = Math.Max(maxX, point.X);
+            minY = Math.Min(minY, point.Y);
+            maxY = Math.Max(maxY, point.Y);
+          }
+        }
+      }
+
+      double rangeX = maxX - minX;
+      double rangeY = maxY - minY;
+      double maxRange = Math.Max(rangeX, rangeY);
+
+      if (maxRange > 0)
+      {
+        double centerX = (minX + maxX) / 2;
+        double centerY = (minY + maxY) / 2;
+
+        var xAxis = plotModel.Axes[0] as LinearAxis;
+        var yAxis = plotModel.Axes[1] as LinearAxis;
+
+        if (xAxis != null && yAxis != null)
+        {
+          double padding = maxRange * 0.1;
+          xAxis.Minimum = centerX - maxRange / 2 - padding;
+          xAxis.Maximum = centerX + maxRange / 2 + padding;
+          yAxis.Minimum = centerY - maxRange / 2 - padding;
+          yAxis.Maximum = centerY + maxRange / 2 + padding;
+        }
       }
     }
 
