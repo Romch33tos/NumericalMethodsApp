@@ -30,6 +30,11 @@ namespace NumericalMethodsApp.Models
         throw new InvalidOperationException("Некорректные входные данные");
       }
 
+      if (!IsNewtonMethodApplicable())
+      {
+        throw new InvalidOperationException("Метод Ньютона не применим для данной функции на указанном интервале");
+      }
+
       IterationSteps.Clear();
       double resultPoint = NewtonOptimization(LowerBound, UpperBound, Epsilon, FindMinimum);
       double functionValue = EvaluateFunction(resultPoint);
@@ -55,7 +60,12 @@ namespace NumericalMethodsApp.Models
         double firstDerivative = CalculateFirstDerivative(currentPoint);
         double secondDerivative = CalculateSecondDerivative(currentPoint);
 
-        if (Math.Abs(firstDerivative) < epsilonValue || Math.Abs(secondDerivative) < 1e-10)
+        if (Math.Abs(secondDerivative) < 1e-10)
+        {
+          throw new InvalidOperationException("Вторая производная близка к нулю - метод Ньютона не применим");
+        }
+
+        if (Math.Abs(firstDerivative) < epsilonValue)
         {
           break;
         }
@@ -64,8 +74,7 @@ namespace NumericalMethodsApp.Models
 
         if (nextPoint < lowerBound || nextPoint > upperBound || double.IsInfinity(nextPoint) || double.IsNaN(nextPoint))
         {
-          nextPoint = GoldenSectionFallback(lowerBound, upperBound, epsilonValue, findMinimum);
-          break;
+          throw new InvalidOperationException("Метод Ньютона расходится на данном интервале");
         }
 
         var step = new NewtonIterationStep
@@ -90,56 +99,11 @@ namespace NumericalMethodsApp.Models
 
         if (iterationCount > 1000)
         {
-          currentPoint = GoldenSectionFallback(lowerBound, upperBound, epsilonValue, findMinimum);
-          break;
+          throw new InvalidOperationException("Превышено максимальное количество итераций");
         }
       }
 
       return currentPoint;
-    }
-
-    private double GoldenSectionFallback(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
-    {
-      double goldenRatio = 1.618033988749895;
-      double currentLower = lowerBound;
-      double currentUpper = upperBound;
-      int fallbackIterationCount = 0;
-
-      while (Math.Abs(currentUpper - currentLower) > epsilonValue && fallbackIterationCount < 100)
-      {
-        ++fallbackIterationCount;
-
-        double leftPoint = currentUpper - (currentUpper - currentLower) / goldenRatio;
-        double rightPoint = currentLower + (currentUpper - currentLower) / goldenRatio;
-
-        double leftFunctionValue = EvaluateFunction(leftPoint);
-        double rightFunctionValue = EvaluateFunction(rightPoint);
-
-        if (findMinimum)
-        {
-          if (leftFunctionValue >= rightFunctionValue)
-          {
-            currentLower = leftPoint;
-          }
-          else
-          {
-            currentUpper = rightPoint;
-          }
-        }
-        else
-        {
-          if (leftFunctionValue <= rightFunctionValue)
-          {
-            currentLower = leftPoint;
-          }
-          else
-          {
-            currentUpper = rightPoint;
-          }
-        }
-      }
-
-      return (currentLower + currentUpper) / 2;
     }
 
     private double CalculateFirstDerivative(double x)
@@ -336,6 +300,31 @@ namespace NumericalMethodsApp.Models
       catch
       {
         return false;
+      }
+
+      return true;
+    }
+
+    private bool IsNewtonMethodApplicable()
+    {
+      const int testPoints = 10;
+      double step = (UpperBound - LowerBound) / testPoints;
+
+      for (int counter = 0; counter <= testPoints; ++counter)
+      {
+        double x = LowerBound + counter * step;
+        try
+        {
+          double secondDerivative = CalculateSecondDerivative(x);
+          if (Math.Abs(secondDerivative) < 1e-10)
+          {
+            return false;
+          }
+        }
+        catch
+        {
+          return false;
+        }
       }
 
       return true;
