@@ -41,13 +41,13 @@ namespace NumericalMethodsApp.Presenters
         _model.Calculate();
 
         DisplayResult();
-        _view.UpdatePlot(_model.LowerBound, _model.UpperBound,
+        UpdatePlot(_model.LowerBound, _model.UpperBound,
             _model.CalculationResult.Point, _model.CalculationResult.Value,
             _model.FindMinimum);
       }
       catch (Exception ex)
       {
-        _view.ShowError($"Ошибка при вычислении: {ex.Message}\nРекомендация: попробуйте изменить интервал поиска.");
+        _view.ShowError($"Ошибка при вычислении: {ex.Message}");
       }
     }
 
@@ -67,12 +67,43 @@ namespace NumericalMethodsApp.Presenters
     {
       string helpText = @"Метод золотого сечения
 
-Инструкция:
-1. Введите функцию f(x) в поле 'Функция f(x)'
-2. Укажите границы интервала [a, b]
-3. Задайте точность вычисления ε
-4. Выберите режим поиска (минимум или максимум)
-5. Нажмите 'Вычислить'";
+Инструкция по использованию:
+
+1. ВВОД ФУНКЦИИ
+   - Используйте переменную x в выражении
+   - Поддерживаемые операции: +, -, *, /, ^ (степень)
+   - Поддерживаемые функции: sin(x), cos(x), tan(x), log(x), log10(x), exp(x), sqrt(x), abs(x)
+   - Константы: pi (3.14159...), e (2.71828...)
+   - Примеры корректных выражений:
+     * x^2 + 2*x + 1
+     * sin(x) * cos(x)
+     * log(x) + 0.5*x
+     * 0.1*x + x^2
+     * exp(-0.5*x^2)
+
+2. ЗАДАНИЕ ИНТЕРВАЛА
+   - Начало интервала (A) должно быть меньше конца интервала (B)
+   - Убедитесь, что функция определена на всем интервале
+   - На интервале должна присутствовать одна точка экстремума
+
+3. ВЫБОР ТОЧНОСТИ
+   - Точность ε должна быть положительным числом
+   - Меньшие значения дают более точный результат, но требуют больше итераций
+   - Рекомендуемое значение: 0.001
+
+4. ВЫБОР РЕЖИМА
+   - Минимум: поиск наименьшего значения функции на интервале
+   - Максимум: поиск наибольшего значения функции на интервале
+
+5. ВИЗУАЛИЗАЦИЯ
+   - График функции отображается синей линией
+   - Найденный экстремум отмечается красной (минимум) или зеленой (максимум) точкой
+   - Для навигации по графику используйте левую кнопку мыши для перемещения и колесо для масштабирования
+
+Особенности работы:
+- Метод золотого сечения гарантированно находит экстремум унимодальной функции
+- Функция должна быть непрерывной на заданном интервале
+- При возникновении ошибок попробуйте изменить интервал поиска";
 
       _view.ShowInfo(helpText);
     }
@@ -92,12 +123,6 @@ namespace NumericalMethodsApp.Presenters
       if (_model.IsConstantFunction(_view.FunctionExpression))
       {
         _view.ShowError("Функция должна зависеть от переменной x. Введите выражение с переменной x.");
-        return false;
-      }
-
-      if (IsTrivialExpression(_view.FunctionExpression))
-      {
-        _view.ShowError("Введите содержательное математическое выражение.");
         return false;
       }
 
@@ -142,27 +167,6 @@ namespace NumericalMethodsApp.Presenters
       return true;
     }
 
-    private bool IsTrivialExpression(string expression)
-    {
-      string cleanExpression = expression.Replace(" ", "").ToLower();
-
-      if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
-        return true;
-
-      string[] trivialPatterns = {
-        "x*0", "0*x", "x-x", "x/x", "x^0", "0^x",
-        "x*1", "1*x", "x+0", "0+x", "x-0", "x+1-1"
-      };
-
-      foreach (string pattern in trivialPatterns)
-      {
-        if (cleanExpression.Contains(pattern))
-          return true;
-      }
-
-      return false;
-    }
-
     private void UpdateModelFromView()
     {
       _model.FunctionExpression = _view.FunctionExpression;
@@ -197,9 +201,7 @@ namespace NumericalMethodsApp.Presenters
         Title = "x",
         TitleFontSize = 12,
         MajorGridlineStyle = LineStyle.Dot,
-        MajorGridlineColor = OxyColors.LightGray,
-        IsPanEnabled = false,
-        IsZoomEnabled = false
+        MajorGridlineColor = OxyColors.LightGray
       });
 
       _plotModel.Axes.Add(new LinearAxis
@@ -208,9 +210,7 @@ namespace NumericalMethodsApp.Presenters
         Title = "f(x)",
         TitleFontSize = 12,
         MajorGridlineStyle = LineStyle.Dot,
-        MajorGridlineColor = OxyColors.LightGray,
-        IsPanEnabled = false,
-        IsZoomEnabled = false
+        MajorGridlineColor = OxyColors.LightGray
       });
 
       if (_view is GoldenRatioMethod wpfView)
