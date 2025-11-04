@@ -121,4 +121,4 @@
 
 ### Интерфейс окна метода Ньютона
 
-<img width="600" alt="NewtonMethod" src="https://github.com/user-attachments/assets/3b3a2286-19fa-4561-abb7-04eae04986c5" />
+<img width="600" alt="NewtonMethod" src="https://github.com/user-attachments/assets/e94df89c-432e-4b21-b546-c8b374780055" />
