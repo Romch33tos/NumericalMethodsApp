@@ -246,7 +246,7 @@
                     <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="6,0,6,0" Grid.RowSpan="2">
                         <TextBox x:Name="ResultTextBox" 
                                 Style="{StaticResource ResultTextBoxStyle}"
-                                Text="{Binding ResultText, ElementName=ThisWindow}" Height="90"/>
+                                Text="{Binding ResultText, ElementName=ThisWindow}" Height="117"/>
                     </GroupBox>
                 </Grid>
             </Border>
