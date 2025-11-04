@@ -225,6 +225,7 @@ namespace NumericalMethodsApp.Models
       }
 
       expression = ConvertPowerOperators(expression);
+      expression = ConvertImplicitMultiplication(expression);
       return expression;
     }
 
@@ -235,6 +236,17 @@ namespace NumericalMethodsApp.Models
       {
         expression = Regex.Replace(expression, pattern, "pow($1, $2)");
       }
+      return expression;
+    }
+
+    private string ConvertImplicitMultiplication(string expression)
+    {
+      var numberVariablePattern = @"(\d+\.?\d*)([a-zA-Z\(])";
+      var variableNumberPattern = @"([a-zA-Z\)])(\d+\.?\d*)";
+
+      expression = Regex.Replace(expression, numberVariablePattern, "$1*$2");
+      expression = Regex.Replace(expression, variableNumberPattern, "$1*$2");
+
       return expression;
     }
 
@@ -316,18 +328,36 @@ namespace NumericalMethodsApp.Models
       if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
         return true;
 
-      string[] trivialPatterns = {
-        "x*0", "0*x", "x-x", "x/x", "x^0", "0^x",
-        "x*1", "1*x", "x+0", "0+x", "x-0"
-      };
-
-      foreach (string pattern in trivialPatterns)
+      try
       {
-        if (cleanExpression.Contains(pattern))
-          return true;
-      }
+        double test1 = EvaluateFunction(1.0);
+        double test2 = EvaluateFunction(2.0);
 
-      return false;
+        if (Math.Abs(test1 - test2) < 1e-10)
+          return true;
+
+        string[] trivialPatterns = {
+          "0*x", "x*0", "0x", "x0", 
+          "x-x", 
+          "x/x", 
+          "x^0",
+        };
+
+        foreach (string pattern in trivialPatterns)
+        {
+          if (cleanExpression.Contains(pattern))
+            return true;
+        }
+
+        if (!cleanExpression.Contains("x"))
+          return true;
+
+        return false;
+      }
+      catch
+      {
+        return false;
+      }
     }
 
     private string CheckForDiscontinuities(double lowerBound, double upperBound)
