@@ -154,6 +154,39 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="350"/>
                 </Grid.ColumnDefinitions>
+
+                <GroupBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Header="Массивы" Margin="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <DataGrid x:Name="OriginalDataGrid" Grid.Column="0" 
+                                 Height="160" Margin="8,4,4,4" SelectionChanged="DataGrid_SelectionChanged"/>
+
+                        <DataGrid x:Name="SortedDataGrid" Grid.Column="1" 
+                                 Height="160" Margin="4,4,8,4"/>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Header="Сравнение алгоритмов сортировки (время выполнения)" Margin="8">
+                    <Border BorderThickness="1" BorderBrush="#FFEAECEE" 
+                           Background="#FFF8F9FA" CornerRadius="6">
+                        <oxy:PlotView x:Name="PerformanceChart" Background="Transparent" Margin="5"/>
+                    </Border>
+                </GroupBox>
+
+                <GroupBox Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" Header="Результаты выполнения" Margin="8">
+                    <DataGrid x:Name="ResultsDataGrid" Height="332" Margin="8">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Алгоритм" Width="*" Binding="{Binding AlgorithmName}"/>
+                            <DataGridTextColumn Header="Время (мс)" Width="80" Binding="{Binding TimeMs}"/>
+                            <DataGridTextColumn Header="Итерации" Width="70" Binding="{Binding Iterations}"/>
+                            <DataGridTextColumn Header="Элементы" Width="70" Binding="{Binding ElementCount}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
             </Grid>
         </Border>
     </DockPanel>
