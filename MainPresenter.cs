@@ -23,20 +23,20 @@ namespace NumericalMethodsApp
           view.OpenMethodWindow(methodName, dichotomyWindow, button);
           break;
         case "Method2":
-          GoldenRatioMethod goldenRatioWindow = new GoldenRatioMethod();
-          view.OpenMethodWindow(methodName, goldenRatioWindow, button);
-          break;
-        case "Method3":
-          OlympiadSortingView sortingWindow = new OlympiadSortingView();
-          view.OpenMethodWindow(methodName, sortingWindow, button);
-          break;
-        case "Method5":
           LinearEquationsView slauWindow = new LinearEquationsView();
           view.OpenMethodWindow(methodName, slauWindow, button);
           break;
-        case "Method6":
+        case "Method3":
+          GoldenRatioMethod goldenRatioWindow = new GoldenRatioMethod();
+          view.OpenMethodWindow(methodName, goldenRatioWindow, button);
+          break;
+        case "Method4":
           NewtonMethod newtonWindow = new NewtonMethod();
           view.OpenMethodWindow(methodName, newtonWindow, button);
+          break;
+        case "Method5":
+          OlympiadSortingView sortingWindow = new OlympiadSortingView();
+          view.OpenMethodWindow(methodName, sortingWindow, button);
           break;
         default:
           string message = $"Метод {methodName} будет реализован в будущем.";
