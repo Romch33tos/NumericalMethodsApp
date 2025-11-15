@@ -7,12 +7,12 @@
         xmlns:oxy="http://oxyplot.org/wpf" 
         x:Class="NumericalMethodsApp.OlympiadSorting.OlympiadSortingView"
         mc:Ignorable="d"
-        Title="Сортировка массивов" Height="700" Width="1100"
-        ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
+        Title="Олимпиадные сортировки" Height="694" Width="1100"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
         Background="White"
         x:Name="ThisWindow"
-        WindowState="Maximized">
-
+        WindowState="Normal"
+        SizeToContent="Manual">
     <Window.Resources>
         <Style TargetType="Label">
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -132,7 +132,7 @@
         </Style>
     </Window.Resources>
 
-    <DockPanel Margin="0">
+    <DockPanel Margin="0,0,0,29">
         <Menu DockPanel.Dock="Top" Background="White">
             <MenuItem Header="Справка" Click="Help_Click"/>
         </Menu>
@@ -221,13 +221,13 @@
                         <TextBox x:Name="MaxValueTextBox" Grid.Row="1" Grid.Column="3" Text="100" 
                                 ToolTip="Максимальное значение" Width="67" HorizontalAlignment="Center"/>
 
-                        <Button Content="Применить размер" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" 
-                               Click="ApplySize_Click" Margin="5,10,0,-1" Height="28" FontSize="11" 
-                               Background="#FF3498DB" HorizontalAlignment="Left" Width="120"/>
+                        <Button Content="Применить размер" Grid.Row="2" Grid.ColumnSpan="4" 
+                               Click="ApplySize_Click" Margin="97,18,0,-9" Height="28" FontSize="11" 
+                               Background="#FF3498DB" HorizontalAlignment="Left" Width="153"/>
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="1" Header="Импорт данных" Margin="6,6,116,6">
+                <GroupBox Grid.Row="3" Grid.Column="1" Header="Импорт данных" Margin="6,6,111,6">
                     <StackPanel Orientation="Vertical">
                         <Button Content="Случайная генерация" Click="RandomGenerate_Click" 
                                Margin="3" Background="#FF27AE60"/>
@@ -238,7 +238,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="1" Header="Алгоритмы сортировки" Margin="264,6,240,6" Grid.ColumnSpan="2">
+                <GroupBox Grid.Row="3" Grid.Column="1" Header="Алгоритмы сортировки" Margin="269,6,222,6" Grid.ColumnSpan="2">
                     <StackPanel Margin="6">
                         <CheckBox x:Name="BubbleSortCheckBox" Content="Пузырьковая" Checked="CheckBox_Checked"/>
                         <CheckBox x:Name="InsertionSortCheckBox" Content="Вставками" Checked="CheckBox_Checked"/>
@@ -248,14 +248,14 @@
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="2" Header="Направление сортировки" Margin="65,6,0,14" HorizontalAlignment="Left" Width="219">
+                <GroupBox Grid.Row="3" Grid.Column="2" Header="Направление сортировки" Margin="88,6,6,55">
                     <StackPanel Orientation="Vertical">
                         <RadioButton x:Name="AscendingRadioButton" Content="По возрастанию" IsChecked="True"/>
                         <RadioButton x:Name="DescendingRadioButton" Content="По убыванию"/>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Header="Настройки сортировки" Margin="6,6,0,6">
+                <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Header="Настройки сортировки" Margin="6,6,6,53" Grid.RowSpan="3">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
