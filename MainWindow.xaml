@@ -96,26 +96,26 @@
                  Click="MethodButton_Click" Tag="Method1"
                  Style="{StaticResource MethodButtonStyle}" Name="Method1Button"/>
                     <Button Content="Метод золотого сечения" 
-                 Click="MethodButton_Click" Tag="Method2"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method2Button"/>
-                    <Button Content="Метод покоординатного спуска" 
                  Click="MethodButton_Click" Tag="Method3"
                  Style="{StaticResource MethodButtonStyle}" Name="Method3Button"/>
                     <Button Content="Олимпиадные сортировки" 
-                 Click="MethodButton_Click" Tag="Method4"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method4Button"/>
+                 Click="MethodButton_Click" Tag="Method5"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method5Button"/>
+                    <Button Content="Метод наименьших квадратов" 
+                 Click="MethodButton_Click" Tag="Method7"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method7Button"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Margin="5,0,10,0">
                     <Button Content="Решение СЛАУ" 
-                 Click="MethodButton_Click" Tag="Method5"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method5Button"/>
+                 Click="MethodButton_Click" Tag="Method2"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method2Button"/>
                     <Button Content="Метод Ньютона" 
+                 Click="MethodButton_Click" Tag="Method4"
+                 Style="{StaticResource MethodButtonStyle}" Name="Method4Button"/>
+                    <Button Content="Метод покоординатного спуска" 
                  Click="MethodButton_Click" Tag="Method6"
                  Style="{StaticResource MethodButtonStyle}" Name="Method6Button"/>
-                    <Button Content="Метод наименьших квадратов" 
-                 Click="MethodButton_Click" Tag="Method7"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method7Button"/>
                     <Button Content="Решение определенного интеграла" 
                  Click="MethodButton_Click" Tag="Method8"
                  Style="{StaticResource MethodButtonStyle}" Name="Method8Button"/>
