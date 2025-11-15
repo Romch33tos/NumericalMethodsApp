@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using NumericalMethodsApp.Views;
+using NumericalMethodsApp.OlympiadSorting;
 
 namespace NumericalMethodsApp
 {
@@ -24,6 +25,10 @@ namespace NumericalMethodsApp
         case "Method2":
           GoldenRatioMethod goldenRatioWindow = new GoldenRatioMethod();
           view.OpenMethodWindow(methodName, goldenRatioWindow, button);
+          break;
+        case "Method3":
+          OlympiadSortingView sortingWindow = new OlympiadSortingView();
+          view.OpenMethodWindow(methodName, sortingWindow, button);
           break;
         case "Method5":
           LinearEquationsView slauWindow = new LinearEquationsView();
