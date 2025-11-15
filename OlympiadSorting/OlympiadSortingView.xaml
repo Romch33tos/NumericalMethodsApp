@@ -187,6 +187,53 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>
+
+                <GroupBox Grid.Row="3" Grid.Column="0" Header="Генерация данных" Margin="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Content="Размерность:" Grid.Row="0" Grid.Column="0"/>
+                        <TextBox x:Name="RowsTextBox" Grid.Column="1" Text="5" 
+                                ToolTip="Количество строк" Margin="8,4,65,0"/>
+
+                        <Label Content="Диапазон:" Grid.Row="1" Grid.Column="0"/>
+                        <TextBox x:Name="MinValueTextBox" Grid.Row="1" Grid.Column="1" Text="0" 
+                                ToolTip="Минимальное значение"/>
+                        <Label Content="-" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center"/>
+                        <TextBox x:Name="MaxValueTextBox" Grid.Row="1" Grid.Column="3" Text="100" 
+                                ToolTip="Максимальное значение" Margin="8,4,0,4"/>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="3" Grid.Column="1" Header="Импорт данных" Margin="8">
+                    <StackPanel Orientation="Vertical">
+                        <Button Content="Случайная генерация" Click="RandomGenerate_Click" 
+                               Margin="4" Background="#FF27AE60"/>
+                        <Button Content="Импорт из CSV" Click="ImportCsv_Click" 
+                               Margin="4"/>
+                        <Button Content="Импорт из Google Таблиц" Click="ImportGoogle_Click" 
+                               Margin="4"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="3" Grid.Column="2" Header="Алгоритмы сортировки" Margin="8">
+                    <StackPanel Margin="8">
+                        <CheckBox x:Name="BubbleSortCheckBox" Content="Пузырьковая" Checked="CheckBox_Checked"/>
+                        <CheckBox x:Name="InsertionSortCheckBox" Content="Вставками" Checked="CheckBox_Checked"/>
+                        <CheckBox x:Name="ShakerSortCheckBox" Content="Шейкерная" Checked="CheckBox_Checked"/>
+                        <CheckBox x:Name="QuickSortCheckBox" Content="Быстрая" Checked="CheckBox_Checked"/>
+                        <CheckBox x:Name="BogosortCheckBox" Content="Болотная" Checked="CheckBox_Checked"/>
+                    </StackPanel>
+                </GroupBox>
             </Grid>
         </Border>
     </DockPanel>
