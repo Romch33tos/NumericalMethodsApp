@@ -224,18 +224,14 @@
                         </Grid>
                     </GroupBox>
 
-                    <GroupBox Grid.Row="3" Grid.Column="2" Header="Выберите режим работы" Margin="6">
-                        <StackPanel>
-                            <RadioButton Content="Найти минимум функции" x:Name="MinRadioButton" 
-                     Checked="RadioButton_Checked"
-                     IsChecked="{Binding FindMinimum, ElementName=ThisWindow}"
-                     Margin="2,3"
-                     GroupName="ExtremumType"/>
-                            <RadioButton Content="Найти максимум функции" x:Name="MaxRadioButton" 
-                     Checked="RadioButton_Checked"
-                     IsChecked="{Binding FindMaximum, ElementName=ThisWindow}"
-                     Margin="2,3"
-                     GroupName="ExtremumType"/>
+                    <GroupBox Grid.Row="3" Grid.Column="2" Header="Пошаговый просмотр" Margin="6">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="StepBackButton" Content="←" Style="{StaticResource StepButtonStyle}"
+                                    Click="StepBackButton_Click" ToolTip="Предыдущий шаг"/>
+                            <Label x:Name="StepInfoLabel" Content="Шаг: 0/0" VerticalAlignment="Center" 
+                                   Margin="6,0" FontWeight="SemiBold" Foreground="#FF2C3E50"/>
+                            <Button x:Name="StepForwardButton" Content="→" Style="{StaticResource StepButtonStyle}"
+                                    Click="StepForwardButton_Click" ToolTip="Следующий шаг"/>
                         </StackPanel>
                     </GroupBox>
 
@@ -247,21 +243,10 @@
                                Background="#FF3498DB" FontSize="13" Margin="6,0"/>
                     </StackPanel>
 
-                    <GroupBox Grid.Row="4" Grid.Column="2" Header="Пошаговый просмотр" Margin="6">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Button x:Name="StepBackButton" Content="←" Style="{StaticResource StepButtonStyle}"
-                                    Click="StepBackButton_Click" ToolTip="Предыдущий шаг"/>
-                            <Label x:Name="StepInfoLabel" Content="Шаг: 0/0" VerticalAlignment="Center" 
-                                   Margin="6,0" FontWeight="SemiBold" Foreground="#FF2C3E50"/>
-                            <Button x:Name="StepForwardButton" Content="→" Style="{StaticResource StepButtonStyle}"
-                                    Click="StepForwardButton_Click" ToolTip="Следующий шаг"/>
-                        </StackPanel>
-                    </GroupBox>
-
                     <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="6,0,6,0" Grid.RowSpan="2">
                         <TextBox x:Name="ResultTextBox" 
                                 Style="{StaticResource ResultTextBoxStyle}"
-                                Text="{Binding ResultText, ElementName=ThisWindow}" Height="90"/>
+                                Text="{Binding ResultText, ElementName=ThisWindow}" Height="117"/>
                     </GroupBox>
                 </Grid>
             </Border>

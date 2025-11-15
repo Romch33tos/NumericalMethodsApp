@@ -2,31 +2,27 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Controls;
-using OxyPlot;
 using NumericalMethodsApp.Presenters;
+using OxyPlot;
 
 namespace NumericalMethodsApp.Views
 {
   public partial class NewtonMethod : Window, INewtonView, INotifyPropertyChanged
   {
-    private string functionExpression = string.Empty;
-    private string lowerBound = string.Empty;
-    private string upperBound = string.Empty;
-    private string epsilon = "0.001";
-    private bool findMinimum;
-    private bool findMaximum;
-    private string resultText = string.Empty;
-    private int currentStep;
-    private int totalSteps;
-    private bool isModeLocked;
+    private string _functionExpression = string.Empty;
+    private string _lowerBound = string.Empty;
+    private string _upperBound = string.Empty;
+    private string _epsilon = "0.001";
+    private string _resultText = string.Empty;
+    private int _currentStep;
+    private int _totalSteps;
+    private bool _isModeLocked;
 
     public NewtonPresenter Presenter { get; private set; }
 
     public event EventHandler CalculateRequested;
     public event EventHandler ClearAllRequested;
     public event EventHandler HelpRequested;
-    public event EventHandler ModeChanged;
     public event EventHandler<int> StepChanged;
     public event PropertyChangedEventHandler PropertyChanged;
 
@@ -34,85 +30,67 @@ namespace NumericalMethodsApp.Views
     {
       InitializeComponent();
       Presenter = new NewtonPresenter(this);
+      DataContext = this;
+      UpdateStepInfo();
       UpdateStepButtons();
     }
 
     public string FunctionExpression
     {
-      get => functionExpression;
+      get => _functionExpression;
       set
       {
-        functionExpression = value;
+        _functionExpression = value;
         OnPropertyChanged();
       }
     }
 
     public string LowerBound
     {
-      get => lowerBound;
+      get => _lowerBound;
       set
       {
-        lowerBound = value;
+        _lowerBound = value;
         OnPropertyChanged();
       }
     }
 
     public string UpperBound
     {
-      get => upperBound;
+      get => _upperBound;
       set
       {
-        upperBound = value;
+        _upperBound = value;
         OnPropertyChanged();
       }
     }
 
     public string Epsilon
     {
-      get => epsilon;
+      get => _epsilon;
       set
       {
-        epsilon = value;
-        OnPropertyChanged();
-      }
-    }
-
-    public bool FindMinimum
-    {
-      get => findMinimum;
-      set
-      {
-        findMinimum = value;
-        OnPropertyChanged();
-      }
-    }
-
-    public bool FindMaximum
-    {
-      get => findMaximum;
-      set
-      {
-        findMaximum = value;
+        _epsilon = value;
         OnPropertyChanged();
       }
     }
 
     public string ResultText
     {
-      get => resultText;
+      get => _resultText;
       set
       {
-        resultText = value;
+        _resultText = value;
         OnPropertyChanged();
       }
     }
 
     public int CurrentStep
     {
-      get => currentStep;
+      get => _currentStep;
       set
       {
-        currentStep = value;
+        _currentStep = value;
         OnPropertyChanged();
         UpdateStepInfo();
         UpdateStepButtons();
@@ -121,10 +99,10 @@ namespace NumericalMethodsApp.Views
 
     public int TotalSteps
     {
-      get => totalSteps;
+      get => _totalSteps;
       set
       {
-        totalSteps = value;
+        _totalSteps = value;
         OnPropertyChanged();
         UpdateStepInfo();
         UpdateStepButtons();
@@ -133,10 +111,10 @@ namespace NumericalMethodsApp.Views
 
     public bool IsModeLocked
     {
-      get => isModeLocked;
+      get => _isModeLocked;
       set
       {
-        isModeLocked = value;
+        _isModeLocked = value;
         OnPropertyChanged();
       }
     }
@@ -158,18 +136,15 @@ namespace NumericalMethodsApp.Views
 
     private void ClearAllButton_Click(object sender, RoutedEventArgs e)
     {
-      MessageBoxResult confirmationResult = MessageBox.Show(
+      var result = MessageBox.Show(
           "Вы уверены, что хотите очистить все данные?",
           "Подтверждение очистки",
           MessageBoxButton.YesNo,
           MessageBoxImage.Question);
 
-      if (confirmationResult == MessageBoxResult.Yes)
+      if (result == MessageBoxResult.Yes)
       {
-        IsModeLocked = false;
         ClearAllRequested?.Invoke(this, EventArgs.Empty);
-        CurrentStep = 0;
-        TotalSteps = 0;
       }
     }
 
@@ -178,26 +153,11 @@ namespace NumericalMethodsApp.Views
       HelpRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private void RadioButton_Checked(object sender, RoutedEventArgs e)
-    {
-      if (!string.IsNullOrEmpty(ResultText))
-      {
-        ResultText = "";
-        ClearPlot();
-        CurrentStep = 0;
-        TotalSteps = 0;
-
-        Presenter?.ResetModel();
-      }
-
-      ModeChanged?.Invoke(this, EventArgs.Empty);
-    }
-
     private void StepBackButton_Click(object sender, RoutedEventArgs e)
     {
       if (CurrentStep > 0)
       {
-        CurrentStep--;
+        --CurrentStep;
         StepChanged?.Invoke(this, CurrentStep);
       }
     }
@@ -206,7 +166,7 @@ namespace NumericalMethodsApp.Views
     {
       if (CurrentStep < TotalSteps)
       {
-        CurrentStep++;
+        ++CurrentStep;
         StepChanged?.Invoke(this, CurrentStep);
       }
     }
@@ -232,15 +192,17 @@ namespace NumericalMethodsApp.Views
       MessageBox.Show(message, "Справка", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
+    public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY)
     {
-      Presenter?.UpdatePlot(lowerBound, upperBound, extremumX, extremumY, isMinimum);
+      Presenter.UpdatePlot(lowerBound, upperBound, extremumX, extremumY);
     }
 
     public void ClearPlot()
     {
-      PlotViewControl.Model?.Series.Clear();
-      PlotViewControl.Model?.InvalidatePlot(true);
+      var emptyModel = new PlotModel();
+      emptyModel.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, Title = "x" });
+      emptyModel.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Title = "f(x)" });
+      PlotViewControl.Model = emptyModel;
     }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

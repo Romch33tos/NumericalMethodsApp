@@ -7,13 +7,11 @@ namespace NumericalMethodsApp.Models
 {
   public class NewtonModel
   {
-    public const double GoldenRatioConstant = 1.618033988749895;
-
     public string FunctionExpression { get; set; } = string.Empty;
     public double LowerBound { get; set; }
     public double UpperBound { get; set; }
     public double Epsilon { get; set; }
-    public bool FindMinimum { get; set; }
+    public bool FindMinimum { get; set; } = true;
 
     public NewtonCalculationResult CalculationResult { get; private set; }
     public List<NewtonIterationStep> IterationSteps { get; private set; }
@@ -32,8 +30,13 @@ namespace NumericalMethodsApp.Models
         throw new InvalidOperationException("Некорректные входные данные");
       }
 
+      if (!IsNewtonMethodApplicable())
+      {
+        throw new InvalidOperationException("Метод Ньютона не применим для данной функции на указанном интервале");
+      }
+
       IterationSteps.Clear();
-      double resultPoint = NewtonSearch(LowerBound, UpperBound, Epsilon, FindMinimum);
+      double resultPoint = NewtonOptimization(LowerBound, UpperBound, Epsilon, FindMinimum);
       double functionValue = EvaluateFunction(resultPoint);
 
       CalculationResult = new NewtonCalculationResult
@@ -45,75 +48,74 @@ namespace NumericalMethodsApp.Models
       };
     }
 
-    private double NewtonSearch(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
+    private double NewtonOptimization(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
     {
-      int iterationCounter = 0;
-      double currentLower = lowerBound;
-      double currentUpper = upperBound;
+      int iterationCount = 0;
+      double currentPoint = (lowerBound + upperBound) / 2;
 
-      while (Math.Abs(currentUpper - currentLower) > epsilonValue)
+      while (true)
       {
-        ++iterationCounter;
+        ++iterationCount;
 
-        double leftPoint = currentUpper - (currentUpper - currentLower) / GoldenRatioConstant;
-        double rightPoint = currentLower + (currentUpper - currentLower) / GoldenRatioConstant;
+        double firstDerivative = CalculateFirstDerivative(currentPoint);
+        double secondDerivative = CalculateSecondDerivative(currentPoint);
 
-        double leftFunctionValue = EvaluateFunction(leftPoint);
-        double rightFunctionValue = EvaluateFunction(rightPoint);
+        if (Math.Abs(secondDerivative) < 1e-10)
+        {
+          throw new InvalidOperationException("Вторая производная близка к нулю - метод Ньютона не применим");
+        }
+
+        if (Math.Abs(firstDerivative) < epsilonValue)
+        {
+          break;
+        }
+
+        double nextPoint = currentPoint - firstDerivative / secondDerivative;
+
+        if (nextPoint < lowerBound || nextPoint > upperBound || double.IsInfinity(nextPoint) || double.IsNaN(nextPoint))
+        {
+          throw new InvalidOperationException("Метод Ньютона расходится на данном интервале");
+        }
 
         var step = new NewtonIterationStep
         {
-          Iteration = iterationCounter,
-          LowerBound = currentLower,
-          UpperBound = currentUpper,
-          LeftPoint = leftPoint,
-          RightPoint = rightPoint,
-          LeftValue = leftFunctionValue,
-          RightValue = rightFunctionValue,
-          IntervalLength = currentUpper - currentLower
+          Iteration = iterationCount,
+          CurrentPoint = currentPoint,
+          NextPoint = nextPoint,
+          FirstDerivative = firstDerivative,
+          SecondDerivative = secondDerivative,
+          FunctionValue = EvaluateFunction(currentPoint)
         };
 
         IterationSteps.Add(step);
 
-        if (findMinimum)
+        if (Math.Abs(nextPoint - currentPoint) < epsilonValue)
         {
-          if (leftFunctionValue >= rightFunctionValue)
-          {
-            currentLower = leftPoint;
-          }
-          else
-          {
-            currentUpper = rightPoint;
-          }
-        }
-        else
-        {
-          if (leftFunctionValue <= rightFunctionValue)
-          {
-            currentLower = leftPoint;
-          }
-          else
-          {
-            currentUpper = rightPoint;
-          }
+          currentPoint = nextPoint;
+          break;
         }
 
-        if (iterationCounter > 1000)
+        currentPoint = nextPoint;
+
+        if (iterationCount > 1000)
         {
-          throw new Exception("Превышено максимальное количество итераций. Проверьте корректность функции и интервала.");
+          throw new InvalidOperationException("Превышено максимальное количество итераций");
         }
       }
 
-      return (currentLower + currentUpper) / 2;
+      return currentPoint;
     }
 
-    public NewtonIterationStep GetStep(int stepIndex)
+    private double CalculateFirstDerivative(double x)
     {
-      if (stepIndex >= 0 && stepIndex < IterationSteps.Count)
-      {
-        return IterationSteps[stepIndex];
-      }
-      return null;
+      double stepSize = 1e-6;
+      return (EvaluateFunction(x + stepSize) - EvaluateFunction(x - stepSize)) / (2 * stepSize);
+    }
+
+    private double CalculateSecondDerivative(double x)
+    {
+      double stepSize = 1e-6;
+      return (EvaluateFunction(x + stepSize) - 2 * EvaluateFunction(x) + EvaluateFunction(x - stepSize)) / (stepSize * stepSize);
     }
 
     public double EvaluateFunction(double inputValue)
@@ -122,29 +124,29 @@ namespace NumericalMethodsApp.Models
 
       try
       {
-        string expressionText = FunctionExpression.Replace(" ", "");
+        string processedExpression = FunctionExpression.Replace(" ", "");
 
-        if (expressionText.ToLower() == "x" || expressionText.ToLower() == "y=x")
+        if (processedExpression.ToLower() == "x" || processedExpression.ToLower() == "y=x")
         {
           return inputValue;
         }
 
-        if (expressionText.ToLower().StartsWith("y="))
+        if (processedExpression.ToLower().StartsWith("y="))
         {
-          expressionText = expressionText.Substring(2);
+          processedExpression = processedExpression.Substring(2);
         }
 
-        if (expressionText.Trim() == "x")
+        if (processedExpression.Trim() == "x")
         {
           return inputValue;
         }
 
-        expressionText = ConvertToNCalcExpression(expressionText);
+        processedExpression = ConvertToNCalcExpression(processedExpression);
 
-        expressionText = expressionText.Replace("e^-", "exp(-");
-        expressionText = expressionText.Replace("e^", "exp(");
+        processedExpression = processedExpression.Replace("e^-", "exp(-");
+        processedExpression = processedExpression.Replace("e^", "exp(");
 
-        functionExpression = new NCalc.Expression(expressionText);
+        functionExpression = new NCalc.Expression(processedExpression);
         functionExpression.Parameters["x"] = inputValue;
         functionExpression.Parameters["e"] = Math.E;
         functionExpression.Parameters["pi"] = Math.PI;
@@ -171,15 +173,15 @@ namespace NumericalMethodsApp.Models
                 functionArgs.Result = Math.Log10(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
                 break;
               case "exp":
-                double expArg = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
-                if (expArg > 100) functionArgs.Result = double.PositiveInfinity;
-                else if (expArg < -100) functionArgs.Result = 0.0;
-                else functionArgs.Result = Math.Exp(expArg);
+                double exponentArgument = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                if (exponentArgument > 100) functionArgs.Result = double.PositiveInfinity;
+                else if (exponentArgument < -100) functionArgs.Result = 0.0;
+                else functionArgs.Result = Math.Exp(exponentArgument);
                 break;
               case "sqrt":
-                double sqrtArg = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
-                if (sqrtArg < 0) throw new Exception("Квадратный корень из отрицательного числа");
-                functionArgs.Result = Math.Sqrt(sqrtArg);
+                double sqrtArgument = Convert.ToDouble(functionArgs.Parameters[0].Evaluate());
+                if (sqrtArgument < 0) throw new Exception("Квадратный корень из отрицательного числа");
+                functionArgs.Result = Math.Sqrt(sqrtArgument);
                 break;
               case "abs":
                 functionArgs.Result = Math.Abs(Convert.ToDouble(functionArgs.Parameters[0].Evaluate()));
@@ -206,29 +208,29 @@ namespace NumericalMethodsApp.Models
           }
         };
 
-        object resultObject = functionExpression.Evaluate();
+        object evaluationResult = functionExpression.Evaluate();
 
-        if (resultObject is double doubleResult)
+        if (evaluationResult is double doubleResult)
         {
           if (double.IsInfinity(doubleResult) || double.IsNaN(doubleResult))
             throw new Exception("Результат вычисления функции не является конечным числом");
           return doubleResult;
         }
-        else if (resultObject is int intResult)
+        else if (evaluationResult is int intResult)
         {
           return intResult;
         }
-        else if (resultObject is decimal decimalResult)
+        else if (evaluationResult is decimal decimalResult)
         {
           return (double)decimalResult;
         }
-        else if (resultObject is long longResult)
+        else if (evaluationResult is long longResult)
         {
           return longResult;
         }
         else
         {
-          throw new Exception($"Неподдерживаемый тип результата: {resultObject.GetType()}");
+          throw new Exception($"Неподдерживаемый тип результата: {evaluationResult.GetType()}");
         }
       }
       catch (Exception evaluationException)
@@ -257,10 +259,10 @@ namespace NumericalMethodsApp.Models
 
     private string ConvertPowerOperators(string expression)
     {
-      var pattern = @"([a-zA-Z0-9\.\(\)]+)\^([a-zA-Z0-9\.\(\)]+)";
-      while (Regex.IsMatch(expression, pattern))
+      var powerPattern = @"([a-zA-Z0-9\.\(\)]+)\^([a-zA-Z0-9\.\(\)]+)";
+      while (Regex.IsMatch(expression, powerPattern))
       {
-        expression = Regex.Replace(expression, pattern, "pow($1, $2)");
+        expression = Regex.Replace(expression, powerPattern, "pow($1, $2)");
       }
       return expression;
     }
@@ -303,6 +305,31 @@ namespace NumericalMethodsApp.Models
       return true;
     }
 
+    private bool IsNewtonMethodApplicable()
+    {
+      const int testPoints = 10;
+      double step = (UpperBound - LowerBound) / testPoints;
+
+      for (int counter = 0; counter <= testPoints; ++counter)
+      {
+        double x = LowerBound + counter * step;
+        try
+        {
+          double secondDerivative = CalculateSecondDerivative(x);
+          if (Math.Abs(secondDerivative) < 1e-10)
+          {
+            return false;
+          }
+        }
+        catch
+        {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     public bool IsConstantFunction(string expression)
     {
       string cleanExpression = expression.Replace(" ", "").ToLower();
@@ -324,8 +351,8 @@ namespace NumericalMethodsApp.Models
         testExpr.Parameters["e"] = Math.E;
         testExpr.Parameters["pi"] = Math.PI;
 
-        var result1 = testExpr.Evaluate();
-        return result1 != null;
+        var result = testExpr.Evaluate();
+        return result != null;
       }
       catch
       {
@@ -333,36 +360,15 @@ namespace NumericalMethodsApp.Models
       }
     }
 
-    private bool IsTrivialExpression(string expression)
-    {
-      string cleanExpression = expression.Replace(" ", "").ToLower();
-
-      if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
-        return true;
-
-      string[] trivialPatterns = {
-                "x*0", "0*x", "x-x", "x/x", "x^0", "0^x",
-                "x*1", "1*x", "x+0", "0+x", "x-0"
-            };
-
-      foreach (string pattern in trivialPatterns)
-      {
-        if (cleanExpression.Contains(pattern))
-          return true;
-      }
-
-      return false;
-    }
-
     private string CheckForDiscontinuities(double lowerBound, double upperBound)
     {
       const int testPointsCount = 50;
-      double step = (upperBound - lowerBound) / testPointsCount;
+      double stepSize = (upperBound - lowerBound) / testPointsCount;
       double? previousValue = null;
 
-      for (int counter = 0; counter <= testPointsCount; ++counter)
+      for (int pointIndex = 0; pointIndex <= testPointsCount; ++pointIndex)
       {
-        double testPoint = lowerBound + counter * step;
+        double testPoint = lowerBound + pointIndex * stepSize;
         try
         {
           double currentValue = EvaluateFunction(testPoint);
@@ -374,7 +380,7 @@ namespace NumericalMethodsApp.Models
 
             if (difference > maxAllowedDifference && !double.IsInfinity(currentValue) && !double.IsInfinity(previousValue.Value))
             {
-              return $"Резкое изменение значения функции между x={testPoint - step} и x={testPoint}";
+              return $"Резкое изменение значения функции между x={testPoint - stepSize} и x={testPoint}";
             }
           }
 
@@ -397,7 +403,7 @@ namespace NumericalMethodsApp.Models
       LowerBound = 0;
       UpperBound = 0;
       Epsilon = 0.001;
-      FindMinimum = false;
+      FindMinimum = true;
     }
 
     public static double ParseDouble(string text)
@@ -425,13 +431,10 @@ namespace NumericalMethodsApp.Models
   public class NewtonIterationStep
   {
     public int Iteration { get; set; }
-    public double LowerBound { get; set; }
-    public double UpperBound { get; set; }
-    public double LeftPoint { get; set; }
-    public double RightPoint { get; set; }
-    public double LeftValue { get; set; }
-    public double RightValue { get; set; }
-    public double IntervalLength { get; set; }
-    public double CurrentEstimate => (LowerBound + UpperBound) / 2;
+    public double CurrentPoint { get; set; }
+    public double NextPoint { get; set; }
+    public double FirstDerivative { get; set; }
+    public double SecondDerivative { get; set; }
+    public double FunctionValue { get; set; }
   }
 }
