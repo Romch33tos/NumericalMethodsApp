@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,10 +36,6 @@ namespace NumericalMethodsApp.OlympiadSorting
     }
 
     private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-    }
-
-    private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
     }
 
@@ -87,8 +83,27 @@ namespace NumericalMethodsApp.OlympiadSorting
           MessageBoxImage.Information);
     }
 
-    private void Button_Click(object sender, RoutedEventArgs e)
+    private void ResultsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+    }
+
+    private void ApplySize_Click(object sender, RoutedEventArgs e)
+    {
+      if (int.TryParse(RowsTextBox.Text, out int size) && size > 0)
+      {
+        MessageBox.Show($"Размер массива установлен: {size} элементов",
+            "Размер применен",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+      }
+      else
+      {
+        MessageBox.Show("Пожалуйста, введите корректное положительное число для размера массива",
+            "Ошибка",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        RowsTextBox.Text = "5";
+      }
     }
   }
 }
