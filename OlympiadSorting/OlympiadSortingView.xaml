@@ -234,6 +234,47 @@
                         <CheckBox x:Name="BogosortCheckBox" Content="Болотная" Checked="CheckBox_Checked"/>
                     </StackPanel>
                 </GroupBox>
+
+                <GroupBox Grid.Row="4" Grid.ColumnSpan="3" Header="Настройки сортировки" Margin="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Label Content="Ограничение итераций:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="MaxIterationsTextBox" Width="80" Text="1000" 
+                                    ToolTip="Максимальное количество итераций" Margin="8,4,16,4"/>
+                        </StackPanel>
+
+                        <GroupBox Grid.Row="0" Grid.Column="1" Header="Направление сортировки" 
+                                 BorderThickness="0" Background="Transparent" Padding="0" Margin="603,0,-9,0" Grid.ColumnSpan="3">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <RadioButton x:Name="AscendingRadioButton" Content="По возрастанию" IsChecked="True"/>
+                                <RadioButton x:Name="DescendingRadioButton" Content="По убыванию"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" 
+                                   Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Content="Очистить все" Click="ClearAll_Click" 
+                                   Width="150" Background="#FFE74C3C" FontSize="13" Height="36"/>
+                            <Button Content="Запустить сортировку" 
+                                   Click="StartSorting_Click" Width="150" Background="#FFE67E22"
+                                   Height="36" Margin="16,4,0,4"/>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+
+                <StackPanel Grid.Row="6" Grid.ColumnSpan="3" Orientation="Horizontal" 
+                           HorizontalAlignment="Center" Margin="0,16,0,0"/>
             </Grid>
         </Border>
     </DockPanel>
