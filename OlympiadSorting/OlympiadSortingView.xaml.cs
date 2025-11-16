@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Collections;
+using OxyPlot;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -106,6 +107,14 @@ namespace NumericalMethodsApp.OlympiadSorting
     private void CheckBox_Checked(object sender, RoutedEventArgs e) => CheckBoxChecked?.Invoke(sender, e);
     private void OriginalDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e) => OriginalDataGridCellEditEnding?.Invoke(sender, e);
 
+    private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+    }
+
+    private void ResultsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+    }
+
     public void SetOriginalDataGridItemsSource(object source)
     {
       OriginalDataGrid.ItemsSource = source as IEnumerable;
@@ -119,6 +128,37 @@ namespace NumericalMethodsApp.OlympiadSorting
     public void SetResultsDataGridItemsSource(object source)
     {
       ResultsDataGrid.ItemsSource = source as IEnumerable;
+    }
+
+    public void SetPerformanceChartModel(PlotModel model)
+    {
+      PerformanceChart.Model = model;
+    }
+
+    public void AddNumericValidation(TextBox textBox)
+    {
+      textBox.PreviewTextInput += NumericTextBox_PreviewTextInput;
+    }
+
+    private void NumericTextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+    {
+      foreach (char character in e.Text)
+      {
+        if (!char.IsDigit(character) && character != '-')
+        {
+          e.Handled = true;
+          return;
+        }
+      }
+
+      TextBox textBox = sender as TextBox;
+      if (e.Text == "-" && textBox != null)
+      {
+        if (textBox.SelectionStart != 0 || textBox.Text.Contains("-"))
+        {
+          e.Handled = true;
+        }
+      }
     }
   }
 }
