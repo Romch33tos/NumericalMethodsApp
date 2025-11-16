@@ -113,5 +113,60 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       return new SortResult("Вставками", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
     }
+
+    public SortResult ShakerSort(int[] array, bool ascending, int maxIterations)
+    {
+      int[] sortedArray = (int[])array.Clone();
+      int iterationsCount = 0;
+      bool iterationLimitExceeded = false;
+      var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+      int leftBoundary = 0;
+      int rightBoundary = sortedArray.Length - 1;
+
+      while (leftBoundary <= rightBoundary && iterationsCount < maxIterations)
+      {
+        for (int forwardIndex = leftBoundary; forwardIndex < rightBoundary && iterationsCount < maxIterations; ++forwardIndex)
+        {
+          bool shouldSwap = ascending ?
+            sortedArray[forwardIndex] > sortedArray[forwardIndex + 1] :
+            sortedArray[forwardIndex] < sortedArray[forwardIndex + 1];
+
+          if (shouldSwap)
+          {
+            int temporaryValue = sortedArray[forwardIndex];
+            sortedArray[forwardIndex] = sortedArray[forwardIndex + 1];
+            sortedArray[forwardIndex + 1] = temporaryValue;
+          }
+          ++iterationsCount;
+        }
+        --rightBoundary;
+
+        for (int backwardIndex = rightBoundary; backwardIndex > leftBoundary && iterationsCount < maxIterations; --backwardIndex)
+        {
+          bool shouldSwap = ascending ?
+            sortedArray[backwardIndex - 1] > sortedArray[backwardIndex] :
+            sortedArray[backwardIndex - 1] < sortedArray[backwardIndex];
+
+          if (shouldSwap)
+          {
+            int temporaryValue = sortedArray[backwardIndex];
+            sortedArray[backwardIndex] = sortedArray[backwardIndex - 1];
+            sortedArray[backwardIndex - 1] = temporaryValue;
+          }
+          ++iterationsCount;
+        }
+        ++leftBoundary;
+      }
+
+      stopwatch.Stop();
+
+      if (iterationsCount >= maxIterations)
+      {
+        iterationLimitExceeded = true;
+      }
+
+      return new SortResult("Шейкерная", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
+    }
   }
 }
