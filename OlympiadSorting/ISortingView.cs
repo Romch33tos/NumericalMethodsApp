@@ -1,3 +1,4 @@
+using OxyPlot;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -29,4 +30,6 @@ public interface ISortingView
   void SetOriginalDataGridItemsSource(object source);
   void SetSortedDataGridItemsSource(object source);
   void SetResultsDataGridItemsSource(object source);
+  void SetPerformanceChartModel(PlotModel model);
+  void AddNumericValidation(TextBox textBox);
 }
