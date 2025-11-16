@@ -70,5 +70,48 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       return new SortResult("Пузырьковая", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
     }
+
+    public SortResult InsertionSort(int[] array, bool ascending, int maxIterations)
+    {
+      int[] sortedArray = (int[])array.Clone();
+      int iterationsCount = 0;
+      bool iterationLimitExceeded = false;
+      var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+      for (int currentIndex = 1; currentIndex < sortedArray.Length && iterationsCount < maxIterations; ++currentIndex)
+      {
+        int keyValue = sortedArray[currentIndex];
+        int previousIndex = currentIndex - 1;
+
+        while (previousIndex >= 0 && iterationsCount < maxIterations)
+        {
+          bool shouldMove = ascending ?
+            sortedArray[previousIndex] > keyValue :
+            sortedArray[previousIndex] < keyValue;
+
+          if (shouldMove)
+          {
+            sortedArray[previousIndex + 1] = sortedArray[previousIndex];
+            --previousIndex;
+            ++iterationsCount;
+          }
+          else
+          {
+            break;
+          }
+        }
+        sortedArray[previousIndex + 1] = keyValue;
+        ++iterationsCount;
+      }
+
+      stopwatch.Stop();
+
+      if (iterationsCount >= maxIterations)
+      {
+        iterationLimitExceeded = true;
+      }
+
+      return new SortResult("Вставками", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
+    }
   }
 }
