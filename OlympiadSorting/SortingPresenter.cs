@@ -1,3 +1,5 @@
+using Microsoft.Win32;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
@@ -41,6 +43,7 @@ namespace NumericalMethodsApp.OlympiadSorting
       view.HelpClicked += OnHelpClicked;
       view.ApplySizeClicked += OnApplySizeClicked;
       view.RandomGenerateClicked += OnRandomGenerateClicked;
+      view.ImportCsvClicked += OnImportCsvClicked;
       view.ClearAllClicked += OnClearAllClicked;
       view.StartSortingClicked += OnStartSortingClicked;
       view.CheckBoxChecked += OnCheckBoxChecked;
@@ -117,6 +120,43 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       RefreshDataGrids();
       UpdateButtonsState();
+    }
+
+    private void OnImportCsvClicked(object sender, RoutedEventArgs e)
+    {
+      OpenFileDialog openFileDialog = new OpenFileDialog();
+      openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+      openFileDialog.Title = "Импорт данных из CSV";
+
+      if (openFileDialog.ShowDialog() == true)
+      {
+        try
+        {
+          string[] lines = File.ReadAllLines(openFileDialog.FileName);
+          model.OriginalArray.Clear();
+
+          foreach (string line in lines)
+          {
+            string[] values = line.Split(',');
+            foreach (string value in values)
+            {
+              if (int.TryParse(value.Trim(), out int number))
+              {
+                model.OriginalArray.Add(number);
+              }
+            }
+          }
+
+          view.RowsText = model.OriginalArray.Count.ToString();
+          RefreshDataGrids();
+          UpdateButtonsState();
+          MessageBox.Show($"Успешно импортировано {model.OriginalArray.Count} элементов", "Импорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+          MessageBox.Show($"Ошибка при импорте CSV: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+      }
     }
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
