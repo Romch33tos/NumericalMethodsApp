@@ -1,8 +1,14 @@
 using Microsoft.Win32;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
-using System.Linq;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -44,6 +50,7 @@ namespace NumericalMethodsApp.OlympiadSorting
       view.ApplySizeClicked += OnApplySizeClicked;
       view.RandomGenerateClicked += OnRandomGenerateClicked;
       view.ImportCsvClicked += OnImportCsvClicked;
+      view.ImportGoogleClicked += OnImportGoogleClicked;
       view.ClearAllClicked += OnClearAllClicked;
       view.StartSortingClicked += OnStartSortingClicked;
       view.CheckBoxChecked += OnCheckBoxChecked;
@@ -159,12 +166,88 @@ namespace NumericalMethodsApp.OlympiadSorting
       }
     }
 
+    private void OnImportGoogleClicked(object sender, RoutedEventArgs e)
+    {
+      try
+      {
+        GoogleSheetsImportDialog dialog = new GoogleSheetsImportDialog();
+        if (dialog.ShowDialog() == true)
+        {
+          string url = dialog.SheetsUrl;
+          string csvUrl = ConvertGoogleSheetsUrlToCsv(url);
+
+          using (WebClient client = new WebClient())
+          {
+            string csvData = client.DownloadString(csvUrl);
+            model.OriginalArray.Clear();
+
+            using (StringReader reader = new StringReader(csvData))
+            {
+              string line;
+              while ((line = reader.ReadLine()) != null)
+              {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                string[] values = line.Split(',');
+                foreach (string value in values)
+                {
+                  string trimmedValue = value.Trim().Replace("\"", "");
+                  if (!string.IsNullOrEmpty(trimmedValue) && int.TryParse(trimmedValue, out int number))
+                  {
+                    model.OriginalArray.Add(number);
+                  }
+                }
+              }
+            }
+
+            view.RowsText = model.OriginalArray.Count.ToString();
+            RefreshDataGrids();
+            UpdateButtonsState();
+
+            MessageBox.Show($"Успешно импортировано {model.OriginalArray.Count} элементов из Google Таблиц",
+              "Импорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        MessageBox.Show($"Ошибка при импорте из Google Таблиц: {ex.Message}",
+          "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+      }
+    }
+
+    private string ConvertGoogleSheetsUrlToCsv(string url)
+    {
+      try
+      {
+        Uri uri = new Uri(url);
+        string path = uri.AbsolutePath;
+
+        var pathParts = path.Split('/');
+        string sheetId = pathParts.Length >= 4 ? pathParts[3] :
+            throw new ArgumentException("Неверный формат ссылки на Google Таблицу");
+
+        string gid = "0";
+        if (uri.Fragment.Contains("gid="))
+        {
+          gid = uri.Fragment.Split('=')[1];
+        }
+
+        return $"https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv&gid={gid}";
+      }
+      catch (Exception ex)
+      {
+        throw new ArgumentException($"Неверный формат ссылки на Google Таблицу: {ex.Message}");
+      }
+    }
+
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
       model.OriginalArray.Clear();
       model.SortResults.Clear();
       RefreshDataGrids();
       view.SetResultsDataGridItemsSource(null);
+      view.SetPerformanceChartModel(new PlotModel());
       UpdateButtonsState();
     }
 
@@ -303,6 +386,30 @@ namespace NumericalMethodsApp.OlympiadSorting
     {
       view.SetResultsDataGridItemsSource(null);
       view.SetResultsDataGridItemsSource(model.SortResults);
+
+      var plotModel = new PlotModel { Title = "" };
+
+      var categoryAxis = new CategoryAxis { Position = AxisPosition.Left };
+      var valueAxis = new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Minimum = 0,
+        Title = ""
+      };
+
+      var barSeries = new BarSeries { FillColor = OxyColors.SteelBlue };
+
+      foreach (var result in model.SortResults)
+      {
+        categoryAxis.Labels.Add(result.AlgorithmName);
+        barSeries.Items.Add(new BarItem { Value = result.TimeMs });
+      }
+
+      plotModel.Axes.Add(categoryAxis);
+      plotModel.Axes.Add(valueAxis);
+      plotModel.Series.Add(barSeries);
+
+      view.SetPerformanceChartModel(plotModel);
     }
   }
 }
