@@ -1,7 +1,5 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
-using OxyPlot;
-using System.Collections;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -85,81 +83,6 @@ namespace NumericalMethodsApp.OlympiadSorting
     {
       get => StartSorting.IsEnabled;
       set => StartSorting.IsEnabled = value;
-    }
-
-    public event RoutedEventHandler HelpClicked;
-    public event RoutedEventHandler ApplySizeClicked;
-    public event RoutedEventHandler RandomGenerateClicked;
-    public event RoutedEventHandler ImportCsvClicked;
-    public event RoutedEventHandler ImportGoogleClicked;
-    public event RoutedEventHandler ClearAllClicked;
-    public event RoutedEventHandler StartSortingClicked;
-    public event RoutedEventHandler CheckBoxChecked;
-    public event System.EventHandler<DataGridCellEditEndingEventArgs> OriginalDataGridCellEditEnding;
-
-    private void Help_Click(object sender, RoutedEventArgs e) => HelpClicked?.Invoke(sender, e);
-    private void ApplySize_Click(object sender, RoutedEventArgs e) => ApplySizeClicked?.Invoke(sender, e);
-    private void RandomGenerate_Click(object sender, RoutedEventArgs e) => RandomGenerateClicked?.Invoke(sender, e);
-    private void ImportCsv_Click(object sender, RoutedEventArgs e) => ImportCsvClicked?.Invoke(sender, e);
-    private void ImportGoogle_Click(object sender, RoutedEventArgs e) => ImportGoogleClicked?.Invoke(sender, e);
-    private void ClearAll_Click(object sender, RoutedEventArgs e) => ClearAllClicked?.Invoke(sender, e);
-    private void StartSorting_Click(object sender, RoutedEventArgs e) => StartSortingClicked?.Invoke(sender, e);
-    private void CheckBox_Checked(object sender, RoutedEventArgs e) => CheckBoxChecked?.Invoke(sender, e);
-    private void OriginalDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e) => OriginalDataGridCellEditEnding?.Invoke(sender, e);
-
-    // Добавленные обработчики событий
-    private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-    }
-
-    private void ResultsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-    }
-
-    public void SetOriginalDataGridItemsSource(object source)
-    {
-      OriginalDataGrid.ItemsSource = source as IEnumerable;
-    }
-
-    public void SetSortedDataGridItemsSource(object source)
-    {
-      SortedDataGrid.ItemsSource = source as IEnumerable;
-    }
-
-    public void SetResultsDataGridItemsSource(object source)
-    {
-      ResultsDataGrid.ItemsSource = source as IEnumerable;
-    }
-
-    public void SetPerformanceChartModel(PlotModel model)
-    {
-      PerformanceChart.Model = model;
-    }
-
-    public void AddNumericValidation(TextBox textBox)
-    {
-      textBox.PreviewTextInput += NumericTextBox_PreviewTextInput;
-    }
-
-    private void NumericTextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
-    {
-      foreach (char character in e.Text)
-      {
-        if (!char.IsDigit(character) && character != '-')
-        {
-          e.Handled = true;
-          return;
-        }
-      }
-
-      TextBox textBox = sender as TextBox;
-      if (e.Text == "-" && textBox != null)
-      {
-        if (textBox.SelectionStart != 0 || textBox.Text.Contains("-"))
-        {
-          e.Handled = true;
-        }
-      }
     }
   }
 }
