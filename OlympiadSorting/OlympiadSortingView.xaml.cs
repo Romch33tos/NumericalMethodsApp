@@ -93,6 +93,7 @@ namespace NumericalMethodsApp.OlympiadSorting
     public event RoutedEventHandler ClearAllClicked;
     public event RoutedEventHandler StartSortingClicked;
     public event RoutedEventHandler CheckBoxChecked;
+    public event System.EventHandler<DataGridCellEditEndingEventArgs> OriginalDataGridCellEditEnding;
 
     private void Help_Click(object sender, RoutedEventArgs e) => HelpClicked?.Invoke(sender, e);
     private void ApplySize_Click(object sender, RoutedEventArgs e) => ApplySizeClicked?.Invoke(sender, e);
@@ -102,5 +103,6 @@ namespace NumericalMethodsApp.OlympiadSorting
     private void ClearAll_Click(object sender, RoutedEventArgs e) => ClearAllClicked?.Invoke(sender, e);
     private void StartSorting_Click(object sender, RoutedEventArgs e) => StartSortingClicked?.Invoke(sender, e);
     private void CheckBox_Checked(object sender, RoutedEventArgs e) => CheckBoxChecked?.Invoke(sender, e);
+    private void OriginalDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e) => OriginalDataGridCellEditEnding?.Invoke(sender, e);
   }
 }
