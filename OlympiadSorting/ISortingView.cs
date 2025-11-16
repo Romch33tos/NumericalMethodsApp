@@ -22,4 +22,5 @@ public interface ISortingView
   event RoutedEventHandler ImportGoogleClicked;
   event RoutedEventHandler ClearAllClicked;
   event RoutedEventHandler StartSortingClicked;
+  event RoutedEventHandler CheckBoxChecked;
 }
