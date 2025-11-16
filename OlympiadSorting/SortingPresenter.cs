@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -127,6 +128,70 @@ namespace NumericalMethodsApp.OlympiadSorting
       UpdateButtonsState();
     }
 
+    private void OnStartSortingClicked(object sender, RoutedEventArgs e)
+    {
+      if (model.OriginalArray.Count == 0)
+      {
+        MessageBox.Show("Нет данных для сортировки", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        return;
+      }
+
+      if (!int.TryParse(view.MaxIterationsText, out int maxIterations) || maxIterations <= 0)
+      {
+        MessageBox.Show("Укажите корректное ограничение итераций", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        return;
+      }
+
+      bool ascending = view.IsAscendingChecked;
+      model.SortResults.Clear();
+
+      if (view.IsBubbleSortChecked)
+      {
+        var result = algorithms.BubbleSort(model.OriginalArray.ToArray(), ascending, maxIterations);
+        model.SortResults.Add(result);
+        CheckIterationLimit(result);
+      }
+
+      if (view.IsInsertionSortChecked)
+      {
+        var result = algorithms.InsertionSort(model.OriginalArray.ToArray(), ascending, maxIterations);
+        model.SortResults.Add(result);
+        CheckIterationLimit(result);
+      }
+
+      if (view.IsShakerSortChecked)
+      {
+        var result = algorithms.ShakerSort(model.OriginalArray.ToArray(), ascending, maxIterations);
+        model.SortResults.Add(result);
+        CheckIterationLimit(result);
+      }
+
+      if (view.IsQuickSortChecked)
+      {
+        var result = algorithms.QuickSort(model.OriginalArray.ToArray(), ascending, maxIterations);
+        model.SortResults.Add(result);
+        CheckIterationLimit(result);
+      }
+
+      if (view.IsBogosortChecked)
+      {
+        var result = algorithms.BogoSort(model.OriginalArray.ToArray(), ascending, maxIterations);
+        model.SortResults.Add(result);
+        CheckIterationLimit(result);
+      }
+
+      DisplayResults();
+      UpdateSortedArray();
+    }
+
+    private void CheckIterationLimit(SortResult result)
+    {
+      if (result.IterationLimitExceeded)
+      {
+        MessageBox.Show($"Превышен лимит итераций. {result.AlgorithmName} сортировка прервана.", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+      }
+    }
+
     private void OnCheckBoxChecked(object sender, RoutedEventArgs e)
     {
       UpdateButtonsState();
@@ -178,6 +243,26 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       view.SetOriginalDataGridItemsSource(dataSource);
       view.SetSortedDataGridItemsSource(null);
+    }
+
+    private void UpdateSortedArray()
+    {
+      var bestResult = model.SortResults.OrderBy(result => result.TimeMs).FirstOrDefault();
+      if (bestResult != null)
+      {
+        var sortedDataSource = new List<DataItem>();
+        for (int index = 0; index < bestResult.SortedArray.Length; ++index)
+        {
+          sortedDataSource.Add(new DataItem { Index = index, Value = bestResult.SortedArray[index] });
+        }
+        view.SetSortedDataGridItemsSource(sortedDataSource);
+      }
+    }
+
+    private void DisplayResults()
+    {
+      view.SetResultsDataGridItemsSource(null);
+      view.SetResultsDataGridItemsSource(model.SortResults);
     }
   }
 }
