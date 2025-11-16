@@ -25,4 +25,8 @@ public interface ISortingView
   event RoutedEventHandler StartSortingClicked;
   event RoutedEventHandler CheckBoxChecked;
   event System.EventHandler<DataGridCellEditEndingEventArgs> OriginalDataGridCellEditEnding;
+
+  void SetOriginalDataGridItemsSource(object source);
+  void SetSortedDataGridItemsSource(object source);
+  void SetResultsDataGridItemsSource(object source);
 }
