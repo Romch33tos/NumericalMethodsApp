@@ -36,6 +36,8 @@ namespace NumericalMethodsApp.OlympiadSorting
 
   public class SortingAlgorithms
   {
+    private readonly Random random = new Random();
+
     public SortResult BubbleSort(int[] array, bool ascending, int maxIterations)
     {
       int[] sortedArray = (int[])array.Clone();
@@ -225,6 +227,52 @@ namespace NumericalMethodsApp.OlympiadSorting
       array[highIndex] = temporaryValue2;
 
       return partitionIndex + 1;
+    }
+
+    public SortResult BogoSort(int[] array, bool ascending, int maxIterations)
+    {
+      int[] sortedArray = (int[])array.Clone();
+      int iterationsCount = 0;
+      bool iterationLimitExceeded = false;
+      var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+      while (!IsSorted(sortedArray, ascending) && iterationsCount < maxIterations)
+      {
+        ShuffleArray(sortedArray);
+        ++iterationsCount;
+      }
+
+      stopwatch.Stop();
+
+      if (iterationsCount >= maxIterations)
+      {
+        iterationLimitExceeded = true;
+      }
+
+      return new SortResult("Болотная", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
+    }
+
+    private bool IsSorted(int[] array, bool ascending)
+    {
+      for (int index = 0; index < array.Length - 1; ++index)
+      {
+        if (ascending && array[index] > array[index + 1])
+          return false;
+        if (!ascending && array[index] < array[index + 1])
+          return false;
+      }
+      return true;
+    }
+
+    private void ShuffleArray(int[] array)
+    {
+      for (int index = 0; index < array.Length; ++index)
+      {
+        int randomIndex = random.Next(array.Length);
+        int temporaryValue = array[index];
+        array[index] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
     }
   }
 }
