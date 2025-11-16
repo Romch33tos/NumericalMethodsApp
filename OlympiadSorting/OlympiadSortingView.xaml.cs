@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Collections;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -104,5 +105,20 @@ namespace NumericalMethodsApp.OlympiadSorting
     private void StartSorting_Click(object sender, RoutedEventArgs e) => StartSortingClicked?.Invoke(sender, e);
     private void CheckBox_Checked(object sender, RoutedEventArgs e) => CheckBoxChecked?.Invoke(sender, e);
     private void OriginalDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e) => OriginalDataGridCellEditEnding?.Invoke(sender, e);
+
+    public void SetOriginalDataGridItemsSource(object source)
+    {
+      OriginalDataGrid.ItemsSource = source as IEnumerable;
+    }
+
+    public void SetSortedDataGridItemsSource(object source)
+    {
+      SortedDataGrid.ItemsSource = source as IEnumerable;
+    }
+
+    public void SetResultsDataGridItemsSource(object source)
+    {
+      ResultsDataGrid.ItemsSource = source as IEnumerable;
+    }
   }
 }
