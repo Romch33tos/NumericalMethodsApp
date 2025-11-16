@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 
 public interface ISortingView
 {
@@ -23,4 +24,5 @@ public interface ISortingView
   event RoutedEventHandler ClearAllClicked;
   event RoutedEventHandler StartSortingClicked;
   event RoutedEventHandler CheckBoxChecked;
+  event System.EventHandler<DataGridCellEditEndingEventArgs> OriginalDataGridCellEditEnding;
 }
