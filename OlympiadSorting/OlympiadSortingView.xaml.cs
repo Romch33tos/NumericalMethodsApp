@@ -84,5 +84,23 @@ namespace NumericalMethodsApp.OlympiadSorting
       get => StartSorting.IsEnabled;
       set => StartSorting.IsEnabled = value;
     }
+
+    public event RoutedEventHandler HelpClicked;
+    public event RoutedEventHandler ApplySizeClicked;
+    public event RoutedEventHandler RandomGenerateClicked;
+    public event RoutedEventHandler ImportCsvClicked;
+    public event RoutedEventHandler ImportGoogleClicked;
+    public event RoutedEventHandler ClearAllClicked;
+    public event RoutedEventHandler StartSortingClicked;
+    public event RoutedEventHandler CheckBoxChecked;
+
+    private void Help_Click(object sender, RoutedEventArgs e) => HelpClicked?.Invoke(sender, e);
+    private void ApplySize_Click(object sender, RoutedEventArgs e) => ApplySizeClicked?.Invoke(sender, e);
+    private void RandomGenerate_Click(object sender, RoutedEventArgs e) => RandomGenerateClicked?.Invoke(sender, e);
+    private void ImportCsv_Click(object sender, RoutedEventArgs e) => ImportCsvClicked?.Invoke(sender, e);
+    private void ImportGoogle_Click(object sender, RoutedEventArgs e) => ImportGoogleClicked?.Invoke(sender, e);
+    private void ClearAll_Click(object sender, RoutedEventArgs e) => ClearAllClicked?.Invoke(sender, e);
+    private void StartSorting_Click(object sender, RoutedEventArgs e) => StartSortingClicked?.Invoke(sender, e);
+    private void CheckBox_Checked(object sender, RoutedEventArgs e) => CheckBoxChecked?.Invoke(sender, e);
   }
 }
