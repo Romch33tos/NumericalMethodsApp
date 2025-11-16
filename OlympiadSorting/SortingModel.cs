@@ -168,5 +168,63 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       return new SortResult("Шейкерная", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
     }
+
+    public SortResult QuickSort(int[] array, bool ascending, int maxIterations)
+    {
+      int[] sortedArray = (int[])array.Clone();
+      int iterationsCount = 0;
+      bool iterationLimitExceeded = false;
+      var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+      QuickSortRecursive(sortedArray, 0, sortedArray.Length - 1, ascending, ref iterationsCount, maxIterations);
+
+      stopwatch.Stop();
+
+      if (iterationsCount >= maxIterations)
+      {
+        iterationLimitExceeded = true;
+      }
+
+      return new SortResult("Быстрая", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
+    }
+
+    private void QuickSortRecursive(int[] array, int lowIndex, int highIndex, bool ascending, ref int iterationsCount, int maxIterations)
+    {
+      if (lowIndex < highIndex && iterationsCount < maxIterations)
+      {
+        int pivotIndex = Partition(array, lowIndex, highIndex, ascending, ref iterationsCount, maxIterations);
+        QuickSortRecursive(array, lowIndex, pivotIndex - 1, ascending, ref iterationsCount, maxIterations);
+        QuickSortRecursive(array, pivotIndex + 1, highIndex, ascending, ref iterationsCount, maxIterations);
+      }
+      ++iterationsCount;
+    }
+
+    private int Partition(int[] array, int lowIndex, int highIndex, bool ascending, ref int iterationsCount, int maxIterations)
+    {
+      int pivotValue = array[highIndex];
+      int partitionIndex = lowIndex - 1;
+
+      for (int currentIndex = lowIndex; currentIndex < highIndex && iterationsCount < maxIterations; ++currentIndex)
+      {
+        bool shouldSwap = ascending ?
+          array[currentIndex] <= pivotValue :
+          array[currentIndex] >= pivotValue;
+
+        if (shouldSwap)
+        {
+          ++partitionIndex;
+          int temporaryValue = array[partitionIndex];
+          array[partitionIndex] = array[currentIndex];
+          array[currentIndex] = temporaryValue;
+        }
+        ++iterationsCount;
+      }
+
+      int temporaryValue2 = array[partitionIndex + 1];
+      array[partitionIndex + 1] = array[highIndex];
+      array[highIndex] = temporaryValue2;
+
+      return partitionIndex + 1;
+    }
   }
 }
