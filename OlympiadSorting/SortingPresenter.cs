@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -24,6 +25,14 @@ namespace NumericalMethodsApp.OlympiadSorting
       view.MinValueText = "0";
       view.MaxValueText = "100";
       view.MaxIterationsText = "1000";
+
+      view.AddNumericValidation(GetTextBoxByName("RowsTextBox"));
+      view.AddNumericValidation(GetTextBoxByName("MinValueTextBox"));
+      view.AddNumericValidation(GetTextBoxByName("MaxValueTextBox"));
+      view.AddNumericValidation(GetTextBoxByName("MaxIterationsTextBox"));
+
+      RefreshDataGrids();
+      UpdateButtonsState();
     }
 
     private void SubscribeToEvents()
@@ -33,6 +42,13 @@ namespace NumericalMethodsApp.OlympiadSorting
       view.RandomGenerateClicked += OnRandomGenerateClicked;
       view.ClearAllClicked += OnClearAllClicked;
       view.StartSortingClicked += OnStartSortingClicked;
+      view.CheckBoxChecked += OnCheckBoxChecked;
+      view.OriginalDataGridCellEditEnding += OnOriginalDataGridCellEditEnding;
+    }
+
+    private TextBox GetTextBoxByName(string name)
+    {
+      return (view as OlympiadSortingView)?.FindName(name) as TextBox;
     }
 
     private void OnHelpClicked(object sender, RoutedEventArgs e)
@@ -109,6 +125,35 @@ namespace NumericalMethodsApp.OlympiadSorting
       RefreshDataGrids();
       view.SetResultsDataGridItemsSource(null);
       UpdateButtonsState();
+    }
+
+    private void OnCheckBoxChecked(object sender, RoutedEventArgs e)
+    {
+      UpdateButtonsState();
+    }
+
+    private void OnOriginalDataGridCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+    {
+      if (e.EditAction == DataGridEditAction.Commit)
+      {
+        var textBox = e.EditingElement as TextBox;
+        if (textBox != null)
+        {
+          if (!int.TryParse(textBox.Text, out int value))
+          {
+            MessageBox.Show("Введите целое число", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Cancel = true;
+          }
+          else
+          {
+            int rowIndex = e.Row.GetIndex();
+            if (rowIndex < model.OriginalArray.Count)
+            {
+              model.OriginalArray[rowIndex] = value;
+            }
+          }
+        }
+      }
     }
 
     private void UpdateButtonsState()
