@@ -243,8 +243,22 @@ namespace NumericalMethodsApp.OlympiadSorting
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+      view.RowsText = "5";
+      view.MinValueText = "0";
+      view.MaxValueText = "100";
+      view.MaxIterationsText = "1000";
+
+      view.IsBubbleSortChecked = false;
+      view.IsInsertionSortChecked = false;
+      view.IsShakerSortChecked = false;
+      view.IsQuickSortChecked = false;
+      view.IsBogosortChecked = false;
+
+      view.IsAscendingChecked = true;
+
       model.OriginalArray.Clear();
       model.SortResults.Clear();
+
       RefreshDataGrids();
       view.SetResultsDataGridItemsSource(null);
       view.SetPerformanceChartModel(new PlotModel());
