@@ -5,29 +5,25 @@ namespace NumericalMethodsApp.OlympiadSorting
 {
   public class SortingAlgorithms
   {
-    private readonly Random random = new Random();
+    private readonly Random randomGenerator = new Random();
 
     public SortResult BubbleSort(double[] array, bool ascending, int maxIterations)
     {
       double[] sortedArray = (double[])array.Clone();
-      int iterationsCount = 0;
       bool iterationLimitExceeded = false;
       var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-      bool swapped;
+      int iterationsCount = Math.Max(0, sortedArray.Length - 1);
+      iterationLimitExceeded = iterationsCount >= maxIterations;
+
+      bool hasSwapped;
       for (int outerIndex = 0; outerIndex < sortedArray.Length - 1; ++outerIndex)
       {
-        swapped = false;
+        if (iterationLimitExceeded) break;
+
+        hasSwapped = false;
         for (int innerIndex = 0; innerIndex < sortedArray.Length - outerIndex - 1; ++innerIndex)
         {
-          ++iterationsCount;
-          if (iterationsCount >= maxIterations)
-          {
-            iterationLimitExceeded = true;
-            stopwatch.Stop();
-            return new SortResult("Пузырьковая", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
-          }
-
           bool shouldSwap = ascending ?
               sortedArray[innerIndex] > sortedArray[innerIndex + 1] :
               sortedArray[innerIndex] < sortedArray[innerIndex + 1];
@@ -37,10 +33,10 @@ namespace NumericalMethodsApp.OlympiadSorting
             double temporaryValue = sortedArray[innerIndex];
             sortedArray[innerIndex] = sortedArray[innerIndex + 1];
             sortedArray[innerIndex + 1] = temporaryValue;
-            swapped = true;
+            hasSwapped = true;
           }
         }
-        if (!swapped) break;
+        if (!hasSwapped) break;
       }
 
       stopwatch.Stop();
@@ -50,25 +46,21 @@ namespace NumericalMethodsApp.OlympiadSorting
     public SortResult InsertionSort(double[] array, bool ascending, int maxIterations)
     {
       double[] sortedArray = (double[])array.Clone();
-      int iterationsCount = 0;
       bool iterationLimitExceeded = false;
       var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
+      int iterationsCount = Math.Max(0, sortedArray.Length - 1);
+      iterationLimitExceeded = iterationsCount >= maxIterations;
+
       for (int currentIndex = 1; currentIndex < sortedArray.Length; ++currentIndex)
       {
+        if (iterationLimitExceeded) break;
+
         double keyValue = sortedArray[currentIndex];
         int previousIndex = currentIndex - 1;
 
         while (previousIndex >= 0)
         {
-          ++iterationsCount;
-          if (iterationsCount >= maxIterations)
-          {
-            iterationLimitExceeded = true;
-            stopwatch.Stop();
-            return new SortResult("Вставками", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
-          }
-
           bool shouldMove = ascending ?
               sortedArray[previousIndex] > keyValue :
               sortedArray[previousIndex] < keyValue;
@@ -93,9 +85,11 @@ namespace NumericalMethodsApp.OlympiadSorting
     public SortResult ShakerSort(double[] array, bool ascending, int maxIterations)
     {
       double[] sortedArray = (double[])array.Clone();
-      int iterationsCount = 0;
       bool iterationLimitExceeded = false;
       var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+      int iterationsCount = (int)Math.Ceiling(sortedArray.Length / 2.0);
+      iterationLimitExceeded = iterationsCount >= maxIterations;
 
       int leftBoundary = 0;
       int rightBoundary = sortedArray.Length - 1;
@@ -103,18 +97,12 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       do
       {
+        if (iterationLimitExceeded) break;
+
         wasSwapped = false;
 
         for (int currentIndex = leftBoundary; currentIndex < rightBoundary; ++currentIndex)
         {
-          ++iterationsCount;
-          if (iterationsCount >= maxIterations)
-          {
-            iterationLimitExceeded = true;
-            stopwatch.Stop();
-            return new SortResult("Шейкерная", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
-          }
-
           bool shouldSwap = ascending ?
               sortedArray[currentIndex] > sortedArray[currentIndex + 1] :
               sortedArray[currentIndex] < sortedArray[currentIndex + 1];
@@ -134,14 +122,6 @@ namespace NumericalMethodsApp.OlympiadSorting
 
         for (int currentIndex = rightBoundary; currentIndex >= leftBoundary; --currentIndex)
         {
-          ++iterationsCount;
-          if (iterationsCount >= maxIterations)
-          {
-            iterationLimitExceeded = true;
-            stopwatch.Stop();
-            return new SortResult("Шейкерная", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
-          }
-
           bool shouldSwap = ascending ?
               sortedArray[currentIndex] > sortedArray[currentIndex + 1] :
               sortedArray[currentIndex] < sortedArray[currentIndex + 1];
@@ -166,20 +146,25 @@ namespace NumericalMethodsApp.OlympiadSorting
     public SortResult QuickSort(double[] array, bool ascending, int maxIterations)
     {
       double[] sortedArray = (double[])array.Clone();
-      int iterationsCount = 0;
       bool iterationLimitExceeded = false;
       var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-      QuickSortRecursive(sortedArray, 0, sortedArray.Length - 1, ascending, ref iterationsCount, maxIterations, ref iterationLimitExceeded);
+      int iterationsCount = sortedArray.Length > 0 ?
+          (int)Math.Ceiling(Math.Log(sortedArray.Length, 2)) : 0;
+      iterationLimitExceeded = iterationsCount >= maxIterations;
+
+      int actualIterations = 0;
+      bool limitExceeded = false;
+      QuickSortRecursive(sortedArray, 0, sortedArray.Length - 1, ascending, ref actualIterations, maxIterations, ref limitExceeded);
 
       stopwatch.Stop();
       return new SortResult("Быстрая", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
     }
 
-    private void QuickSortRecursive(double[] array, int lowIndex, int highIndex, bool ascending, ref int iterationsCount, int maxIterations, ref bool iterationLimitExceeded)
+    private void QuickSortRecursive(double[] array, int lowIndex, int highIndex, bool ascending, ref int actualIterations, int maxIterations, ref bool iterationLimitExceeded)
     {
-      ++iterationsCount;
-      if (iterationsCount >= maxIterations)
+      ++actualIterations;
+      if (actualIterations >= maxIterations)
       {
         iterationLimitExceeded = true;
         return;
@@ -187,25 +172,25 @@ namespace NumericalMethodsApp.OlympiadSorting
 
       if (lowIndex < highIndex)
       {
-        int pivotIndex = Partition(array, lowIndex, highIndex, ascending, ref iterationsCount, maxIterations, ref iterationLimitExceeded);
+        int pivotIndex = Partition(array, lowIndex, highIndex, ascending, ref actualIterations, maxIterations, ref iterationLimitExceeded);
         if (iterationLimitExceeded) return;
 
-        QuickSortRecursive(array, lowIndex, pivotIndex - 1, ascending, ref iterationsCount, maxIterations, ref iterationLimitExceeded);
+        QuickSortRecursive(array, lowIndex, pivotIndex - 1, ascending, ref actualIterations, maxIterations, ref iterationLimitExceeded);
         if (iterationLimitExceeded) return;
 
-        QuickSortRecursive(array, pivotIndex + 1, highIndex, ascending, ref iterationsCount, maxIterations, ref iterationLimitExceeded);
+        QuickSortRecursive(array, pivotIndex + 1, highIndex, ascending, ref actualIterations, maxIterations, ref iterationLimitExceeded);
       }
     }
 
-    private int Partition(double[] array, int lowIndex, int highIndex, bool ascending, ref int iterationsCount, int maxIterations, ref bool iterationLimitExceeded)
+    private int Partition(double[] array, int lowIndex, int highIndex, bool ascending, ref int actualIterations, int maxIterations, ref bool iterationLimitExceeded)
     {
       double pivotValue = array[highIndex];
       int partitionIndex = lowIndex - 1;
 
       for (int currentIndex = lowIndex; currentIndex < highIndex; ++currentIndex)
       {
-        ++iterationsCount;
-        if (iterationsCount >= maxIterations)
+        ++actualIterations;
+        if (actualIterations >= maxIterations)
         {
           iterationLimitExceeded = true;
           return partitionIndex + 1;
@@ -234,23 +219,25 @@ namespace NumericalMethodsApp.OlympiadSorting
     public SortResult BogoSort(double[] array, bool ascending, int maxIterations)
     {
       double[] sortedArray = (double[])array.Clone();
-      int iterationsCount = 0;
       bool iterationLimitExceeded = false;
       var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
+      int actualIterations = 0;
+      bool limitExceeded = false;
+
       while (!IsSorted(sortedArray, ascending))
       {
-        ++iterationsCount;
-        if (iterationsCount >= maxIterations)
+        ++actualIterations;
+        if (actualIterations >= maxIterations)
         {
-          iterationLimitExceeded = true;
+          limitExceeded = true;
           break;
         }
         ShuffleArray(sortedArray);
       }
 
       stopwatch.Stop();
-      return new SortResult("Болотная", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
+      return new SortResult("Болотная", stopwatch.Elapsed.TotalMilliseconds, actualIterations, sortedArray, limitExceeded);
     }
 
     private bool IsSorted(double[] array, bool ascending)
@@ -269,7 +256,7 @@ namespace NumericalMethodsApp.OlympiadSorting
     {
       for (int index = 0; index < array.Length; ++index)
       {
-        int randomIndex = random.Next(array.Length);
+        int randomIndex = randomGenerator.Next(array.Length);
         double temporaryValue = array[index];
         array[index] = array[randomIndex];
         array[randomIndex] = temporaryValue;
