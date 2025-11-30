@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
+using System.Globalization;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -107,7 +108,8 @@ namespace NumericalMethodsApp.OlympiadSorting
         return;
       }
 
-      if (!double.TryParse(view.MinValueText, out double min) || !double.TryParse(view.MaxValueText, out double max))
+      if (!double.TryParse(view.MinValueText, NumberStyles.Any, CultureInfo.InvariantCulture, out double min) ||
+          !double.TryParse(view.MaxValueText, NumberStyles.Any, CultureInfo.InvariantCulture, out double max))
       {
         MessageBox.Show("Укажите корректный диапазон значений", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         return;
@@ -148,7 +150,7 @@ namespace NumericalMethodsApp.OlympiadSorting
             string[] values = line.Split(',');
             foreach (string value in values)
             {
-              if (double.TryParse(value.Trim(), out double number))
+              if (double.TryParse(value.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
               {
                 model.OriginalArray.Add(number);
               }
@@ -193,7 +195,8 @@ namespace NumericalMethodsApp.OlympiadSorting
                 foreach (string value in values)
                 {
                   string trimmedValue = value.Trim().Replace("\"", "");
-                  if (!string.IsNullOrEmpty(trimmedValue) && double.TryParse(trimmedValue, out double number))
+                  if (!string.IsNullOrEmpty(trimmedValue) &&
+                      double.TryParse(trimmedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
                   {
                     model.OriginalArray.Add(number);
                   }
@@ -342,9 +345,9 @@ namespace NumericalMethodsApp.OlympiadSorting
         var textBox = e.EditingElement as TextBox;
         if (textBox != null)
         {
-          if (!double.TryParse(textBox.Text, out double value))
+          if (!double.TryParse(textBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
           {
-            MessageBox.Show("Введите число", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("Введите корректное число", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Cancel = true;
           }
           else
@@ -376,7 +379,7 @@ namespace NumericalMethodsApp.OlympiadSorting
       var dataSource = new List<DataItem>();
       for (int index = 0; index < model.OriginalArray.Count; ++index)
       {
-        dataSource.Add(new DataItem { Index = index, Value = model.OriginalArray[index] });
+        dataSource.Add(new DataItem { Index = index + 1, Value = model.OriginalArray[index] });
       }
 
       view.SetOriginalDataGridItemsSource(dataSource);
@@ -391,7 +394,7 @@ namespace NumericalMethodsApp.OlympiadSorting
         var sortedDataSource = new List<DataItem>();
         for (int index = 0; index < bestResult.SortedArray.Length; ++index)
         {
-          sortedDataSource.Add(new DataItem { Index = index, Value = bestResult.SortedArray[index] });
+          sortedDataSource.Add(new DataItem { Index = index + 1, Value = bestResult.SortedArray[index] });
         }
         view.SetSortedDataGridItemsSource(sortedDataSource);
       }
