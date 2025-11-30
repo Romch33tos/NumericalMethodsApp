@@ -1,7 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Collections;
 using OxyPlot;
+using System.Collections;
+using System.Globalization;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -142,23 +143,27 @@ namespace NumericalMethodsApp.OlympiadSorting
 
     private void NumericTextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
     {
-      foreach (char character in e.Text)
+      TextBox textBox = sender as TextBox;
+      string currentText = textBox.Text;
+      int selectionStart = textBox.SelectionStart;
+      string newText = currentText.Substring(0, selectionStart) + e.Text + currentText.Substring(textBox.SelectionStart + textBox.SelectionLength);
+
+      if (newText == "-")
       {
-        if (!char.IsDigit(character) && character != '-')
-        {
-          e.Handled = true;
-          return;
-        }
+        e.Handled = false;
+        return;
       }
 
-      TextBox textBox = sender as TextBox;
-      if (e.Text == "-" && textBox != null)
-      {
-        if (textBox.SelectionStart != 0 || textBox.Text.Contains("-"))
-        {
-          e.Handled = true;
-        }
-      }
+      e.Handled = !IsValidNumber(newText);
+    }
+
+    private bool IsValidNumber(string text)
+    {
+      if (string.IsNullOrEmpty(text))
+        return true;
+
+      return double.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out _) ||
+             double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out _);
     }
   }
 }
