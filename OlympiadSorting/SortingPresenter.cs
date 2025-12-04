@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
+using System.Globalization;
 
 namespace NumericalMethodsApp.OlympiadSorting
 {
@@ -65,23 +66,23 @@ namespace NumericalMethodsApp.OlympiadSorting
     private void OnHelpClicked(object sender, RoutedEventArgs e)
     {
       MessageBox.Show(
-        "Справка по использованию приложения:\n\n" +
-        "1. Укажите размерность массива и нажмите 'Применить размер'\n" +
-        "2. Введите данные в таблицу или сгенерируйте случайные\n" +
-        "3. Выберите алгоритмы сортировки\n" +
-        "4. Настройте параметры сортировки\n" +
-        "5. Нажмите 'Начать' для запуска сортировки\n\n" +
-        "Результаты будут отображены в таблице и на графике.",
-        "Справка",
-        MessageBoxButton.OK,
-        MessageBoxImage.Information);
+          "Справка по использованию приложения:\n\n" +
+          "1. Укажите размерность массива и нажмите 'Применить размер'\n" +
+          "2. Введите данные в таблицу или сгенерируйте случайные\n" +
+          "3. Выберите алгоритмы сортировки\n" +
+          "4. Настройте параметры сортировки\n" +
+          "5. Нажмите 'Начать' для запуска сортировки\n\n" +
+          "Результаты будут отображены в таблице и на графике.",
+          "Справка",
+          MessageBoxButton.OK,
+          MessageBoxImage.Information);
     }
 
     private void OnApplySizeClicked(object sender, RoutedEventArgs e)
     {
       if (int.TryParse(view.RowsText, out int size) && size > 0)
       {
-        List<int> newArray = new List<int>(new int[size]);
+        List<double> newArray = new List<double>(new double[size]);
 
         for (int index = 0; index < Math.Min(model.OriginalArray.Count, size); ++index)
         {
@@ -107,7 +108,8 @@ namespace NumericalMethodsApp.OlympiadSorting
         return;
       }
 
-      if (!int.TryParse(view.MinValueText, out int min) || !int.TryParse(view.MaxValueText, out int max))
+      if (!double.TryParse(view.MinValueText, NumberStyles.Any, CultureInfo.InvariantCulture, out double min) ||
+          !double.TryParse(view.MaxValueText, NumberStyles.Any, CultureInfo.InvariantCulture, out double max))
       {
         MessageBox.Show("Укажите корректный диапазон значений", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         return;
@@ -122,7 +124,8 @@ namespace NumericalMethodsApp.OlympiadSorting
       model.OriginalArray.Clear();
       for (int index = 0; index < size; ++index)
       {
-        model.OriginalArray.Add(model.RandomGenerator.Next(min, max + 1));
+        double randomValue = min + (model.RandomGenerator.NextDouble() * (max - min));
+        model.OriginalArray.Add(Math.Round(randomValue, 2));
       }
 
       RefreshDataGrids();
@@ -147,7 +150,7 @@ namespace NumericalMethodsApp.OlympiadSorting
             string[] values = line.Split(',');
             foreach (string value in values)
             {
-              if (int.TryParse(value.Trim(), out int number))
+              if (double.TryParse(value.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
               {
                 model.OriginalArray.Add(number);
               }
@@ -192,7 +195,8 @@ namespace NumericalMethodsApp.OlympiadSorting
                 foreach (string value in values)
                 {
                   string trimmedValue = value.Trim().Replace("\"", "");
-                  if (!string.IsNullOrEmpty(trimmedValue) && int.TryParse(trimmedValue, out int number))
+                  if (!string.IsNullOrEmpty(trimmedValue) &&
+                      double.TryParse(trimmedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
                   {
                     model.OriginalArray.Add(number);
                   }
@@ -205,14 +209,14 @@ namespace NumericalMethodsApp.OlympiadSorting
             UpdateButtonsState();
 
             MessageBox.Show($"Успешно импортировано {model.OriginalArray.Count} элементов из Google Таблиц",
-              "Импорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
+                "Импорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
           }
         }
       }
       catch (Exception ex)
       {
         MessageBox.Show($"Ошибка при импорте из Google Таблиц: {ex.Message}",
-          "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
       }
     }
 
@@ -243,8 +247,22 @@ namespace NumericalMethodsApp.OlympiadSorting
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+      view.RowsText = "5";
+      view.MinValueText = "0";
+      view.MaxValueText = "100";
+      view.MaxIterationsText = "1000";
+
+      view.IsBubbleSortChecked = false;
+      view.IsInsertionSortChecked = false;
+      view.IsShakerSortChecked = false;
+      view.IsQuickSortChecked = false;
+      view.IsBogosortChecked = false;
+
+      view.IsAscendingChecked = true;
+
       model.OriginalArray.Clear();
       model.SortResults.Clear();
+
       RefreshDataGrids();
       view.SetResultsDataGridItemsSource(null);
       view.SetPerformanceChartModel(new PlotModel());
@@ -327,9 +345,9 @@ namespace NumericalMethodsApp.OlympiadSorting
         var textBox = e.EditingElement as TextBox;
         if (textBox != null)
         {
-          if (!int.TryParse(textBox.Text, out int value))
+          if (!double.TryParse(textBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
           {
-            MessageBox.Show("Введите целое число", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("Введите корректное число", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Cancel = true;
           }
           else
@@ -361,7 +379,7 @@ namespace NumericalMethodsApp.OlympiadSorting
       var dataSource = new List<DataItem>();
       for (int index = 0; index < model.OriginalArray.Count; ++index)
       {
-        dataSource.Add(new DataItem { Index = index, Value = model.OriginalArray[index] });
+        dataSource.Add(new DataItem { Index = index + 1, Value = model.OriginalArray[index] });
       }
 
       view.SetOriginalDataGridItemsSource(dataSource);
@@ -376,7 +394,7 @@ namespace NumericalMethodsApp.OlympiadSorting
         var sortedDataSource = new List<DataItem>();
         for (int index = 0; index < bestResult.SortedArray.Length; ++index)
         {
-          sortedDataSource.Add(new DataItem { Index = index, Value = bestResult.SortedArray[index] });
+          sortedDataSource.Add(new DataItem { Index = index + 1, Value = bestResult.SortedArray[index] });
         }
         view.SetSortedDataGridItemsSource(sortedDataSource);
       }
