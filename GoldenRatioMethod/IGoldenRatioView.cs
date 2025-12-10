@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace NumericalMethodsApp.Views
 {
@@ -10,6 +10,7 @@ namespace NumericalMethodsApp.Views
     string Epsilon { get; set; }
     bool FindMinimum { get; set; }
     bool FindMaximum { get; set; }
+    bool FindZero { get; set; } 
     string ResultText { get; set; }
 
     event EventHandler CalculateRequested;
@@ -20,6 +21,7 @@ namespace NumericalMethodsApp.Views
     void ShowError(string message);
     void ShowInfo(string message);
     void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum);
+    void UpdatePlotForZero(double lowerBound, double upperBound, double zeroX);
     void ClearPlot();
   }
 }
