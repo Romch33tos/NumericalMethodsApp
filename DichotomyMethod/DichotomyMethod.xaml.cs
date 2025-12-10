@@ -40,8 +40,30 @@ namespace NumericalMethodsApp
     private void InitializePlot()
     {
       _plotModel = new PlotModel { Title = "" };
-      _plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "x", FontSize = 14 });
-      _plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "f(x)", FontSize = 14 });
+
+      // Ось X с сеткой
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Title = "x",
+        FontSize = 14,
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(40, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
+        MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 0)
+      });
+
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Left,
+        Title = "f(x)",
+        FontSize = 14,
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(40, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
+        MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 0)
+      });
+
       PlotView.Model = _plotModel;
     }
 
