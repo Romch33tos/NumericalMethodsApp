@@ -191,6 +191,11 @@
                  IsChecked="{Binding FindMaximum, ElementName=ThisWindow}"
                  Margin="2"
                  GroupName="ExtremumType"/>
+                        <RadioButton Content="Найти ноль функции" x:Name="ZeroRadioButton" 
+                 Checked="RadioButton_Checked"
+                 IsChecked="{Binding FindZero, ElementName=ThisWindow}"
+                 Margin="2"
+                 GroupName="ExtremumType"/>
                     </StackPanel>
                 </GroupBox>
 
