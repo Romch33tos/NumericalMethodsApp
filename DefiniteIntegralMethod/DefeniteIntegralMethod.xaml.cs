@@ -1,7 +1,7 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using OxyPlot;
 
 namespace NumericalMethodsApp.DefiniteIntegralMethod
@@ -13,8 +13,17 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
     private double upperBound = 2;
     private double epsilon = 0.001;
     private string resultText = "";
-    private IntegrationMethod selectedMethod = IntegrationMethod.LeftRectangle;
+    private List<IntegrationMethod> selectedMethods = new List<IntegrationMethod>();
     private PlotModel plotModel;
+    private bool useFixedPartitions = false;
+    private bool autoPartitions = true;
+    private int fixedPartitions = 100;
+
+    private bool isLeftRectSelected = false;
+    private bool isRightRectSelected = false;
+    private bool isMidRectSelected = false;
+    private bool isTrapezoidSelected = false;
+    private bool isSimpsonSelected = false;
 
     public event PropertyChangedEventHandler PropertyChanged;
     public event EventHandler CalculateRequested;
@@ -30,17 +39,34 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
       DataContext = this;
       presenter = new DefiniteIntegralPresenter(this);
       InitializePlot();
-      LeftRectRadioButton.IsChecked = true;
       WireUpEvents();
     }
 
     private void WireUpEvents()
     {
-      LeftRectRadioButton.Checked += (sender, eventArgs) => MethodChanged?.Invoke(this, IntegrationMethod.LeftRectangle);
-      RightRectRadioButton.Checked += (sender, eventArgs) => MethodChanged?.Invoke(this, IntegrationMethod.RightRectangle);
-      MidRectRadioButton.Checked += (sender, eventArgs) => MethodChanged?.Invoke(this, IntegrationMethod.MidpointRectangle);
-      TrapezoidRadioButton.Checked += (sender, eventArgs) => MethodChanged?.Invoke(this, IntegrationMethod.Trapezoidal);
-      SimpsonRadioButton.Checked += (sender, eventArgs) => MethodChanged?.Invoke(this, IntegrationMethod.Simpson);
+      LeftRectCheckBox.Checked += (sender, eventArgs) => UpdateSelectedMethods();
+      LeftRectCheckBox.Unchecked += (sender, eventArgs) => UpdateSelectedMethods();
+      RightRectCheckBox.Checked += (sender, eventArgs) => UpdateSelectedMethods();
+      RightRectCheckBox.Unchecked += (sender, eventArgs) => UpdateSelectedMethods();
+      MidRectCheckBox.Checked += (sender, eventArgs) => UpdateSelectedMethods();
+      MidRectCheckBox.Unchecked += (sender, eventArgs) => UpdateSelectedMethods();
+      TrapezoidCheckBox.Checked += (sender, eventArgs) => UpdateSelectedMethods();
+      TrapezoidCheckBox.Unchecked += (sender, eventArgs) => UpdateSelectedMethods();
+      SimpsonCheckBox.Checked += (sender, eventArgs) => UpdateSelectedMethods();
+      SimpsonCheckBox.Unchecked += (sender, eventArgs) => UpdateSelectedMethods();
+    }
+
+    private void UpdateSelectedMethods()
+    {
+      SelectedMethods.Clear();
+
+      if (IsLeftRectSelected) SelectedMethods.Add(IntegrationMethod.LeftRectangle);
+      if (IsRightRectSelected) SelectedMethods.Add(IntegrationMethod.RightRectangle);
+      if (IsMidRectSelected) SelectedMethods.Add(IntegrationMethod.MidpointRectangle);
+      if (IsTrapezoidSelected) SelectedMethods.Add(IntegrationMethod.Trapezoidal);
+      if (IsSimpsonSelected) SelectedMethods.Add(IntegrationMethod.Simpson);
+
+      OnPropertyChanged(nameof(SelectedMethods));
     }
 
     public string FunctionExpression
@@ -93,13 +119,13 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
       }
     }
 
-    public IntegrationMethod SelectedMethod
+    public List<IntegrationMethod> SelectedMethods
     {
-      get => selectedMethod;
+      get => selectedMethods;
       set
       {
-        selectedMethod = value;
-        OnPropertyChanged(nameof(SelectedMethod));
+        selectedMethods = value;
+        OnPropertyChanged(nameof(SelectedMethods));
       }
     }
 
@@ -111,6 +137,86 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
         plotModel = value;
         PlotViewControl.Model = plotModel;
         PlotViewControl.InvalidatePlot();
+      }
+    }
+
+    public bool UseFixedPartitions
+    {
+      get => useFixedPartitions;
+      set
+      {
+        useFixedPartitions = value;
+        OnPropertyChanged(nameof(UseFixedPartitions));
+      }
+    }
+
+    public bool AutoPartitions
+    {
+      get => autoPartitions;
+      set
+      {
+        autoPartitions = value;
+        OnPropertyChanged(nameof(AutoPartitions));
+      }
+    }
+
+    public int FixedPartitions
+    {
+      get => fixedPartitions;
+      set
+      {
+        fixedPartitions = value;
+        OnPropertyChanged(nameof(FixedPartitions));
+      }
+    }
+
+    public bool IsLeftRectSelected
+    {
+      get => isLeftRectSelected;
+      set
+      {
+        isLeftRectSelected = value;
+        OnPropertyChanged(nameof(IsLeftRectSelected));
+      }
+    }
+
+    public bool IsRightRectSelected
+    {
+      get => isRightRectSelected;
+      set
+      {
+        isRightRectSelected = value;
+        OnPropertyChanged(nameof(IsRightRectSelected));
+      }
+    }
+
+    public bool IsMidRectSelected
+    {
+      get => isMidRectSelected;
+      set
+      {
+        isMidRectSelected = value;
+        OnPropertyChanged(nameof(IsMidRectSelected));
+      }
+    }
+
+    public bool IsTrapezoidSelected
+    {
+      get => isTrapezoidSelected;
+      set
+      {
+        isTrapezoidSelected = value;
+        OnPropertyChanged(nameof(IsTrapezoidSelected));
+      }
+    }
+
+    public bool IsSimpsonSelected
+    {
+      get => isSimpsonSelected;
+      set
+      {
+        isSimpsonSelected = value;
+        OnPropertyChanged(nameof(IsSimpsonSelected));
       }
     }
 
