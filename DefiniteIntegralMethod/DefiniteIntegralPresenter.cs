@@ -1,5 +1,8 @@
-﻿using System;
+using System;
 using System.Windows.Media;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
 
 namespace NumericalMethodsApp.DefiniteIntegralMethod
 {
@@ -29,30 +32,127 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
       {
         if (!ValidateInput()) return;
 
-        (double result, int partitions) = model.CalculateIntegral(
-          view.SelectedMethod,
-          view.FunctionExpression,
-          view.LowerBound,
-          view.UpperBound,
-          view.Epsilon
-        );
+        string results = "";
+        int decimalPlaces = model.GetDecimalPlaces(view.Epsilon);
 
-        view.ResultText = $"Значение интеграла: {result:F6}\nКоличество разбиений: {partitions}";
+        if (view.SelectedMethods.Count == 0)
+        {
+          view.ShowWarning("Выберите хотя бы один метод интегрирования");
+          return;
+        }
 
-        Color methodColor = model.GetMethodColor(view.SelectedMethod);
-        view.PlotModel = model.CreatePlotModel(
-          view.FunctionExpression,
-          view.LowerBound,
-          view.UpperBound,
-          view.SelectedMethod,
-          methodColor,
-          partitions
-        );
+        foreach (IntegrationMethod method in view.SelectedMethods)
+        {
+          try
+          {
+            int? partitions = view.UseFixedPartitions ? view.FixedPartitions : (int?)null;
+
+            (double result, int actualPartitions) = model.CalculateIntegral(
+                method,
+                view.FunctionExpression,
+                view.LowerBound,
+                view.UpperBound,
+                view.Epsilon,
+                partitions
+            );
+
+            string methodName = GetMethodName(method);
+            results += $"{methodName}\n";
+            results += $"Значение функции: {result.ToString($"F{decimalPlaces}")}\n";
+            results += $"Количество разбиений: {actualPartitions}\n\n";
+          }
+          catch (Exception ex)
+          {
+            results += $"{GetMethodName(method)}\n";
+            results += $"Ошибка: {ex.Message}\n";
+            results += $"Количество разбиений: 0\n\n";
+          }
+        }
+
+        view.ResultText = results.TrimEnd();
+
+        if (view.SelectedMethods.Count == 1)
+        {
+          Color methodColor = model.GetMethodColor(view.SelectedMethods[0]);
+          view.PlotModel = model.CreatePlotModel(
+              view.FunctionExpression,
+              view.LowerBound,
+              view.UpperBound,
+              view.SelectedMethods[0],
+              methodColor,
+              view.UseFixedPartitions ? view.FixedPartitions : 50
+          );
+        }
+        else
+        {
+          PlotModel plotModel = new PlotModel
+          {
+            PlotAreaBorderColor = OxyColors.LightGray,
+            PlotAreaBorderThickness = new OxyThickness(1),
+            Background = OxyColors.White
+          };
+
+          LinearAxis xAxis = new LinearAxis
+          {
+            Position = AxisPosition.Bottom,
+            Title = "x",
+            MajorGridlineColor = OxyColors.LightGray,
+            MajorGridlineStyle = LineStyle.Dash
+          };
+
+          LinearAxis yAxis = new LinearAxis
+          {
+            Position = AxisPosition.Left,
+            Title = "f(x)",
+            MajorGridlineColor = OxyColors.LightGray,
+            MajorGridlineStyle = LineStyle.Dash
+          };
+
+          plotModel.Axes.Add(xAxis);
+          plotModel.Axes.Add(yAxis);
+
+          LineSeries functionSeries = new LineSeries
+          {
+            Title = "f(x)",
+            Color = OxyColors.Blue,
+            StrokeThickness = 3
+          };
+
+          int pointsCount = 200;
+          double stepSize = (view.UpperBound - view.LowerBound) / pointsCount;
+
+          for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
+          {
+            double xCoordinate = view.LowerBound + pointIndex * stepSize;
+            try
+            {
+              double yCoordinate = model.EvaluateFunction(view.FunctionExpression, xCoordinate);
+              functionSeries.Points.Add(new DataPoint(xCoordinate, yCoordinate));
+            }
+            catch { }
+          }
+
+          plotModel.Series.Add(functionSeries);
+          view.PlotModel = plotModel;
+        }
       }
       catch (Exception exception)
       {
         view.ShowError($"Ошибка при вычислении: {exception.Message}");
       }
+    }
+
+    private string GetMethodName(IntegrationMethod method)
+    {
+      return method switch
+      {
+        IntegrationMethod.LeftRectangle => "Метод левых прямоугольников",
+        IntegrationMethod.RightRectangle => "Метод правых прямоугольников",
+        IntegrationMethod.MidpointRectangle => "Метод средних прямоугольников",
+        IntegrationMethod.Trapezoidal => "Метод трапеций",
+        IntegrationMethod.Simpson => "Метод Сиимпсона",
+        _ => "Неизвестный метод"
+      };
     }
 
     private bool ValidateInput()
@@ -72,6 +172,12 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
       if (view.Epsilon <= 0)
       {
         view.ShowWarning("Точность должна быть положительным числом");
+        return false;
+      }
+
+      if (view.UseFixedPartitions && (view.FixedPartitions <= 0 || view.FixedPartitions > 1000000))
+      {
+        view.ShowWarning("Количество разбиений должно быть от 1 до 1000000");
         return false;
       }
 
@@ -103,34 +209,42 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
 
     private void OnClearAllRequested(object sender, EventArgs eventArgs)
     {
-      view.FunctionExpression = "";
-      view.LowerBound = 0;
-      view.UpperBound = 1;
+      view.FunctionExpression = "x*x - 2*x + 1";
+      view.LowerBound = 1;
+      view.UpperBound = 2;
       view.Epsilon = 0.001;
       view.ResultText = "";
-      view.SelectedMethod = IntegrationMethod.LeftRectangle;
+      view.FixedPartitions = 100;
+      view.UseFixedPartitions = false;
+      view.AutoPartitions = true;
+      view.SelectedMethods.Clear();
+      view.IsLeftRectSelected = false;
+      view.IsRightRectSelected = false;
+      view.IsMidRectSelected = false;
+      view.IsTrapezoidSelected = false;
+      view.IsSimpsonSelected = false;
 
-      OxyPlot.PlotModel plotModel = new OxyPlot.PlotModel
+      PlotModel plotModel = new PlotModel
       {
-        PlotAreaBorderColor = OxyPlot.OxyColors.LightGray,
-        PlotAreaBorderThickness = new OxyPlot.OxyThickness(1),
-        Background = OxyPlot.OxyColors.White
+        PlotAreaBorderColor = OxyColors.LightGray,
+        PlotAreaBorderThickness = new OxyThickness(1),
+        Background = OxyColors.White
       };
 
-      OxyPlot.Axes.LinearAxis xAxis = new OxyPlot.Axes.LinearAxis
+      LinearAxis xAxis = new LinearAxis
       {
-        Position = OxyPlot.Axes.AxisPosition.Bottom,
+        Position = AxisPosition.Bottom,
         Title = "x",
-        MajorGridlineColor = OxyPlot.OxyColors.LightGray,
-        MajorGridlineStyle = OxyPlot.LineStyle.Dash
+        MajorGridlineColor = OxyColors.LightGray,
+        MajorGridlineStyle = LineStyle.Dash
       };
 
-      OxyPlot.Axes.LinearAxis yAxis = new OxyPlot.Axes.LinearAxis
+      LinearAxis yAxis = new LinearAxis
       {
-        Position = OxyPlot.Axes.AxisPosition.Left,
+        Position = AxisPosition.Left,
         Title = "f(x)",
-        MajorGridlineColor = OxyPlot.OxyColors.LightGray,
-        MajorGridlineStyle = OxyPlot.LineStyle.Dash
+        MajorGridlineColor = OxyColors.LightGray,
+        MajorGridlineStyle = LineStyle.Dash
       };
 
       plotModel.Axes.Add(xAxis);
@@ -141,21 +255,21 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
     private void OnHelpRequested(object sender, EventArgs eventArgs)
     {
       string helpText = "Инструкция по использованию:\n\n" +
-                       "1. Введите функцию f(x)\n" +
-                       "2. Укажите границы интегрирования a и b\n" +
-                       "3. Задайте точность вычислений ε\n" +
-                       "4. Выберите метод интегрирования\n" +
-                       "5. Нажмите 'Вычислить' для расчета\n\n" +
-                       "Поддерживаемые операции: +, -, *, /, ^, sin, cos, tan, log, exp, sqrt, abs, asin, acos, atan\n" +
-                       "Константы: pi, e\n" +
-                       "Примеры функций: x^2 + 2*x + 1, sin(x)*cos(x), exp(-x^2), sqrt(1-x^2)";
+                     "1. Введите функцию f(x)\n" +
+                     "2. Укажите границы интегрирования a и b\n" +
+                     "3. Задайте точность вычислений ε\n" +
+                     "4. Выберите режим подбора разбиений\n" +
+                     "5. Выберите один или несколько методов интегрирования\n" +
+                     "6. Нажмите 'Вычислить' для расчета\n\n" +
+                     "Поддерживаемые операции: +, -, *, /, ^, sin, cos, tan, log, exp, sqrt, abs, asin, acos, atan\n" +
+                     "Константы: pi, e\n" +
+                     "Примеры функций: x^2 + 2*x + 1, sin(x)*cos(x), exp(-x^2), sqrt(1-x^2)";
 
       view.ShowInformation(helpText);
     }
 
     private void OnMethodChanged(object sender, IntegrationMethod method)
     {
-      view.SelectedMethod = method;
     }
   }
 }
