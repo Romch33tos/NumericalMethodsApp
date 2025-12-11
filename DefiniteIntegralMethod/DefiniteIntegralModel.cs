@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Media;
 using OxyPlot;
 using OxyPlot.Series;
@@ -101,9 +101,16 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
     }
 
     public (double result, int partitions) CalculateIntegral(IntegrationMethod method, string expression,
-                                                            double lowerBound, double upperBound, double epsilon)
+                                                            double lowerBound, double upperBound, double epsilon,
+                                                            int? fixedPartitions = null)
     {
       Func<double, double> function = xValue => EvaluateFunction(expression, xValue);
+
+      if (fixedPartitions.HasValue)
+      {
+        double result = CalculateFixedPartitions(method, function, lowerBound, upperBound, fixedPartitions.Value);
+        return (result, fixedPartitions.Value);
+      }
 
       switch (method)
       {
@@ -113,6 +120,20 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
           return CalculateAdaptiveSimpson(function, lowerBound, upperBound, epsilon);
         default:
           return CalculateAdaptiveRectangle(method, function, lowerBound, upperBound, epsilon);
+      }
+    }
+
+    private double CalculateFixedPartitions(IntegrationMethod method, Func<double, double> function,
+                                           double lowerBound, double upperBound, int partitions)
+    {
+      switch (method)
+      {
+        case IntegrationMethod.Trapezoidal:
+          return CalculateTrapezoidal(function, lowerBound, upperBound, partitions);
+        case IntegrationMethod.Simpson:
+          return CalculateSimpson(function, lowerBound, upperBound, partitions);
+        default:
+          return CalculateRectangle(method, function, lowerBound, upperBound, partitions);
       }
     }
 
@@ -464,6 +485,12 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
       double term1 = y1 * (x - x0) * (x - x2) / ((x1 - x0) * (x1 - x2));
       double term2 = y2 * (x - x0) * (x - x1) / ((x2 - x0) * (x2 - x1));
       return term0 + term1 + term2;
+    }
+
+    public int GetDecimalPlaces(double epsilon)
+    {
+      if (epsilon <= 0) return 6;
+      return Math.Max(1, (int)Math.Ceiling(-Math.Log10(epsilon)));
     }
 
     public Color GetMethodColor(IntegrationMethod method)
