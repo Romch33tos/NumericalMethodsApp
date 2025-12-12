@@ -8,9 +8,9 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
 {
   public partial class DefeniteIntegralMethod : Window, IDefiniteIntegralView
   {
-    private string functionExpression = "x*x - 2*x + 1";
-    private double lowerBound = 1;
-    private double upperBound = 2;
+    private string functionExpression = "";
+    private double lowerBound = 0;
+    private double upperBound = 1;
     private double epsilon = 0.001;
     private string resultText = "";
     private List<IntegrationMethod> selectedMethods = new List<IntegrationMethod>();
