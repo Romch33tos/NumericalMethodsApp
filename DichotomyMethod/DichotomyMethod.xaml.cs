@@ -25,9 +25,9 @@ namespace NumericalMethodsApp
       InitializePlot();
       _presenter = new DichotomyPresenter(this);
 
-      TextBoxFunction.Text = "x^2 - 4";
-      TextBoxA.Text = "1";
-      TextBoxB.Text = "3";
+      TextBoxFunction.Text = "";
+      TextBoxA.Text = "0";
+      TextBoxB.Text = "1";
       TextBoxEpsilon.Text = "0.001";
 
       KeyboardNavigation.SetTabIndex(TextBoxFunction, 0);
