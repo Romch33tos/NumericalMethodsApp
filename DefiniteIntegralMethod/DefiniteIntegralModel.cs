@@ -141,23 +141,22 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
                                                                        Func<double, double> function,
                                                                        double lowerBound, double upperBound, double tolerance)
     {
-      int maxPartitions = 10000;
-      int currentPartitions = 8;
+      int maxPartitions = 1000000;
+      int currentPartitions = 4;
       double previousResult = CalculateRectangle(method, function, lowerBound, upperBound, currentPartitions);
       double currentResult = previousResult;
 
-      for (int iterationIndex = 0; iterationIndex < 20; ++iterationIndex)
+      for (int iterationIndex = 0; iterationIndex < 50; ++iterationIndex)
       {
         currentPartitions *= 2;
         if (currentPartitions > maxPartitions) break;
 
         currentResult = CalculateRectangle(method, function, lowerBound, upperBound, currentPartitions);
-        if (Math.Abs(currentResult - previousResult) < tolerance) break;
-        if (iterationIndex > 5 && Math.Abs(currentResult - previousResult) >
-            Math.Abs(previousResult - CalculateRectangle(method, function, lowerBound, upperBound, currentPartitions / 4)))
-        {
+        double errorEstimate = Math.Abs(currentResult - previousResult);
+
+        if (errorEstimate < tolerance * Math.Abs(currentResult) && errorEstimate < tolerance)
           break;
-        }
+
         previousResult = currentResult;
       }
 
@@ -194,23 +193,22 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
     private (double result, int partitions) CalculateAdaptiveTrapezoidal(Func<double, double> function,
                                                                         double lowerBound, double upperBound, double tolerance)
     {
-      int maxPartitions = 10000;
-      int currentPartitions = 8;
+      int maxPartitions = 1000000;
+      int currentPartitions = 4;
       double previousResult = CalculateTrapezoidal(function, lowerBound, upperBound, currentPartitions);
       double currentResult = previousResult;
 
-      for (int iterationIndex = 0; iterationIndex < 20; ++iterationIndex)
+      for (int iterationIndex = 0; iterationIndex < 50; ++iterationIndex)
       {
         currentPartitions *= 2;
         if (currentPartitions > maxPartitions) break;
 
         currentResult = CalculateTrapezoidal(function, lowerBound, upperBound, currentPartitions);
-        if (Math.Abs(currentResult - previousResult) < tolerance) break;
-        if (iterationIndex > 5 && Math.Abs(currentResult - previousResult) >
-            Math.Abs(previousResult - CalculateTrapezoidal(function, lowerBound, upperBound, currentPartitions / 4)))
-        {
+        double errorEstimate = Math.Abs(currentResult - previousResult);
+
+        if (errorEstimate < tolerance * Math.Abs(currentResult) && errorEstimate < tolerance)
           break;
-        }
+
         previousResult = currentResult;
       }
 
@@ -234,23 +232,22 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
     private (double result, int partitions) CalculateAdaptiveSimpson(Func<double, double> function,
                                                                      double lowerBound, double upperBound, double tolerance)
     {
-      int maxPartitions = 10000;
+      int maxPartitions = 1000000;
       int currentPartitions = 4;
       double previousResult = CalculateSimpson(function, lowerBound, upperBound, currentPartitions);
       double currentResult = previousResult;
 
-      for (int iterationIndex = 0; iterationIndex < 20; ++iterationIndex)
+      for (int iterationIndex = 0; iterationIndex < 50; ++iterationIndex)
       {
         currentPartitions *= 2;
         if (currentPartitions > maxPartitions) break;
 
         currentResult = CalculateSimpson(function, lowerBound, upperBound, currentPartitions);
-        if (Math.Abs(currentResult - previousResult) < tolerance) break;
-        if (iterationIndex > 5 && Math.Abs(currentResult - previousResult) >
-            Math.Abs(previousResult - CalculateSimpson(function, lowerBound, upperBound, currentPartitions / 4)))
-        {
+        double errorEstimate = Math.Abs(currentResult - previousResult);
+
+        if (errorEstimate < tolerance * Math.Abs(currentResult) && errorEstimate < tolerance)
           break;
-        }
+
         previousResult = currentResult;
       }
 
