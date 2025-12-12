@@ -150,7 +150,7 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
         IntegrationMethod.RightRectangle => "Метод правых прямоугольников",
         IntegrationMethod.MidpointRectangle => "Метод средних прямоугольников",
         IntegrationMethod.Trapezoidal => "Метод трапеций",
-        IntegrationMethod.Simpson => "Метод Сиимпсона",
+        IntegrationMethod.Simpson => "Метод Симпсона",
         _ => "Неизвестный метод"
       };
     }
@@ -209,9 +209,9 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
 
     private void OnClearAllRequested(object sender, EventArgs eventArgs)
     {
-      view.FunctionExpression = "x*x - 2*x + 1";
-      view.LowerBound = 1;
-      view.UpperBound = 2;
+      view.FunctionExpression = "";
+      view.LowerBound = 0;
+      view.UpperBound = 1;
       view.Epsilon = 0.001;
       view.ResultText = "";
       view.FixedPartitions = 100;
