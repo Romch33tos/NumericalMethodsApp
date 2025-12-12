@@ -149,29 +149,24 @@ namespace NumericalMethodsApp.OlympiadSorting
       bool iterationLimitExceeded = false;
       var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-      int iterationsCount = sortedArray.Length > 0 ?
-          (int)Math.Ceiling(Math.Log(sortedArray.Length, 2)) : 0;
-      iterationLimitExceeded = iterationsCount >= maxIterations;
-
       int actualIterations = 0;
-      bool limitExceeded = false;
-      QuickSortRecursive(sortedArray, 0, sortedArray.Length - 1, ascending, ref actualIterations, maxIterations, ref limitExceeded);
+      QuickSortRecursive(sortedArray, 0, sortedArray.Length - 1, ascending, ref actualIterations, maxIterations, ref iterationLimitExceeded);
 
       stopwatch.Stop();
-      return new SortResult("Быстрая", stopwatch.Elapsed.TotalMilliseconds, iterationsCount, sortedArray, iterationLimitExceeded);
+      return new SortResult("Быстрая", stopwatch.Elapsed.TotalMilliseconds, actualIterations, sortedArray, iterationLimitExceeded);
     }
 
     private void QuickSortRecursive(double[] array, int lowIndex, int highIndex, bool ascending, ref int actualIterations, int maxIterations, ref bool iterationLimitExceeded)
     {
-      ++actualIterations;
-      if (actualIterations >= maxIterations)
-      {
-        iterationLimitExceeded = true;
-        return;
-      }
-
       if (lowIndex < highIndex)
       {
+        ++actualIterations;
+        if (actualIterations >= maxIterations)
+        {
+          iterationLimitExceeded = true;
+          return;
+        }
+
         int pivotIndex = Partition(array, lowIndex, highIndex, ascending, ref actualIterations, maxIterations, ref iterationLimitExceeded);
         if (iterationLimitExceeded) return;
 
@@ -207,6 +202,13 @@ namespace NumericalMethodsApp.OlympiadSorting
           array[partitionIndex] = array[currentIndex];
           array[currentIndex] = temporaryValue;
         }
+      }
+
+      ++actualIterations;
+      if (actualIterations >= maxIterations)
+      {
+        iterationLimitExceeded = true;
+        return partitionIndex + 1;
       }
 
       double temporaryValue2 = array[partitionIndex + 1];
