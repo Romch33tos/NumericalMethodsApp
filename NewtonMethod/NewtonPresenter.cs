@@ -82,12 +82,11 @@ namespace NumericalMethodsApp.Presenters
           int decimalPlaces = GetDecimalPlacesFromEpsilon();
           string format = $"F{decimalPlaces}";
 
-          view.ResultText = $"Шаг {step.Iteration}:\n" +
-                           $"Текущая точка: x = {step.CurrentPoint.ToString(format, CultureInfo.InvariantCulture)}\n" +
-                           $"Следующая точка: x = {step.NextPoint.ToString(format, CultureInfo.InvariantCulture)}\n" +
-                           $"Первая производная: {step.FirstDerivative.ToString(format, CultureInfo.InvariantCulture)}\n" +
-                           $"Вторая производная: {step.SecondDerivative.ToString(format, CultureInfo.InvariantCulture)}\n" +
-                           $"{extremumType}: f(x) = {functionValue.ToString(format, CultureInfo.InvariantCulture)}";
+          view.ResultText = $"Текущая точка: x = {step.CurrentPoint.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"Следующая точка: x = {step.NextPoint.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"Первая производная: {step.FirstDerivative.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"Вторая производная: {step.SecondDerivative.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"{extremumType}: f(x) = {functionValue.ToString(format, CultureInfo.InvariantCulture)}";
         }
       }
     }
