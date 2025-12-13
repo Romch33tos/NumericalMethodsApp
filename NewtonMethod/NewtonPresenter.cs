@@ -79,22 +79,56 @@ namespace NumericalMethodsApp.Presenters
           UpdateStepPlot(step, currentPoint, functionValue);
 
           string extremumType = "Минимум";
-          view.ResultText = $"Шаг {step.Iteration}:\n" +
-                           $"Текущая точка: x = {Math.Round(step.CurrentPoint, 5)}\n" +
-                           $"Следующая точка: x = {Math.Round(step.NextPoint, 5)}\n" +
-                           $"Первая производная: {Math.Round(step.FirstDerivative, 5)}\n" +
-                           $"Вторая производная: {Math.Round(step.SecondDerivative, 5)}\n" +
-                           $"{extremumType}: f(x) = {Math.Round(functionValue, 5)}";
+          int decimalPlaces = GetDecimalPlacesFromEpsilon();
+          string format = $"F{decimalPlaces}";
+
+          view.ResultText = $"Текущая точка: x = {step.CurrentPoint.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"Следующая точка: x = {step.NextPoint.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"Первая производная: {step.FirstDerivative.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"Вторая производная: {step.SecondDerivative.ToString(format, CultureInfo.InvariantCulture)}\n" +
+                            $"{extremumType}: f(x) = {functionValue.ToString(format, CultureInfo.InvariantCulture)}";
         }
       }
+    }
+
+    private int GetDecimalPlacesFromEpsilon()
+    {
+      double epsilon = model.Epsilon;
+      if (epsilon <= 0) return 5;
+
+      if (epsilon >= 1) return 0;
+
+      string epsilonStr = epsilon.ToString("G15", CultureInfo.InvariantCulture);
+      int decimalPlaces = 0;
+
+      if (epsilonStr.Contains("."))
+      {
+        string decimalPart = epsilonStr.Split('.')[1];
+        decimalPlaces = decimalPart.Length;
+      }
+      else if (epsilonStr.Contains(","))
+      {
+        string decimalPart = epsilonStr.Split(',')[1];
+        decimalPlaces = decimalPart.Length;
+      }
+      else if (epsilonStr.Contains("E-"))
+      {
+        int exponent = int.Parse(epsilonStr.Split(new[] { "E-" }, StringSplitOptions.None)[1]);
+        decimalPlaces = exponent;
+      }
+
+      return Math.Max(decimalPlaces, 1);
     }
 
     private void DisplayFinalResult()
     {
       string extremumType = "минимум";
+      int decimalPlaces = GetDecimalPlacesFromEpsilon();
+      string format = $"F{decimalPlaces}";
+
       view.ResultText = $"Найден {extremumType}:\n" +
-                       $"x = {Math.Round(model.CalculationResult.Point, 5)}, " +
-                       $"f(x) = {Math.Round(model.CalculationResult.Value, 5)}\n" +
+                       $"x = {model.CalculationResult.Point.ToString(format, CultureInfo.InvariantCulture)}, " +
+                       $"f(x) = {model.CalculationResult.Value.ToString(format, CultureInfo.InvariantCulture)}\n" +
                        $"Количество итераций: {model.IterationSteps.Count}";
     }
 
@@ -196,12 +230,10 @@ namespace NumericalMethodsApp.Presenters
                           "Принцип работы:\n" +
                           "- Использует первую и вторую производные для поиска экстремума\n" +
                           "- Итерационная формула: xₙ₊₁ = xₙ - f'(xₙ)/f''(xₙ)\n\n" +
-
                           "Ограничения метода:\n" +
                           "- Функция должна быть дважды дифференцируемой\n" +
                           "- Вторая производная не должна быть равна нулю\n" +
                           "- Начальное приближение должно быть близко к экстремуму\n\n" +
-
                           "Поддерживаемые функции:\n" +
                           "- Тригонометрические: sin(x), cos(x), tan(x)\n" +
                           "- Экспоненциальные: exp(x), e^x\n" +
@@ -209,7 +241,6 @@ namespace NumericalMethodsApp.Presenters
                           "- Степенные: x^2, pow(x, y)\n" +
                           "- Квадратный корень: sqrt(x)\n" +
                           "- Модуль: abs(x)\n\n" +
-
                           "Инструкция:\n" +
                           "1. Введите функцию f(x)\n" +
                           "2. Укажите интервал поиска [A, B]\n" +
@@ -288,7 +319,9 @@ namespace NumericalMethodsApp.Presenters
         AxislineColor = OxyColors.Black,
         TicklineColor = OxyColors.Black,
         MajorGridlineColor = OxyColors.LightGray,
-        MajorGridlineStyle = LineStyle.Dash,
+        MajorGridlineStyle = LineStyle.Solid,
+        MinorGridlineColor = OxyColor.FromArgb(30, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
         IsPanEnabled = true,
         IsZoomEnabled = true
       };
@@ -302,7 +335,9 @@ namespace NumericalMethodsApp.Presenters
         AxislineColor = OxyColors.Black,
         TicklineColor = OxyColors.Black,
         MajorGridlineColor = OxyColors.LightGray,
-        MajorGridlineStyle = LineStyle.Dash,
+        MajorGridlineStyle = LineStyle.Solid,
+        MinorGridlineColor = OxyColor.FromArgb(30, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
         IsPanEnabled = true,
         IsZoomEnabled = true
       };

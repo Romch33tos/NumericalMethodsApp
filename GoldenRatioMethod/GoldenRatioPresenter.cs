@@ -41,9 +41,17 @@ namespace NumericalMethodsApp.Presenters
         _model.Calculate();
 
         DisplayResult();
-        UpdatePlot(_model.LowerBound, _model.UpperBound,
-            _model.CalculationResult.Point, _model.CalculationResult.Value,
-            _model.FindMinimum);
+
+        if (_model.FindZero)
+        {
+          UpdatePlotForZero(_model.LowerBound, _model.UpperBound, _model.CalculationResult.Point);
+        }
+        else
+        {
+          UpdatePlot(_model.LowerBound, _model.UpperBound,
+              _model.CalculationResult.Point, _model.CalculationResult.Value,
+              _model.FindMinimum);
+        }
       }
       catch (Exception ex)
       {
@@ -59,6 +67,7 @@ namespace NumericalMethodsApp.Presenters
       _view.Epsilon = "0.001";
       _view.FindMinimum = false;
       _view.FindMaximum = false;
+      _view.FindZero = false;
       _view.ResultText = "";
       ClearPlot();
     }
@@ -84,24 +93,28 @@ namespace NumericalMethodsApp.Presenters
 2. ЗАДАНИЕ ИНТЕРВАЛА
    - Начало интервала (A) должно быть меньше конца интервала (B)
    - Убедитесь, что функция определена на всем интервале
-   - На интервале должна присутствовать одна точка экстремума
+   - Для поиска нуля: функция должна иметь разные знаки на концах интервала
 
 3. ВЫБОР ТОЧНОСТИ
    - Точность ε должна быть положительным числом
    - Меньшие значения дают более точный результат, но требуют больше итераций
    - Рекомендуемое значение: 0.001
+   - Количество знаков после запятой в результатах зависит от заданной точности
 
 4. ВЫБОР РЕЖИМА
    - Минимум: поиск наименьшего значения функции на интервале
    - Максимум: поиск наибольшего значения функции на интервале
+   - Ноль: поиск корня функции (нуля)
 
 5. ВИЗУАЛИЗАЦИЯ
    - График функции отображается синей линией
    - Найденный экстремум отмечается красной (минимум) или зеленой (максимум) точкой
+   - Найденный ноль отмечается фиолетовой точкой
    - Для навигации по графику используйте левую кнопку мыши для перемещения и колесо для масштабирования
 
 Особенности работы:
 - Метод золотого сечения гарантированно находит экстремум унимодальной функции
+- Для поиска нуля функция должна иметь разные знаки на концах интервала
 - Функция должна быть непрерывной на заданном интервале
 - При возникновении ошибок попробуйте изменить интервал поиска";
 
@@ -117,12 +130,6 @@ namespace NumericalMethodsApp.Presenters
       if (string.IsNullOrWhiteSpace(_view.FunctionExpression))
       {
         _view.ShowError("Введите функцию f(x)");
-        return false;
-      }
-
-      if (_model.IsConstantFunction(_view.FunctionExpression))
-      {
-        _view.ShowError("Функция должна зависеть от переменной x. Введите выражение с переменной x.");
         return false;
       }
 
@@ -145,18 +152,33 @@ namespace NumericalMethodsApp.Presenters
         return false;
       }
 
-      if (!_view.FindMinimum && !_view.FindMaximum)
+      if (!_view.FindMinimum && !_view.FindMaximum && !_view.FindZero)
       {
-        _view.ShowError("Выберите режим поиска (минимум или максимум)");
+        _view.ShowError("Выберите режим поиска (минимум, максимум или ноль)");
         return false;
       }
 
       try
       {
         _model.FunctionExpression = _view.FunctionExpression;
-        _model.EvaluateFunction(lowerBound);
-        _model.EvaluateFunction(upperBound);
-        _model.EvaluateFunction((lowerBound + upperBound) / 2);
+
+        if (_view.FindZero)
+        {
+          double fLower = _model.EvaluateFunction(lowerBound);
+          double fUpper = _model.EvaluateFunction(upperBound);
+
+          if (Math.Sign(fLower) == Math.Sign(fUpper))
+          {
+            _view.ShowError("Для поиска нуля функция должна иметь разные знаки на концах интервала");
+            return false;
+          }
+        }
+        else
+        {
+          _model.EvaluateFunction(lowerBound);
+          _model.EvaluateFunction(upperBound);
+          _model.EvaluateFunction((lowerBound + upperBound) / 2);
+        }
       }
       catch (Exception functionException)
       {
@@ -174,14 +196,44 @@ namespace NumericalMethodsApp.Presenters
       _model.UpperBound = GoldenRatioModel.ParseDouble(_view.UpperBound);
       _model.Epsilon = GoldenRatioModel.ParseDouble(_view.Epsilon);
       _model.FindMinimum = _view.FindMinimum;
+      _model.FindZero = _view.FindZero;
     }
 
     private void DisplayResult()
     {
       var result = _model.CalculationResult;
-      string extremumType = result.IsMinimum ? "минимум" : "максимум";
-      _view.ResultText = $"Найден {extremumType}:\n" +
-                       $"x = {Math.Round(result.Point, 5)}, f(x) = {Math.Round(result.Value, 5)}";
+      double epsilon = _model.Epsilon;
+
+      int decimalPlaces = GetDecimalPlacesFromEpsilon(epsilon);
+      string formatString = $"F{decimalPlaces}";
+
+      if (result.IsZero)
+      {
+        double roundedX = Math.Round(result.Point, decimalPlaces);
+        _view.ResultText = $"Найден ноль функции:\n" +
+                         $"x = {roundedX.ToString(formatString)}, f(x) = 0";
+      }
+      else
+      {
+        double roundedX = Math.Round(result.Point, decimalPlaces);
+        double roundedY = Math.Round(result.Value, decimalPlaces);
+        string extremumType = result.IsMinimum ? "минимум" : "максимум";
+        _view.ResultText = $"Найден {extremumType}:\n" +
+                         $"x = {roundedX.ToString(formatString)}, f(x) = {roundedY.ToString(formatString)}";
+      }
+    }
+
+    private int GetDecimalPlacesFromEpsilon(double epsilon)
+    {
+      if (epsilon <= 0)
+        return 5;
+
+      double log10 = Math.Log10(epsilon);
+      int decimalPlaces = (int)Math.Ceiling(Math.Abs(log10));
+
+      if (decimalPlaces < 1) return 1;
+      if (decimalPlaces > 15) return 15;
+      return decimalPlaces;
     }
 
     private void InitializePlot()
@@ -200,8 +252,10 @@ namespace NumericalMethodsApp.Presenters
         Position = AxisPosition.Bottom,
         Title = "x",
         TitleFontSize = 12,
-        MajorGridlineStyle = LineStyle.Dot,
-        MajorGridlineColor = OxyColors.LightGray
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(40, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
+        MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 0)
       });
 
       _plotModel.Axes.Add(new LinearAxis
@@ -209,8 +263,10 @@ namespace NumericalMethodsApp.Presenters
         Position = AxisPosition.Left,
         Title = "f(x)",
         TitleFontSize = 12,
-        MajorGridlineStyle = LineStyle.Dot,
-        MajorGridlineColor = OxyColors.LightGray
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(40, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
+        MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 0)
       });
 
       if (_view is GoldenRatioMethod wpfView)
@@ -264,7 +320,7 @@ namespace NumericalMethodsApp.Presenters
         extremumSeries.Points.Add(new ScatterPoint(extremumX, extremumY));
         _plotModel.Series.Add(extremumSeries);
 
-        AdjustPlotBounds(lowerBound, upperBound, extremumY);
+        AdjustPlotBounds(lowerBound, upperBound);
 
         _plotModel.InvalidatePlot(true);
       }
@@ -274,17 +330,72 @@ namespace NumericalMethodsApp.Presenters
       }
     }
 
+    public void UpdatePlotForZero(double lowerBound, double upperBound, double zeroX)
+    {
+      _plotModel.Series.Clear();
+
+      try
+      {
+        var functionSeries = new LineSeries
+        {
+          Title = "f(x)",
+          Color = OxyColors.Blue,
+          StrokeThickness = 2
+        };
+
+        int pointsCount = 100;
+        double stepSize = (upperBound - lowerBound) / pointsCount;
+
+        for (int pointIndex = 0; pointIndex <= pointsCount; ++pointIndex)
+        {
+          double currentX = lowerBound + pointIndex * stepSize;
+          try
+          {
+            double currentY = _model.EvaluateFunction(currentX);
+            if (!double.IsInfinity(currentY) && !double.IsNaN(currentY))
+            {
+              functionSeries.Points.Add(new DataPoint(currentX, currentY));
+            }
+          }
+          catch
+          {
+          }
+        }
+
+        _plotModel.Series.Add(functionSeries);
+
+        var zeroSeries = new ScatterSeries
+        {
+          Title = "Ноль",
+          MarkerType = MarkerType.Circle,
+          MarkerSize = 8,
+          MarkerFill = OxyColors.Purple
+        };
+
+        zeroSeries.Points.Add(new ScatterPoint(zeroX, 0));
+        _plotModel.Series.Add(zeroSeries);
+
+        AdjustPlotBounds(lowerBound, upperBound);
+
+        _plotModel.InvalidatePlot(true);
+      }
+      catch (Exception ex)
+      {
+        System.Diagnostics.Debug.WriteLine($"Ошибка при обновлении графика для нуля: {ex.Message}");
+      }
+    }
+
     private void ClearPlot()
     {
       _plotModel?.Series.Clear();
       _plotModel?.InvalidatePlot(true);
     }
 
-    private void AdjustPlotBounds(double lowerBound, double upperBound, double extremumY)
+    private void AdjustPlotBounds(double lowerBound, double upperBound)
     {
       double xMargin = (upperBound - lowerBound) * 0.1;
       double yRange = GetFunctionValueRange(lowerBound, upperBound);
-      double yMargin = yRange * 0.1;
+      double yMargin = Math.Max(yRange * 0.1, 0.1);
 
       var xAxis = _plotModel.Axes[0] as LinearAxis;
       var yAxis = _plotModel.Axes[1] as LinearAxis;
@@ -312,8 +423,11 @@ namespace NumericalMethodsApp.Presenters
           }
         }
 
-        if (extremumY < minY) minY = extremumY;
-        if (extremumY > maxY) maxY = extremumY;
+        if (Math.Abs(maxY - minY) < 0.001)
+        {
+          minY -= 1;
+          maxY += 1;
+        }
 
         yAxis.Minimum = minY - yMargin;
         yAxis.Maximum = maxY + yMargin;

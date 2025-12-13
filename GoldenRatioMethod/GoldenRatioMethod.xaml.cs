@@ -16,6 +16,7 @@ namespace NumericalMethodsApp.Views
     private string _epsilon = "0.001";
     private bool _findMinimum;
     private bool _findMaximum;
+    private bool _findZero;
     private string _resultText;
 
     public GoldenRatioPresenter Presenter { get; private set; }
@@ -86,6 +87,16 @@ namespace NumericalMethodsApp.Views
       }
     }
 
+    public bool FindZero
+    {
+      get => _findZero;
+      set
+      {
+        _findZero = value;
+        OnPropertyChanged();
+      }
+    }
+
     public string ResultText
     {
       get => _resultText;
@@ -143,6 +154,11 @@ namespace NumericalMethodsApp.Views
     public void UpdatePlot(double lowerBound, double upperBound, double extremumX, double extremumY, bool isMinimum)
     {
       Presenter?.UpdatePlot(lowerBound, upperBound, extremumX, extremumY, isMinimum);
+    }
+
+    public void UpdatePlotForZero(double lowerBound, double upperBound, double zeroX)
+    {
+      Presenter?.UpdatePlotForZero(lowerBound, upperBound, zeroX);
     }
 
     public void ClearPlot()

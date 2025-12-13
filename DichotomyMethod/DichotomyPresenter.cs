@@ -41,7 +41,8 @@ namespace NumericalMethodsApp
         var discontinuityPoints = _model.FindDiscontinuityPoints(functionExpression, startInterval, endInterval);
         if (discontinuityPoints.Any())
         {
-          string pointsText = string.Join(", ", discontinuityPoints.Select(p => Math.Round(p, 3)));
+          int discontinuityPrecision = GetPrecisionFromEpsilon(epsilon);
+          string pointsText = string.Join(", ", discontinuityPoints.Select(p => Math.Round(p, discontinuityPrecision)));
           _view.ShowWarning($"Обнаружены точки разрыва функции: {pointsText}\n\nРекомендуется изменить интервал, исключив эти точки.");
         }
 
@@ -49,8 +50,10 @@ namespace NumericalMethodsApp
 
         if (result.Success)
         {
-          string resultText = $"Найден корень уравнения: x = {Math.Round(result.Root, 6)}\n" +
-                             $"Значение функции: f(x) = {Math.Round(result.FunctionValue, 10)}";
+          int precision = GetPrecisionFromEpsilon(epsilon);
+
+          string resultText = $"Найден корень уравнения: x = {result.Root.ToString($"F{precision}")}\n" +
+                             $"Значение функции: f(x) = {result.FunctionValue.ToString($"F{precision}")}";
           _view.SetResult(resultText);
           _view.PlotFunction(startInterval, endInterval, new double[] { result.Root });
         }
@@ -65,6 +68,17 @@ namespace NumericalMethodsApp
       {
         _view.ShowError($"Ошибка при вычислениях: {ex.Message}");
       }
+    }
+
+    private int GetPrecisionFromEpsilon(double epsilon)
+    {
+      if (epsilon <= 0) return 10;
+
+      double logValue = -Math.Log10(epsilon);
+
+      int precision = (int)Math.Round(logValue, MidpointRounding.AwayFromZero);
+
+      return Math.Max(0, precision);
     }
 
     public double EvaluateFunction(string functionExpression, double xValue)
