@@ -10,7 +10,7 @@
 
 ## Интерфейс приложения
 
-<img width="280" alt="MainWindow" src="https://github.com/user-attachments/assets/c695a415-e8b6-4f49-b17f-11b142b757d1" />
+<img width="476" height="569" alt="MainWindow" src="https://github.com/user-attachments/assets/02900931-3180-4112-8573-c8d813528eb9" />
 
 ---
 
@@ -34,7 +34,7 @@
 
 ### Интерфейс окна метода дихотомии
 
-<img width="600" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/4e13385e-bf17-4d63-87e1-763b3f36ab5c" />
+<img width="981" height="710" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/cc98985c-e629-4470-bf64-e29a7ddbb6c3" />
 
 ---
 
@@ -102,7 +102,7 @@
 
 ### Интерфейс окна метода золотого сечения
 
-<img width="600" alt="GoldenRatio" src="https://github.com/user-attachments/assets/8f1536da-702c-4028-a8b8-5343802a9d92" />
+<img width="974" height="706" alt="GoldenRatioMethod" src="https://github.com/user-attachments/assets/fcfb380d-3337-472d-92d4-63e60eaf105b" />
 
 ---
 
@@ -121,7 +121,7 @@
 
 ### Интерфейс окна метода Ньютона
 
-<img width="600" alt="NewtonMethod" src="https://github.com/user-attachments/assets/e94df89c-432e-4b21-b546-c8b374780055" />
+<img width="981" height="707" alt="NewtonMethod" src="https://github.com/user-attachments/assets/2a305f54-31f2-4ded-9242-255d3c13605f" />
 
 ---
 
@@ -191,7 +191,11 @@
 
 **Временная сложность:** O(n × n!) в среднем случае
 
-Исправлю формулы, чтобы они корректно отображались в Markdown и LaTeX.
+### Интерфейс окна олимпиадных сортировок
+
+<img width="1077" height="676" alt="OlympiadSorting" src="https://github.com/user-attachments/assets/790bde9e-9458-4ed1-88a5-639d7c8fd7a3" />
+
+---
 
 ## 📗 Вычисление определенного интеграла
 
@@ -259,6 +263,6 @@
 
 **Точность:** Имеет более высокий порядок точности по сравнению с предыдущими методами, особенно для гладких функций. Точность метода Симпсона пропорциональна $h^4$, тогда как у метода трапеций — $h^2$, а у методов прямоугольников — $h$.
 
-### Интерфейс программы
+### Интерфейс окна метода вычисления определенного интеграла
 
-<img width="600" alt="Integral" src="https://github.com/user-attachments/assets/4615f600-a8f7-4578-b8f5-2cd22f101c31">
+<img width="975" height="706" alt="DefiniteIntegralMethod" src="https://github.com/user-attachments/assets/bede163b-790e-43bb-8917-5e0a7e929adf" />
