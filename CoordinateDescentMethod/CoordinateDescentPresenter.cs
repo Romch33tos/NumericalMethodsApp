@@ -7,7 +7,6 @@ namespace NumericalMethodsApp
   {
     private readonly ICoordinateDescentView view;
     private readonly CoordinateDescentModel model;
-    private double epsilon;
 
     public CoordinateDescentPresenter(ICoordinateDescentView view)
     {
@@ -19,6 +18,7 @@ namespace NumericalMethodsApp
       this.view.HelpClicked += OnHelpClicked;
     }
 
+    private double epsilon;
     private void OnCalculateClicked(object sender, EventArgs e)
     {
       try
@@ -112,6 +112,30 @@ namespace NumericalMethodsApp
       resultText += $"y = {model.MinimumPoint.Y.ToString(format, CultureInfo.InvariantCulture)}";
 
       view.Result = resultText;
+    }
+
+    private void OnClearAllClicked(object sender, EventArgs e)
+    {
+      view.ClearResults();
+    }
+
+    private void OnHelpClicked(object sender, EventArgs e)
+    {
+      string helpMessage = "Метод покоординатного спуска\n\n" +
+                          "1. Введите функцию f(x, y) в поле 'Функция'\n" +
+                          "2. Укажите начальные приближения для x и y\n" +
+                          "3. Задайте точность вычислений ε (0 < ε ≤ 1)\n" +
+                          "4. Нажмите 'Вычислить'\n\n" +
+                          "Примеры функций:\n" +
+                          "x^2 + y^2\n" +
+                          "sin(x) + cos(y)\n" +
+                          "exp(-(x^2 + y^2))\n" +
+                          "x^2 + 2*y^2 - 4*x + 4*y\n\n" +
+                          "Доступные операторы: +, -, *, /, ^\n" +
+                          "Доступные функции: sin, cos, tan, exp, log, sqrt, abs";
+
+      System.Windows.MessageBox.Show(helpMessage, "Справка",
+          System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
     }
   }
 }
