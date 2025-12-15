@@ -1,8 +1,9 @@
-using System;
-using System.Windows.Media;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using System;
+using System.Windows;
+using System.Windows.Media;
 
 namespace NumericalMethodsApp.DefiniteIntegralMethod
 {
@@ -209,6 +210,17 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
 
     private void OnClearAllRequested(object sender, EventArgs eventArgs)
     {
+      MessageBoxResult result = MessageBox.Show(
+          "Вы действительно хотите очистить все данные?",
+          "Подтверждение очистки",
+          MessageBoxButton.YesNo,
+          MessageBoxImage.Question);
+
+      if (result != MessageBoxResult.Yes)
+      {
+        return;
+      }
+
       view.FunctionExpression = "";
       view.LowerBound = 0;
       view.UpperBound = 1;
