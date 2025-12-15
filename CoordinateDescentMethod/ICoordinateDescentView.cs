@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 
 namespace NumericalMethodsApp
 {
   public interface ICoordinateDescentView
   {
-    string FunctionExpression { get; set; }
-    string XStart { get; set; }
-    string YStart { get; set; }
-    string Epsilon { get; set; }
-    string Result { get; set; }
+    string FunctionExpression { get; }
+    string XStart { get; }
+    string YStart { get; }
+    string Epsilon { get; }
+    string Result { set; }
 
     event EventHandler CalculateClicked;
     event EventHandler ClearAllClicked;
@@ -16,6 +16,6 @@ namespace NumericalMethodsApp
 
     void ShowError(string message);
     void ClearResults();
-    void UpdatePlot(OxyPlot.PlotModel plotModel); 
+    void UpdatePlot(OxyPlot.PlotModel plotModel);
   }
 }
