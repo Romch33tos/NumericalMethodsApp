@@ -247,6 +247,17 @@ namespace NumericalMethodsApp.OlympiadSorting
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+      MessageBoxResult result = MessageBox.Show(
+          "Вы действительно хотите очистить все данные?",
+          "Подтверждение очистки",
+          MessageBoxButton.YesNo,
+          MessageBoxImage.Question);
+
+      if (result != MessageBoxResult.Yes)
+      {
+        return;
+      }
+
       view.RowsText = "5";
       view.MinValueText = "0";
       view.MaxValueText = "100";
