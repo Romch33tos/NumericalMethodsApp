@@ -103,7 +103,7 @@
         </Menu>
 
         <Border Background="White" Margin="15" CornerRadius="8" 
-                BorderThickness="1" BorderBrush="#FFEAECEE" Height="631">
+                BorderThickness="1" BorderBrush="#FFEAECEE" Height="646">
             <Grid Margin="15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -177,9 +177,10 @@
                            Background="#FF3498DB" FontSize="13" Margin="8,0"/>
                 </StackPanel>
 
-                <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="8" Grid.RowSpan="2">
+                <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="8,10,8,8">
                     <TextBox x:Name="ResultText" 
-                            Style="{StaticResource ResultTextBoxStyle}" Height="55"/>
+                            Style="{StaticResource ResultTextBoxStyle}" Height="70
+                             "/>
                 </GroupBox>
             </Grid>
         </Border>
