@@ -80,5 +80,127 @@ namespace NumericalMethodsApp
       epsilon = epsilonValue;
       return true;
     }
+
+    private double EvaluateFunction(double inputX, double inputY)
+    {
+      try
+      {
+        if (Math.Abs(inputX) < 1e-12 && FunctionExpression.Contains("/x"))
+          return double.PositiveInfinity;
+        if (Math.Abs(inputY) < 1e-12 && FunctionExpression.Contains("/y"))
+          return double.PositiveInfinity;
+
+        parsedExpression.Parameters["x"] = inputX;
+        parsedExpression.Parameters["y"] = inputY;
+        var result = parsedExpression.Evaluate();
+        return Convert.ToDouble(result);
+      }
+      catch
+      {
+        return double.NaN;
+      }
+    }
+
+    private double FindOptimalX(double fixedY)
+    {
+      double leftBound = currentX - SearchRange;
+      double rightBound = currentX + SearchRange;
+      double stepSize = SearchStep;
+
+      double optimalX = leftBound;
+      double minValue = EvaluateFunction(leftBound, fixedY);
+
+      if (double.IsNaN(minValue))
+        return currentX;
+
+      for (double candidateX = leftBound + stepSize; candidateX <= rightBound; candidateX += stepSize)
+      {
+        double currentValue = EvaluateFunction(candidateX, fixedY);
+        if (!double.IsNaN(currentValue) && currentValue < minValue)
+        {
+          minValue = currentValue;
+          optimalX = candidateX;
+        }
+      }
+
+      return optimalX;
+    }
+
+    private double FindOptimalY(double fixedX)
+    {
+      double lowerBound = currentY - SearchRange;
+      double upperBound = currentY + SearchRange;
+      double stepSize = SearchStep;
+
+      double optimalY = lowerBound;
+      double minValue = EvaluateFunction(fixedX, lowerBound);
+
+      if (double.IsNaN(minValue))
+        return currentY;
+
+      for (double candidateY = lowerBound + stepSize; candidateY <= upperBound; candidateY += stepSize)
+      {
+        double currentValue = EvaluateFunction(fixedX, candidateY);
+        if (!double.IsNaN(currentValue) && currentValue < minValue)
+        {
+          minValue = currentValue;
+          optimalY = candidateY;
+        }
+      }
+
+      return optimalY;
+    }
+
+    public OptimizationResult PerformOptimization()
+    {
+      if (parsedExpression == null)
+        return OptimizationResult.Failure("Функция не задана");
+
+      OptimizationPath.Clear();
+      OptimizationPath.Add(new Point2D(currentX, currentY));
+
+      int iterationCounter = 0;
+      bool isConverged = false;
+
+      while (!isConverged && iterationCounter < MaxIterations)
+      {
+        ++iterationCounter;
+
+        double previousX = currentX;
+        double previousY = currentY;
+
+        currentX = FindOptimalX(currentY);
+        if (double.IsNaN(currentX))
+          return OptimizationResult.Failure("Ошибка вычисления функции при оптимизации по X");
+
+        OptimizationPath.Add(new Point2D(currentX, currentY));
+
+        currentY = FindOptimalY(currentX);
+        if (double.IsNaN(currentY))
+          return OptimizationResult.Failure("Ошибка вычисления функции при оптимизации по Y");
+
+        OptimizationPath.Add(new Point2D(currentX, currentY));
+
+        double deltaX = Math.Abs(currentX - previousX);
+        double deltaY = Math.Abs(currentY - previousY);
+
+        if (deltaX < epsilon && deltaY < epsilon)
+        {
+          isConverged = true;
+        }
+      }
+
+      IterationsCount = iterationCounter;
+      MinimumPoint = new Point2D(currentX, currentY);
+      FinalFunctionValue = EvaluateFunction(currentX, currentY);
+
+      if (double.IsNaN(FinalFunctionValue))
+        return OptimizationResult.Failure("Не удалось вычислить значение функции в найденной точке");
+
+      OptimizationStatus = isConverged ? "Сходимость достигнута" :
+          iterationCounter >= MaxIterations ? "Достигнут предел итераций" : "Выполнено";
+
+      return OptimizationResult.Success();
+    }
   }
 }
