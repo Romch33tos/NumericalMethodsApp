@@ -71,6 +71,10 @@ namespace NumericalMethodsApp
           view.ShowError(optimizationResult.ErrorMessage);
           return;
         }
+
+        DisplayResults();
+        var plotModel = model.CreatePlotModel();
+        view.UpdatePlot(plotModel);
       }
       catch (Exception ex)
       {
@@ -88,6 +92,26 @@ namespace NumericalMethodsApp
       }
 
       return double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+    }
+
+    private void DisplayResults()
+    {
+      int decimalPlaces = 0;
+      double tempEpsilon = epsilon;
+
+      while (tempEpsilon < 1)
+      {
+        decimalPlaces++;
+        tempEpsilon *= 10;
+      }
+
+      string format = $"F{decimalPlaces}";
+
+      string resultText = "Найдена точка минимума функции:\n";
+      resultText += $"x = {model.MinimumPoint.X.ToString(format, CultureInfo.InvariantCulture)}\n";
+      resultText += $"y = {model.MinimumPoint.Y.ToString(format, CultureInfo.InvariantCulture)}";
+
+      view.Result = resultText;
     }
   }
 }
