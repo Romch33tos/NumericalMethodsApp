@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Windows;
 
 namespace NumericalMethodsApp
 {
@@ -116,6 +117,17 @@ namespace NumericalMethodsApp
 
     private void OnClearAllClicked(object sender, EventArgs e)
     {
+      MessageBoxResult result = MessageBox.Show(
+          "Вы действительно хотите очистить все данные?",
+          "Подтверждение очистки",
+          MessageBoxButton.YesNo,
+          MessageBoxImage.Question);
+
+      if (result != MessageBoxResult.Yes)
+      {
+        return;
+      }
+
       view.ClearResults();
     }
 
