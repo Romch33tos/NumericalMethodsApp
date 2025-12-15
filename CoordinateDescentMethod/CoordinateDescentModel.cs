@@ -1,4 +1,7 @@
 using NCalc;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
 
@@ -201,6 +204,150 @@ namespace NumericalMethodsApp
           iterationCounter >= MaxIterations ? "Достигнут предел итераций" : "Выполнено";
 
       return OptimizationResult.Success();
+    }
+
+    public PlotModel CreatePlotModel()
+    {
+      var plotModel = new PlotModel
+      {
+        Title = "",
+      };
+
+      SetupAxes(plotModel);
+      AddContourLines(plotModel);
+      AddOptimizationPath(plotModel);
+      AddSpecialPoints(plotModel);
+
+      return plotModel;
+    }
+
+    private void SetupAxes(PlotModel plotModel)
+    {
+      var xAxis = new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Title = "x",
+        Minimum = -5,
+        Maximum = 5,
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(30, 0, 0, 0)
+      };
+      plotModel.Axes.Add(xAxis);
+
+      var yAxis = new LinearAxis
+      {
+        Position = AxisPosition.Left,
+        Title = "y",
+        Minimum = -5,
+        Maximum = 5,
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(30, 0, 0, 0)
+      };
+      plotModel.Axes.Add(yAxis);
+    }
+
+    private void AddContourLines(PlotModel plotModel)
+    {
+      const int gridResolution = 50;
+      double[,] functionValues = new double[gridResolution, gridResolution];
+
+      double minX = -5;
+      double maxX = 5;
+      double minY = -5;
+      double maxY = 5;
+
+      double xIncrement = (maxX - minX) / (gridResolution - 1);
+      double yIncrement = (maxY - minY) / (gridResolution - 1);
+
+      for (int rowIndex = 0; rowIndex < gridResolution; ++rowIndex)
+      {
+        for (int columnIndex = 0; columnIndex < gridResolution; ++columnIndex)
+        {
+          double xCoordinate = minX + rowIndex * xIncrement;
+          double yCoordinate = minY + columnIndex * yIncrement;
+          functionValues[rowIndex, columnIndex] = EvaluateFunction(xCoordinate, yCoordinate);
+        }
+      }
+
+      var contourSeries = new ContourSeries
+      {
+        ColumnCoordinates = GenerateCoordinateArray(minX, maxX, gridResolution),
+        RowCoordinates = GenerateCoordinateArray(minY, maxY, gridResolution),
+        Data = functionValues,
+        ContourLevels = new double[] { 1, 2, 5, 10, 20, 30, 50 },
+        ContourColors = new[] { OxyColors.LightBlue, OxyColors.Blue, OxyColors.DarkBlue },
+        LabelBackground = OxyColors.Transparent,
+        StrokeThickness = 1
+      };
+
+      plotModel.Series.Add(contourSeries);
+    }
+
+    private double[] GenerateCoordinateArray(double minimum, double maximum, int pointCount)
+    {
+      double[] coordinates = new double[pointCount];
+      double step = (maximum - minimum) / (pointCount - 1);
+
+      for (int index = 0; index < pointCount; ++index)
+      {
+        coordinates[index] = minimum + index * step;
+      }
+
+      return coordinates;
+    }
+
+    private void AddOptimizationPath(PlotModel plotModel)
+    {
+      if (OptimizationPath.Count < 2)
+        return;
+
+      var pathSeries = new LineSeries
+      {
+        Title = "Траектория",
+        Color = OxyColors.Red,
+        StrokeThickness = 2,
+        MarkerType = MarkerType.Circle,
+        MarkerSize = 3,
+        MarkerFill = OxyColors.Red
+      };
+
+      foreach (var point in OptimizationPath)
+      {
+        pathSeries.Points.Add(new DataPoint(point.X, point.Y));
+      }
+
+      plotModel.Series.Add(pathSeries);
+    }
+
+    private void AddSpecialPoints(PlotModel plotModel)
+    {
+      if (OptimizationPath.Count == 0)
+        return;
+
+      var startPoint = OptimizationPath[0];
+      var startSeries = new ScatterSeries
+      {
+        Title = "Начальная точка",
+        MarkerType = MarkerType.Circle,
+        MarkerSize = 7,
+        MarkerFill = OxyColors.Green
+      };
+      startSeries.Points.Add(new ScatterPoint(startPoint.X, startPoint.Y));
+      plotModel.Series.Add(startSeries);
+
+      if (OptimizationPath.Count > 1)
+      {
+        var endPoint = OptimizationPath[OptimizationPath.Count - 1];
+        var endSeries = new ScatterSeries
+        {
+          Title = "Найденный минимум",
+          MarkerType = MarkerType.Diamond,
+          MarkerSize = 9,
+          MarkerFill = OxyColors.Orange
+        };
+        endSeries.Points.Add(new ScatterPoint(endPoint.X, endPoint.Y));
+        plotModel.Series.Add(endSeries);
+      }
     }
   }
 }
