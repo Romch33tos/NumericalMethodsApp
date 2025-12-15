@@ -45,6 +45,7 @@ namespace NumericalMethodsApp
         parsedExpression.Parameters["y"] = 2.0;
         double testResult2 = Convert.ToDouble(parsedExpression.Evaluate());
 
+        
         if (Math.Abs(testResult - testResult2) < 1e-12)
         {
           parsedExpression.Parameters["x"] = -1.0;
@@ -348,6 +349,40 @@ namespace NumericalMethodsApp
         endSeries.Points.Add(new ScatterPoint(endPoint.X, endPoint.Y));
         plotModel.Series.Add(endSeries);
       }
+    }
+  }
+
+  public class Point2D
+  {
+    public double X { get; set; }
+    public double Y { get; set; }
+
+    public Point2D(double x, double y)
+    {
+      X = x;
+      Y = y;
+    }
+  }
+
+  public class OptimizationResult
+  {
+    public bool IsSuccessful { get; }
+    public string ErrorMessage { get; }
+
+    private OptimizationResult(bool isSuccessful, string errorMessage)
+    {
+      IsSuccessful = isSuccessful;
+      ErrorMessage = errorMessage;
+    }
+
+    public static OptimizationResult Success()
+    {
+      return new OptimizationResult(true, null);
+    }
+
+    public static OptimizationResult Failure(string errorMessage)
+    {
+      return new OptimizationResult(false, errorMessage);
     }
   }
 }
