@@ -5,8 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NumericalMethodsApp.LeastSquaresMethod"
         mc:Ignorable="d"
-        Title="Метод наименьших квадратов" Height="450" Width="800">
+        Title="LeastSquaresMethodView" Height="720" Width="1080">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="99*"/>
+            <ColumnDefinition Width="701*"/>
+        </Grid.ColumnDefinitions>
+        <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="36,403,698,170" Grid.ColumnSpan="2"/>
+        <Label Content="Множество точек" HorizontalAlignment="Left" Margin="35,372,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <TextBox HorizontalAlignment="Left" Margin="13,541,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="66" Grid.Column="1"/>
+        <Label Content="Размерность (n):" HorizontalAlignment="Left" Margin="39,537,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <Button Content="Применить" HorizontalAlignment="Left" Margin="0,641,0,0" VerticalAlignment="Top" Click="Button_Click" RenderTransformOrigin="0.317,-0.048" Width="96" Grid.Column="1"/>
+        <Label Content="Диапазон значений:" HorizontalAlignment="Left" Margin="40,594,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <TextBox HorizontalAlignment="Left" Margin="37,598,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="50" Grid.Column="1"/>
+        <Label Content="—" HorizontalAlignment="Left" Margin="92,594,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <TextBox HorizontalAlignment="Left" Margin="119,598,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="50" Grid.Column="1"/>
+        <Rectangle Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="322" Margin="34,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="1011"/>
+        <Label Content="Импорт данных" HorizontalAlignment="Left" Margin="282,387,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Button Content="Случайная генерация" HorizontalAlignment="Left" Margin="282,427,0,0" VerticalAlignment="Top" Click="Button_Click" RenderTransformOrigin="0.317,-0.048" Grid.Column="1" Width="173"/>
+        <Button Content="Импорт из CSV" HorizontalAlignment="Left" Margin="282,469,0,0" VerticalAlignment="Top" Click="Button_Click" RenderTransformOrigin="0.317,-0.048" Grid.Column="1" Width="173"/>
+        <Button Content="Импорт из Google Таблиц" HorizontalAlignment="Left" Margin="282,511,0,0" VerticalAlignment="Top" Click="Button_Click" RenderTransformOrigin="0.317,-0.048" Grid.Column="1" Width="173"/>
+        <Button Grid.Column="1" Content="Начать" HorizontalAlignment="Left" Height="20" Margin="429,656,0,0" VerticalAlignment="Top" Width="198" Click="Button_Click_1"/>
+        <Button Grid.Column="1" Content="Очистить все" HorizontalAlignment="Left" Margin="244,656,0,0" VerticalAlignment="Top" Width="162" Click="Button_Click_2"/>
+        <Label Content="Точность (ε)" HorizontalAlignment="Left" Margin="40,563,0,0" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Margin="13,566,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="66" Grid.Column="1"/>
+        <Label Grid.Column="1" Content="Результат" HorizontalAlignment="Left" Margin="528,377,0,0" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Margin="541,417,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="370" Grid.Column="1" Height="158"/>
+
     </Grid>
 </Window>
