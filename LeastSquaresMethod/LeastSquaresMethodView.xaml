@@ -6,17 +6,12 @@
         xmlns:local="clr-namespace:NumericalMethodsApp.LeastSquaresMethod"
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="Метод наименьших квадратов" 
-        Height="720" 
-        Width="1080"
-        ResizeMode="NoResize" 
-        WindowStartupLocation="CenterScreen"
+        Title="LeastSquaresMethodView" Height="680" Width="980"
         Background="White">
 
     <Window.Resources>
         <Style TargetType="Label">
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="6,3"/>
             <Setter Property="Foreground" Value="#FF2C3E50"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="12"/>
@@ -24,7 +19,6 @@
 
         <Style TargetType="TextBox">
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="6,3"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="12"/>
@@ -35,7 +29,6 @@
         </Style>
 
         <Style TargetType="Button">
-            <Setter Property="Margin" Value="6,3"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -47,11 +40,11 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" 
-                    Background="{TemplateBinding Background}"
-                    CornerRadius="6">
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center" 
-                               VerticalAlignment="Center" 
-                               Margin="10,6"/>
+                                             VerticalAlignment="Center" 
+                                             Margin="10,6"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -84,122 +77,88 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="Padding" Value="6"/>
-            <Setter Property="Margin" Value="6"/>
-        </Style>
-
-        <Style x:Key="ResultTextBoxStyle" TargetType="TextBox">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="IsReadOnly" Value="True"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#FFBDC3C7"/>
-            <Setter Property="Foreground" Value="Black"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,6"/>
         </Style>
     </Window.Resources>
 
-    <DockPanel>
+    <DockPanel Margin="10">
         <Menu DockPanel.Dock="Top" Background="White">
             <MenuItem Header="Справка" Click="Help_Click"/>
         </Menu>
 
-        <Border Background="White" Margin="12" CornerRadius="8" 
-            BorderThickness="1" BorderBrush="#FFEAECEE">
-            <Grid Margin="12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="300"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="300"/>
-                </Grid.ColumnDefinitions>
+            <Border Grid.ColumnSpan="2" Margin="20,20,20,0" 
+                   Grid.Row="0" VerticalAlignment="Top" Height="260"
+                   Background="#FFF8F9FA" CornerRadius="6">
+                <oxy:PlotView x:Name="MainPlot" Background="Transparent"/>
+            </Border>
 
-                <GroupBox Grid.Row="0" Grid.Column="0" Header="График" Margin="6,6,6,12">
-                    <Border BorderThickness="1" BorderBrush="#FFEAECEE" 
-                 Background="#FFF8F9FA" CornerRadius="6" Height="322">
-                        <oxy:PlotView x:Name="DataPlot" Background="Transparent" Margin="4"/>
-                    </Border>
-                </GroupBox>
+            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,10,0,10" 
+                     Grid.Column="0" HorizontalAlignment="Left" Width="340">
+                <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="6" Height="142"/>
+            </GroupBox>
 
-                <GroupBox Grid.Row="2" Header="Результат" Margin="698,11,44,256" Grid.ColumnSpan="2">
-                    <TextBox x:Name="ResultTextBox" Style="{StaticResource ResultTextBoxStyle}" 
-                  Height="322" TextWrapping="Wrap"/>
-                </GroupBox>
-
-                <GroupBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Header="Множество точек" Margin="6,6,6,12">
-                    <DataGrid x:Name="PointsDataGrid" d:ItemsSource="{d:SampleData ItemCount=5}" 
-                   Height="180" Margin="6" AutoGenerateColumns="False">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="X" Width="*"/>
-                            <DataGridTextColumn Header="Y" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </GroupBox>
-
-                <GroupBox Grid.Row="2" Grid.Column="0" Header="Параметры аппроксимации" Margin="6,6,365,12">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Label Content="Размерность (n):" Grid.Row="0" Grid.Column="0"/>
-                        <TextBox x:Name="DimensionTextBox" Grid.Row="0" Grid.Column="1" 
-                    Text="3" ToolTip="Степень полинома"/>
-
-                        <Label Content="Точность (ε):" Grid.Row="1" Grid.Column="0" Margin="0,12,0,0"/>
-                        <TextBox x:Name="PrecisionTextBox" Grid.Row="1" Grid.Column="1" 
-                    Text="0.001" Margin="0,12,0,0" ToolTip="Точность вычислений"/>
-
-                        <Label Content="Диапазон значений:" Grid.Row="2" Grid.Column="0" Margin="0,12,0,0"/>
-                        <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" 
-                       Orientation="Horizontal" Margin="0,12,0,0">
-                            <TextBox x:Name="MinValueTextBox" Width="80" Text="0" 
-                      ToolTip="Минимальное значение"/>
-                            <Label Content="—" Margin="6,0"/>
-                            <TextBox x:Name="MaxValueTextBox" Width="80" Text="100" 
-                      ToolTip="Максимальное значение"/>
-                        </StackPanel>
-                    </Grid>
-                </GroupBox>
-
-                <GroupBox Grid.Row="2" Header="Импорт данных" Margin="385,11,57,7">
-                    <StackPanel Orientation="Vertical">
-                        <Button Content="Случайная генерация" Click="RandomGenerate_Click" 
-                   Margin="3" Background="#FF27AE60"/>
-                        <Button Content="Импорт из CSV" Click="ImportCsv_Click" 
-                   Margin="3"/>
-                        <Button Content="Импорт из Google Таблиц" Click="ImportGoogle_Click" 
-                   Margin="3"/>
+            <GroupBox Grid.Row="1" Header="Размерность" 
+                     Margin="20,10,0,10" Grid.Column="1" HorizontalAlignment="Left" Width="200">
+                <StackPanel Margin="6">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Label Content="Значение n:" Width="86"/>
+                        <TextBox x:Name="DimensionTextBox" Width="75"/>
                     </StackPanel>
-                </GroupBox>
+                    <Button Content="Применить" Click="Button_Click_3" Width="115"/>
+                </StackPanel>
+            </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Header="Управление" Margin="6,6,6,12">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button x:Name="ClearAllButton" Content="Очистить все" 
-                   Click="ClearAll_Click" Width="135" Background="#FFE74C3C"/>
-                        <Button x:Name="ApplyButton" Content="Применить" 
-                   Click="Apply_Click" Width="135" Margin="12,0,12,0"/>
-                        <Button x:Name="StartButton" Content="Начать вычисления" 
-                   Click="StartCalculation_Click" Width="150" Background="#FFE67E22"/>
+            <GroupBox Grid.Row="2" Header="Генерация данных" 
+                     Margin="20,10,0,10" Grid.Column="0" VerticalAlignment="Top" Width="340">
+                <StackPanel Margin="6">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Label Content="Диапазон значений:" Width="131"/>
+                        <TextBox x:Name="RangeStartTextBox" Width="45" TextChanged="TextBox_TextChanged_1"/>
+                        <Label Content="—" Margin="2,0"/>
+                        <TextBox x:Name="RangeEndTextBox" Width="45" TextChanged="TextBox_TextChanged_1"/>
                     </StackPanel>
-                </GroupBox>
-            </Grid>
-        </Border>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2" Header="Импорт данных" 
+                     Margin="20,10,0,10" Grid.Column="1" VerticalAlignment="Top" Width="292" Height="140">
+                <StackPanel Margin="6">
+                    <Button Content="Случайная генерация" Click="Button_Click" Margin="0,6,0,3"/>
+                    <Button Content="Импорт из CSV" Click="Button_Click" Margin="0,3"/>
+                    <Button Content="Импорт из Google Таблиц" Click="Button_Click" Margin="0,3,0,6"/>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2" Header="Результат" 
+                     Margin="20,10,20,10" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Top">
+                <TextBox x:Name="ResultTextBox" TextWrapping="Wrap" IsReadOnly="True" 
+                        Background="White" BorderThickness="0" Margin="6" Height="120"/>
+            </GroupBox>
+
+            <GroupBox Grid.Row="1" Header="Точность" 
+                     Margin="230,10,0,10" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Left" Width="213">
+                <StackPanel Orientation="Horizontal" Margin="6">
+                    <Label Content="Точность (ε)" VerticalAlignment="Center"/>
+                    <TextBox x:Name="PrecisionTextBox" Width="83" 
+                            TextChanged="TextBox_TextChanged_1" Margin="10,0,0,0"/>
+                </StackPanel>
+            </GroupBox>
+
+            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                       Margin="0,0,0,20" Orientation="Horizontal">
+                <Button Content="Очистить все" Width="120" Click="Button_Click_2" Margin="0,0,20,0"/>
+                <Button Content="Вычислить" Width="120" Click="Button_Click_1"/>
+            </StackPanel>
+        </Grid>
     </DockPanel>
 </Window>
