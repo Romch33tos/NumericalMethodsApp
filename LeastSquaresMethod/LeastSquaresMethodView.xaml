@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:NumericalMethodsApp.LeastSquaresMethod"
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="Метод наименьших квадратов" Height="732" Width="980"
-        Background="White">
+        Title="Метод наименьших квадратов" Height="650" Width="900"
+        Background="White" ResizeMode="NoResize">
 
     <Window.Resources>
         <Style TargetType="Label">
@@ -85,41 +85,40 @@
             <MenuItem Header="Справка" Click="Help_Click"/>
         </Menu>
 
-        <Grid>
+        <Grid RenderTransformOrigin="0.5,0.433">
             <Grid.RowDefinitions>
-                <RowDefinition Height="300"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="229"/>
+                <RowDefinition Height="Auto" MinHeight="279.96"/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.ColumnSpan="2" Margin="20,20,20,0" 
-                   Grid.Row="0" VerticalAlignment="Top" Height="260"
+            <Border Grid.ColumnSpan="2" Margin="20,0,20,0" VerticalAlignment="Center" Height="197"
                    Background="#FFF8F9FA" CornerRadius="6">
-                <oxy:PlotView x:Name="MainPlot" Background="Transparent"/>
+                <oxy:PlotView x:Name="MainPlot" Background="Transparent" Margin="0,0,0,42"/>
             </Border>
 
-            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,20" 
-                     Grid.Column="0" HorizontalAlignment="Left" Width="373">
-                <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="6" Height="142"/>
+            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,135" 
+                     Grid.Column="0" HorizontalAlignment="Left" Width="224">
+                <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,3,0" Height="127"/>
             </GroupBox>
 
             <GroupBox Header="Размерность" 
-                     Margin="406,194,0,64" HorizontalAlignment="Left" Width="259" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="2">
-                <StackPanel Margin="6,0,6,0" Height="71">
+                     Margin="256,0,0,136" HorizontalAlignment="Left" Width="174" Grid.Row="1">
+                <StackPanel Margin="6,0,6,0" Height="74">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Label Content="Значение n:" Width="86"/>
-                        <TextBox x:Name="DimensionTextBox" Width="75"/>
+                        <Label Content="Значение n:" Width="84" Height="25"/>
+                        <TextBox x:Name="DimensionTextBox" Width="45" Height="22"/>
                     </StackPanel>
-                    <Button Content="Применить" Click="Button_Click_3" Width="115" Height="29"/>
+                    <Button Content="Применить" Click="Button_Click_3" Width="114" Height="33"/>
                 </StackPanel>
             </GroupBox>
 
             <GroupBox Grid.Row="1" Header="Генерация данных" 
-                     Margin="20,197,87,0" Grid.Column="0" VerticalAlignment="Top" Grid.RowSpan="2" Height="97">
+                     Margin="20,167,0,0" Grid.Column="0" VerticalAlignment="Top" Height="97">
                 <StackPanel Margin="6,0,6,0" Height="28">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Label Content="Диапазон значений:" Width="131"/>
@@ -131,7 +130,7 @@
             </GroupBox>
 
             <GroupBox Grid.Row="1" Header="Импорт данных" 
-                     Margin="406,0,295,0" VerticalAlignment="Top" Height="189" Grid.ColumnSpan="2">
+                     Margin="5,0,202,0" VerticalAlignment="Top" Height="161" Grid.Column="1">
                 <StackPanel Margin="6">
                     <Button Content="Случайная генерация" Click="Button_Click" Margin="0,6,0,3"/>
                     <Button Content="Импорт из CSV" Click="Button_Click" Margin="0,3"/>
@@ -140,13 +139,13 @@
             </GroupBox>
 
             <GroupBox Grid.Row="1" Header="Результат" 
-                     Margin="202,0,10,0" Grid.Column="1" VerticalAlignment="Top" Height="189">
+                     Margin="238,0,20,0" Grid.Column="1" VerticalAlignment="Top" Height="264">
                 <TextBox x:Name="ResultTextBox" TextWrapping="Wrap" IsReadOnly="True" 
-                        Background="White" BorderThickness="0" Margin="6,0,6,0" Height="150"/>
+                        Background="White" BorderThickness="0" Margin="6,0,6,0" Height="210"/>
             </GroupBox>
 
             <GroupBox Header="Точность" 
-                     Margin="202,197,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="268" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Height="97">
+                     Margin="7,167,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="221" Grid.Row="1" Grid.Column="1" Height="97">
                 <StackPanel Orientation="Horizontal" Margin="6,0,6,0" Height="53">
                     <Label Content="Значение ε:" VerticalAlignment="Center"/>
                     <TextBox x:Name="PrecisionTextBox" Width="83" 
@@ -154,8 +153,8 @@
                 </StackPanel>
             </GroupBox>
 
-            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
-                       Margin="380,0,0,10" Orientation="Horizontal">
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                       Margin="285,291,0,0" Orientation="Horizontal" Height="32" Width="310" Grid.RowSpan="2">
                 <Button Content="Очистить все" Width="145" Click="Button_Click_2" Margin="0,0,20,0"/>
                 <Button Content="Вычислить" Width="145" Click="Button_Click_1"/>
             </StackPanel>
