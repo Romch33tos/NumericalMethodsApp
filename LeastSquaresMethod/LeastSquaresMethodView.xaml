@@ -1,4 +1,4 @@
-<Window x:Class="NumericalMethodsApp.LeastSquaresMethod.LeastSquaresMethodView"
+<Window x:Class="NumericalMethodsApp.LeastSquaresMethod.LeastSquaresView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -83,7 +83,7 @@
 
     <DockPanel Margin="10">
         <Menu DockPanel.Dock="Top" Background="White">
-            <MenuItem Header="Справка" Click="Help_Click"/>
+            <MenuItem Header="Справка" Click="HelpButton_Click"/>
         </Menu>
 
         <Grid>
@@ -97,16 +97,16 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Row="0" Grid.ColumnSpan="2" Height="200" Margin="10" 
-                    BorderThickness="1" BorderBrush="#FFEAECEE" 
-                    Background="#FFF8F9FA" CornerRadius="6">
+                BorderThickness="1" BorderBrush="#FFEAECEE" 
+                Background="#FFF8F9FA" CornerRadius="6">
                 <oxy:PlotView x:Name="MainPlot" Background="Transparent" Margin="5"/>
             </Border>
 
-            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,205" 
-                     Grid.Column="0" HorizontalAlignment="Left" Width="224">
+            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,183" 
+                 Grid.Column="0" HorizontalAlignment="Left" Width="224">
                 <DataGrid x:Name="PointsDataGrid" Height="88"
-                          CellEditEnding="PointsDataGrid_CellEditEnding"
-                          IsEnabled="False" AutoGenerateColumns="False">
+                      CellEditEnding="PointsDataGrid_CellEditEnding"
+                      IsEnabled="False" AutoGenerateColumns="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="№" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
                         <DataGridTextColumn Header="X" Binding="{Binding X, StringFormat=F2}" Width="80"/>
@@ -116,18 +116,18 @@
             </GroupBox>
 
             <GroupBox Header="Размерность" 
-                     Margin="256,0,0,206" HorizontalAlignment="Left" Width="174" Grid.Row="1">
+                 Margin="256,0,0,183" HorizontalAlignment="Left" Width="174" Grid.Row="1">
                 <StackPanel Margin="6,0,6,0" Height="74">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Label Content="Значение n:" Width="80"/>
-                        <TextBox x:Name="DimensionTextBox" Width="56"/>
+                        <TextBox x:Name="DimensionTextBox" Width="56" TextChanged="DimensionTextBox_TextChanged"/>
                     </StackPanel>
-                    <Button Content="Применить" Click="Button_Click_3"/>
+                    <Button Content="Применить" Click="ApplyDimensionButton_Click"/>
                 </StackPanel>
             </GroupBox>
 
             <GroupBox Grid.Row="1" Header="Генерация данных" 
-                     Margin="20,167,0,0" Grid.Column="0" VerticalAlignment="Top" Height="97">
+                 Margin="20,167,0,0" Grid.Column="0" VerticalAlignment="Top" Height="97">
                 <StackPanel Margin="6,0,6,0" Height="28">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Label Content="Диапазон значений:" Width="131"/>
@@ -139,22 +139,22 @@
             </GroupBox>
 
             <GroupBox Grid.Row="1" Header="Импорт данных" 
-                     Margin="5,0,202,0" VerticalAlignment="Top" Height="161" Grid.Column="1">
+                 Margin="5,0,202,0" VerticalAlignment="Top" Height="161" Grid.Column="1">
                 <StackPanel Margin="6">
-                    <Button Content="Случайная генерация" Click="Button_Click" Margin="0,6,0,3"/>
-                    <Button Content="Импорт из CSV" Click="Button_Click" Margin="0,3"/>
-                    <Button Content="Импорт из Google Таблиц" Click="Button_Click" Margin="0,3,0,6"/>
+                    <Button Content="Случайная генерация" Click="RandomGenerateButton_Click" Margin="0,6,0,3"/>
+                    <Button Content="Импорт из CSV" Click="ImportCsvButton_Click" Margin="0,3"/>
+                    <Button Content="Импорт из Google Таблиц" Click="ImportGoogleSheetsButton_Click" Margin="0,3,0,6"/>
                 </StackPanel>
             </GroupBox>
 
             <GroupBox Grid.Row="1" Header="Результат" 
-                     Margin="238,0,20,0" Grid.Column="1" VerticalAlignment="Top" Height="264">
+                 Margin="238,0,20,0" Grid.Column="1" VerticalAlignment="Top" Height="264">
                 <TextBox x:Name="ResultTextBox" TextWrapping="Wrap" IsReadOnly="True" 
-                        Background="White" BorderThickness="0" Margin="6,0,6,0" Height="210"/>
+                    Background="White" BorderThickness="0" Margin="6,0,6,0" Height="210"/>
             </GroupBox>
 
             <GroupBox Header="Точность" 
-                     Margin="7,167,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="221" Grid.Row="1" Grid.Column="1" Height="97">
+                 Margin="7,167,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="221" Grid.Row="1" Grid.Column="1" Height="97">
                 <StackPanel Orientation="Horizontal" Margin="6,0,6,0" Height="53">
                     <Label Content="Значение ε:" VerticalAlignment="Center"/>
                     <TextBox x:Name="PrecisionTextBox" Width="83" Margin="10,0,0,0"/>
@@ -162,9 +162,9 @@
             </GroupBox>
 
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Top" 
-                       Margin="285,291,0,0" Orientation="Horizontal" Height="32" Width="310">
-                <Button Content="Очистить все" Width="145" Click="Button_Click_2" Margin="0,0,20,0"/>
-                <Button Content="Вычислить" Width="145" Click="Button_Click_1"/>
+                   Margin="285,291,0,0" Orientation="Horizontal" Height="32" Width="310">
+                <Button Content="Очистить все" Width="145" Click="ClearAllButton_Click" Margin="0,0,20,0"/>
+                <Button Content="Вычислить" Width="145" Click="CalculateButton_Click"/>
             </StackPanel>
         </Grid>
     </DockPanel>
