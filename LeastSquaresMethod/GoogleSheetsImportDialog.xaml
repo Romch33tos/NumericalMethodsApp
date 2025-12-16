@@ -1,4 +1,4 @@
-﻿<Window x:Class="NumericalMethodsApp.OlympiadSorting.GoogleSheetsImportDialog"
+<Window x:Class="NumericalMethodsApp.LeastSquaresMethod.GoogleSheetsImportDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Импорт из Google Таблиц" Height="200" Width="500"
