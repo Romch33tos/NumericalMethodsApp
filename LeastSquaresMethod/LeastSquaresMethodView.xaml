@@ -86,28 +86,24 @@
             <MenuItem Header="Справка" Click="Help_Click"/>
         </Menu>
 
-        <Grid RenderTransformOrigin="0.5,0.433">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="229"/>
-                <RowDefinition Height="Auto" MinHeight="279.96"/>
-                <RowDefinition/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.ColumnSpan="2" Margin="20,0,20,0" VerticalAlignment="Center" Height="220"
-                   Background="#FFF8F9FA" CornerRadius="6">
-                <oxy:PlotView x:Name="MainPlot" Background="Transparent" Margin="0"/>
-            </Border>
+            <oxy:PlotView x:Name="MainPlot" Grid.ColumnSpan="2" Grid.Row="0" 
+                         Margin="10,20,10,20" Background="Transparent"/>
 
-            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,135" 
+            <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,205" 
                      Grid.Column="0" HorizontalAlignment="Left" Width="224">
-                <DataGrid x:Name="PointsDataGrid" d:ItemsSource="{d:SampleData ItemCount=5}" 
-                          Margin="0,0,3,0" Height="127"
+                <DataGrid x:Name="PointsDataGrid" Height="88"
                           CellEditEnding="PointsDataGrid_CellEditEnding"
-                          IsEnabled="False">
+                          IsEnabled="False" AutoGenerateColumns="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="№" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
                         <DataGridTextColumn Header="X" Binding="{Binding X, StringFormat=F2}" Width="80"/>
@@ -117,7 +113,7 @@
             </GroupBox>
 
             <GroupBox Header="Размерность" 
-                     Margin="256,0,0,136" HorizontalAlignment="Left" Width="174" Grid.Row="1">
+                     Margin="256,0,0,206" HorizontalAlignment="Left" Width="174" Grid.Row="1">
                 <StackPanel Margin="6,0,6,0" Height="74">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Label Content="Значение n:" Width="80"/>
@@ -132,9 +128,9 @@
                 <StackPanel Margin="6,0,6,0" Height="28">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Label Content="Диапазон значений:" Width="131"/>
-                        <TextBox x:Name="RangeStartTextBox" Width="65" TextChanged="TextBox_TextChanged_1"/>
+                        <TextBox x:Name="RangeStartTextBox" Width="65"/>
                         <Label Content="—" Margin="2,0"/>
-                        <TextBox x:Name="RangeEndTextBox" Width="65" TextChanged="TextBox_TextChanged_1"/>
+                        <TextBox x:Name="RangeEndTextBox" Width="65"/>
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
@@ -158,13 +154,12 @@
                      Margin="7,167,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="221" Grid.Row="1" Grid.Column="1" Height="97">
                 <StackPanel Orientation="Horizontal" Margin="6,0,6,0" Height="53">
                     <Label Content="Значение ε:" VerticalAlignment="Center"/>
-                    <TextBox x:Name="PrecisionTextBox" Width="83" 
-                            TextChanged="TextBox_TextChanged_1" Margin="10,0,0,0"/>
+                    <TextBox x:Name="PrecisionTextBox" Width="83" Margin="10,0,0,0"/>
                 </StackPanel>
             </GroupBox>
 
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Top" 
-                       Margin="285,291,0,0" Orientation="Horizontal" Height="32" Width="310" Grid.RowSpan="2">
+                       Margin="285,291,0,0" Orientation="Horizontal" Height="32" Width="310">
                 <Button Content="Очистить все" Width="145" Click="Button_Click_2" Margin="0,0,20,0"/>
                 <Button Content="Вычислить" Width="145" Click="Button_Click_1"/>
             </StackPanel>
