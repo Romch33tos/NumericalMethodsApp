@@ -26,6 +26,7 @@
             <Setter Property="BorderBrush" Value="#FFBDC3C7"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="Padding" Value="6,3"/>
+            <Setter Property="TextAlignment" Value="Left"/>
         </Style>
 
         <Style TargetType="Button">
@@ -96,24 +97,33 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.ColumnSpan="2" Margin="20,0,20,0" VerticalAlignment="Center" Height="197"
+            <Border Grid.ColumnSpan="2" Margin="20,0,20,0" VerticalAlignment="Center" Height="220"
                    Background="#FFF8F9FA" CornerRadius="6">
-                <oxy:PlotView x:Name="MainPlot" Background="Transparent" Margin="0,0,0,42"/>
+                <oxy:PlotView x:Name="MainPlot" Background="Transparent" Margin="0"/>
             </Border>
 
             <GroupBox Grid.Row="1" Header="Множество точек" Margin="20,0,0,135" 
                      Grid.Column="0" HorizontalAlignment="Left" Width="224">
-                <DataGrid d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,3,0" Height="127"/>
+                <DataGrid x:Name="PointsDataGrid" d:ItemsSource="{d:SampleData ItemCount=5}" 
+                          Margin="0,0,3,0" Height="127"
+                          CellEditEnding="PointsDataGrid_CellEditEnding"
+                          IsEnabled="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="№" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
+                        <DataGridTextColumn Header="X" Binding="{Binding X, StringFormat=F2}" Width="80"/>
+                        <DataGridTextColumn Header="Y" Binding="{Binding Y, StringFormat=F2}" Width="80"/>
+                    </DataGrid.Columns>
+                </DataGrid>
             </GroupBox>
 
             <GroupBox Header="Размерность" 
                      Margin="256,0,0,136" HorizontalAlignment="Left" Width="174" Grid.Row="1">
                 <StackPanel Margin="6,0,6,0" Height="74">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Label Content="Значение n:" Width="84" Height="25"/>
-                        <TextBox x:Name="DimensionTextBox" Width="45" Height="22"/>
+                        <Label Content="Значение n:" Width="80"/>
+                        <TextBox x:Name="DimensionTextBox" Width="56"/>
                     </StackPanel>
-                    <Button Content="Применить" Click="Button_Click_3" Width="114" Height="33"/>
+                    <Button Content="Применить" Click="Button_Click_3"/>
                 </StackPanel>
             </GroupBox>
 
