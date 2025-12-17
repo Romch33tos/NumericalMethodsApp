@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.Windows;
 
 namespace NumericalMethodsApp.LeastSquaresMethod
 {
@@ -32,10 +34,29 @@ namespace NumericalMethodsApp.LeastSquaresMethod
     private void InitializeView()
     {
       view.DimensionText = model.Dimension.ToString();
-      view.RangeStartText = model.RangeStart.ToString();
-      view.RangeEndText = model.RangeEnd.ToString();
-      view.PrecisionText = model.Precision.ToString();
+      view.RangeStartText = model.RangeStart.ToString(CultureInfo.InvariantCulture);
+      view.RangeEndText = model.RangeEnd.ToString(CultureInfo.InvariantCulture);
+      view.PrecisionText = model.Precision.ToString(CultureInfo.InvariantCulture);
       view.IsDataGridEnabled = false;
+    }
+
+    private void HandleDimensionChanged(object sender, RoutedEventArgs e)
+    {
+      view.IsDataGridEnabled = false;
+    }
+
+    private void HandleApplyDimensionClicked(object sender, RoutedEventArgs e)
+    {
+      if (int.TryParse(view.DimensionText, out int dimension) && dimension > 0)
+      {
+        model.UpdateDimension(dimension);
+        view.IsDataGridEnabled = true;
+      }
+      else
+      {
+        view.ShowMessage("Пожалуйста, введите корректное положительное число для размерности", "Ошибка", MessageBoxType.Error);
+        view.DimensionText = "3";
+      }
     }
   }
 }
