@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows;
 
 namespace NumericalMethodsApp.LeastSquaresMethod
 {
@@ -13,6 +14,14 @@ namespace NumericalMethodsApp.LeastSquaresMethod
 
     void UpdateDataGrid(List<GridDataPoint> dataPoints);
     void UpdatePlot(List<DataPoint> points, double[] coefficients);
+    MessageBoxResult ShowMessage(string message, string caption, MessageBoxType messageBoxType);
     void ClearPlot();
+  }
+
+  public enum MessageBoxType
+  {
+    Information,
+    Error,
+    Question
   }
 }
