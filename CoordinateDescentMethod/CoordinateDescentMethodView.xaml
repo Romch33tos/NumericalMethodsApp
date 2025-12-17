@@ -156,16 +156,25 @@
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="1" Header="Укажите точность вычислений" Margin="8">
+                <GroupBox Grid.Row="3" Grid.Column="1" Header="Параметры поиска" Margin="8">
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="Значение ε:"/>
-                        <TextBox x:Name="TextBoxEpsilon" Grid.Column="1" 
+                        <Label Content="Точность ε:" Grid.Row="0" Grid.Column="0"/>
+                        <TextBox x:Name="TextBoxEpsilon" Grid.Row="0" Grid.Column="1" 
                                 ToolTip="Точность вычисления (например: 0.001)" 
+                                PreviewTextInput="NumberValidationTextBox"/>
+
+                        <Label Content="Шаг h:" Grid.Row="1" Grid.Column="0"/>
+                        <TextBox x:Name="TextBoxStepSize" Grid.Row="1" Grid.Column="1" 
+                                ToolTip="Шаг поиска (например: 0.01)" 
                                 PreviewTextInput="NumberValidationTextBox"/>
                     </Grid>
                 </GroupBox>
@@ -179,8 +188,7 @@
 
                 <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="8,10,8,8">
                     <TextBox x:Name="ResultText" 
-                            Style="{StaticResource ResultTextBoxStyle}" Height="70
-                             "/>
+                            Style="{StaticResource ResultTextBoxStyle}" Height="70"/>
                 </GroupBox>
             </Grid>
         </Border>
