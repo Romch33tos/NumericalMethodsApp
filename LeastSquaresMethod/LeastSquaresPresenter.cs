@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace NumericalMethodsApp.LeastSquaresMethod
 {
@@ -16,6 +19,7 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       model = new LeastSquaresModel();
       SubscribeToEvents();
       InitializeView();
+      UpdateDataGrid();
     }
 
     private void SubscribeToEvents()
@@ -38,6 +42,7 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       view.RangeEndText = model.RangeEnd.ToString(CultureInfo.InvariantCulture);
       view.PrecisionText = model.Precision.ToString(CultureInfo.InvariantCulture);
       view.IsDataGridEnabled = false;
+      UpdateDataGrid();
     }
 
     private void HandleDimensionChanged(object sender, RoutedEventArgs e)
@@ -51,6 +56,7 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       {
         model.UpdateDimension(dimension);
         view.IsDataGridEnabled = true;
+        UpdateDataGrid();
       }
       else
       {
@@ -128,6 +134,80 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       view.PrecisionText = model.Precision.ToString(CultureInfo.InvariantCulture);
       view.IsDataGridEnabled = false;
       view.ResultText = "";
+      UpdateDataGrid();
+    }
+
+    private void HandleRandomGenerateClicked(object sender, RoutedEventArgs e)
+    {
+      if (!double.TryParse(view.RangeStartText, NumberStyles.Any, CultureInfo.InvariantCulture, out double rangeStart) ||
+          !double.TryParse(view.RangeEndText, NumberStyles.Any, CultureInfo.InvariantCulture, out double rangeEnd))
+      {
+        view.ShowMessage("Укажите корректный диапазон значений", "Ошибка", MessageBoxType.Error);
+        return;
+      }
+
+      if (rangeStart >= rangeEnd)
+      {
+        view.ShowMessage("Начало диапазона должно быть меньше конца", "Ошибка", MessageBoxType.Error);
+        return;
+      }
+
+      for (int pointIndex = 0; pointIndex < model.Points.Count; ++pointIndex)
+      {
+        double xValue = rangeStart + (randomGenerator.NextDouble() * (rangeEnd - rangeStart));
+        double yValue = rangeStart + (randomGenerator.NextDouble() * (rangeEnd - rangeStart));
+        model.Points[pointIndex] = new DataPoint(Math.Round(xValue, 2), Math.Round(yValue, 2));
+      }
+
+      view.IsDataGridEnabled = true;
+      UpdateDataGrid();
+    }
+
+    private void HandleCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+    {
+      if (e.EditAction == DataGridEditAction.Commit)
+      {
+        var textBox = e.EditingElement as TextBox;
+        if (textBox != null)
+        {
+          if (!double.TryParse(textBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
+          {
+            view.ShowMessage("Введите корректное число", "Ошибка", MessageBoxType.Error);
+            e.Cancel = true;
+          }
+          else
+          {
+            int rowIndex = e.Row.GetIndex();
+            if (rowIndex < model.Points.Count)
+            {
+              var propertyName = (e.Column.Header.ToString());
+              if (propertyName == "X")
+              {
+                model.Points[rowIndex] = new DataPoint(value, model.Points[rowIndex].Y);
+              }
+              else if (propertyName == "Y")
+              {
+                model.Points[rowIndex] = new DataPoint(model.Points[rowIndex].X, value);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    private void UpdateDataGrid()
+    {
+      var dataGridItems = new List<GridDataPoint>();
+      for (int pointIndex = 0; pointIndex < model.Points.Count; ++pointIndex)
+      {
+        dataGridItems.Add(new GridDataPoint
+        {
+          Index = pointIndex + 1,
+          X = model.Points[pointIndex].X,
+          Y = model.Points[pointIndex].Y
+        });
+      }
+      view.UpdateDataGrid(dataGridItems);
     }
 
     private int GetDecimalPlacesFromPrecision(double precision)
