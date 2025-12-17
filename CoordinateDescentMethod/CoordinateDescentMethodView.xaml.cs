@@ -1,6 +1,5 @@
-﻿using OxyPlot;
+using OxyPlot;
 using OxyPlot.Axes;
-using OxyPlot.Wpf;
 using System;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -13,46 +12,13 @@ namespace NumericalMethodsApp
     private CoordinateDescentPresenter presenter;
     private PlotModel currentPlotModel;
 
-    public string FunctionExpression
-    {
-      get => TextBoxFunction.Text;
-      set => TextBoxFunction.Text = value;
-    }
-
-    public string XStart
-    {
-      get => TextBoxX.Text;
-      set => TextBoxX.Text = value;
-    }
-
-    public string YStart
-    {
-      get => TextBoxY.Text;
-      set => TextBoxY.Text = value;
-    }
-
-    public string Epsilon
-    {
-      get => TextBoxEpsilon.Text;
-      set => TextBoxEpsilon.Text = value;
-    }
-
-    public string Result
-    {
-      get => ResultText.Text;
-      set => ResultText.Text = value;
-    }
-
-    public event EventHandler CalculateClicked;
-    public event EventHandler ClearAllClicked;
-    public event EventHandler HelpClicked;
-
     public CoordinateDescentView()
     {
       InitializeComponent();
       presenter = new CoordinateDescentPresenter(this);
       InitializePlot();
       TextBoxEpsilon.Text = "0.001";
+      TextBoxStepSize.Text = "0.01";
     }
 
     private void InitializePlot()
@@ -94,6 +60,46 @@ namespace NumericalMethodsApp
       PlotView.Model = currentPlotModel;
     }
 
+    public string FunctionExpression
+    {
+      get => TextBoxFunction.Text;
+      set => TextBoxFunction.Text = value;
+    }
+
+    public string XStart
+    {
+      get => TextBoxX.Text;
+      set => TextBoxX.Text = value;
+    }
+
+    public string YStart
+    {
+      get => TextBoxY.Text;
+      set => TextBoxY.Text = value;
+    }
+
+    public string Epsilon
+    {
+      get => TextBoxEpsilon.Text;
+      set => TextBoxEpsilon.Text = value;
+    }
+
+    public string StepSize
+    {
+      get => TextBoxStepSize.Text;
+      set => TextBoxStepSize.Text = value;
+    }
+
+    public string Result
+    {
+      get => ResultText.Text;
+      set => ResultText.Text = value;
+    }
+
+    public event EventHandler CalculateClicked;
+    public event EventHandler ClearAllClicked;
+    public event EventHandler HelpClicked;
+
     public void UpdatePlot(PlotModel plotModel)
     {
       currentPlotModel = plotModel;
@@ -133,6 +139,7 @@ namespace NumericalMethodsApp
       XStart = string.Empty;
       YStart = string.Empty;
       Epsilon = "0.001";
+      StepSize = "0.01";
       Result = string.Empty;
       InitializePlot();
     }
