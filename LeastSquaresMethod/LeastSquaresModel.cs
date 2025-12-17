@@ -143,5 +143,30 @@ namespace NumericalMethodsApp.LeastSquaresMethod
 
       return coefficients;
     }
+
+    public double EvaluatePolynomial(double xValue, double[] coefficients)
+    {
+      if (coefficients == null || coefficients.Length == 0)
+        return double.NaN;
+
+      if (double.IsNaN(xValue) || double.IsInfinity(xValue))
+        return double.NaN;
+
+      double result = 0;
+      for (int coefficientIndex = 0; coefficientIndex < coefficients.Length; ++coefficientIndex)
+      {
+        if (double.IsNaN(coefficients[coefficientIndex]) || double.IsInfinity(coefficients[coefficientIndex]))
+          return double.NaN;
+
+        double term = coefficients[coefficientIndex] * Math.Pow(xValue, coefficientIndex);
+        if (double.IsNaN(term) || double.IsInfinity(term))
+          return double.NaN;
+
+        result += term;
+        if (double.IsNaN(result) || double.IsInfinity(result))
+          return double.NaN;
+      }
+      return result;
+    }
   }
 }
