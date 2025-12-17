@@ -107,6 +107,29 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       view.ResultText = resultText;
     }
 
+    private void HandleClearAllClicked(object sender, RoutedEventArgs e)
+    {
+      MessageBoxResult result = view.ShowMessage(
+          "Вы действительно хотите очистить все данные?",
+          "Подтверждение очистки",
+          MessageBoxType.Question);
+
+      if (result != MessageBoxResult.Yes) return;
+
+      model.Dimension = 3;
+      model.RangeStart = 0;
+      model.RangeEnd = 10;
+      model.Precision = 0.001;
+      model.Points.Clear();
+
+      view.DimensionText = model.Dimension.ToString();
+      view.RangeStartText = model.RangeStart.ToString(CultureInfo.InvariantCulture);
+      view.RangeEndText = model.RangeEnd.ToString(CultureInfo.InvariantCulture);
+      view.PrecisionText = model.Precision.ToString(CultureInfo.InvariantCulture);
+      view.IsDataGridEnabled = false;
+      view.ResultText = "";
+    }
+
     private int GetDecimalPlacesFromPrecision(double precision)
     {
       if (precision >= 1) return 0;
