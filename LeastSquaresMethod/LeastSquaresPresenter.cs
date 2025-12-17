@@ -1,6 +1,8 @@
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -161,6 +163,44 @@ namespace NumericalMethodsApp.LeastSquaresMethod
 
       view.IsDataGridEnabled = true;
       UpdateDataGrid();
+    }
+
+    private void HandleImportCsvClicked(object sender, RoutedEventArgs e)
+    {
+      OpenFileDialog openFileDialog = new OpenFileDialog();
+      openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+      openFileDialog.Title = "Импорт данных из CSV";
+
+      if (openFileDialog.ShowDialog() == true)
+      {
+        try
+        {
+          string[] fileLines = File.ReadAllLines(openFileDialog.FileName);
+          model.Points.Clear();
+
+          foreach (string line in fileLines)
+          {
+            string[] values = line.Split(',');
+            if (values.Length >= 2)
+            {
+              if (double.TryParse(values[0].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double xValue) &&
+                  double.TryParse(values[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double yValue))
+              {
+                model.Points.Add(new DataPoint(xValue, yValue));
+              }
+            }
+          }
+
+          view.DimensionText = model.Points.Count.ToString();
+          view.IsDataGridEnabled = true;
+          UpdateDataGrid();
+          view.ShowMessage("Импорт успешно завершен", "Импорт", MessageBoxType.Information);
+        }
+        catch (Exception exception)
+        {
+          view.ShowMessage($"Ошибка при импорте CSV: {exception.Message}", "Ошибка", MessageBoxType.Error);
+        }
+      }
     }
 
     private void HandleCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
