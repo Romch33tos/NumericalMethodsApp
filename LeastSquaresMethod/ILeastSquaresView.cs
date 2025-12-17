@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace NumericalMethodsApp.LeastSquaresMethod
 {
@@ -25,6 +26,7 @@ namespace NumericalMethodsApp.LeastSquaresMethod
     event RoutedEventHandler ImportCsvClicked;
     event RoutedEventHandler ImportGoogleSheetsClicked;
     event RoutedEventHandler HelpClicked;
+    event System.EventHandler<DataGridCellEditEndingEventArgs> CellEditEnding;
   }
 
   public enum MessageBoxType
@@ -32,5 +34,12 @@ namespace NumericalMethodsApp.LeastSquaresMethod
     Information,
     Error,
     Question
+  }
+
+  public class GridDataPoint
+  {
+    public int Index { get; set; }
+    public double X { get; set; }
+    public double Y { get; set; }
   }
 }
