@@ -16,6 +16,15 @@ namespace NumericalMethodsApp.LeastSquaresMethod
     void UpdatePlot(List<DataPoint> points, double[] coefficients);
     MessageBoxResult ShowMessage(string message, string caption, MessageBoxType messageBoxType);
     void ClearPlot();
+
+    event RoutedEventHandler DimensionChanged;
+    event RoutedEventHandler ApplyDimensionClicked;
+    event RoutedEventHandler CalculateClicked;
+    event RoutedEventHandler ClearAllClicked;
+    event RoutedEventHandler RandomGenerateClicked;
+    event RoutedEventHandler ImportCsvClicked;
+    event RoutedEventHandler ImportGoogleSheetsClicked;
+    event RoutedEventHandler HelpClicked;
   }
 
   public enum MessageBoxType
