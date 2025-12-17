@@ -20,6 +20,8 @@ namespace NumericalMethodsApp
     }
 
     private double epsilon;
+    private double stepSize;
+
     private void OnCalculateClicked(object sender, EventArgs e)
     {
       try
@@ -61,10 +63,18 @@ namespace NumericalMethodsApp
           return;
         }
 
+        if (!ValidateAndParseInput(view.StepSize, "шага", out double stepSize) || stepSize <= 0)
+        {
+          view.ShowError("Шаг должен быть положительным числом");
+          return;
+        }
+
         this.epsilon = epsilon;
+        this.stepSize = stepSize;
 
         model.SetInitialPoint(xStart, yStart);
         model.SetEpsilon(epsilon);
+        model.SetStepSize(stepSize);
 
         var optimizationResult = model.PerformOptimization();
         if (!optimizationResult.IsSuccessful)
@@ -102,7 +112,7 @@ namespace NumericalMethodsApp
 
       while (tempEpsilon < 1)
       {
-        decimalPlaces++;
+        ++decimalPlaces;
         tempEpsilon *= 10;
       }
 
@@ -137,7 +147,8 @@ namespace NumericalMethodsApp
                           "1. Введите функцию f(x, y) в поле 'Функция'\n" +
                           "2. Укажите начальные приближения для x и y\n" +
                           "3. Задайте точность вычислений ε (0 < ε ≤ 1)\n" +
-                          "4. Нажмите 'Вычислить'\n\n" +
+                          "4. Задайте шаг поиска h (положительное число)\n" +
+                          "5. Нажмите 'Вычислить'\n\n" +
                           "Примеры функций:\n" +
                           "x^2 + y^2\n" +
                           "sin(x) + cos(y)\n" +
