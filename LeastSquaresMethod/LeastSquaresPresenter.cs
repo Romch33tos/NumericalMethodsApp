@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -203,6 +204,57 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       }
     }
 
+    private void HandleImportGoogleSheetsClicked(object sender, RoutedEventArgs e)
+    {
+      try
+      {
+        var dialog = new GoogleSheetsImportDialog();
+        if (dialog.ShowDialog() == true)
+        {
+          string sheetUrl = dialog.SheetsUrl;
+          string csvUrl = ConvertGoogleSheetsUrlToCsv(sheetUrl);
+
+          using (WebClient client = new WebClient())
+          {
+            string csvData = client.DownloadString(csvUrl);
+            model.Points.Clear();
+
+            using (StringReader reader = new StringReader(csvData))
+            {
+              string line;
+              while ((line = reader.ReadLine()) != null)
+              {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                string[] values = line.Split(',');
+                if (values.Length >= 2)
+                {
+                  string xString = values[0].Trim().Replace("\"", "");
+                  string yString = values[1].Trim().Replace("\"", "");
+
+                  if (!string.IsNullOrEmpty(xString) && !string.IsNullOrEmpty(yString) &&
+                      double.TryParse(xString, NumberStyles.Any, CultureInfo.InvariantCulture, out double xValue) &&
+                      double.TryParse(yString, NumberStyles.Any, CultureInfo.InvariantCulture, out double yValue))
+                  {
+                    model.Points.Add(new DataPoint(xValue, yValue));
+                  }
+                }
+              }
+            }
+
+            view.DimensionText = model.Points.Count.ToString();
+            view.IsDataGridEnabled = true;
+            UpdateDataGrid();
+            view.ShowMessage("Импорт успешно завершен", "Импорт", MessageBoxType.Information);
+          }
+        }
+      }
+      catch (Exception exception)
+      {
+        view.ShowMessage($"Ошибка при импорте из Google Таблиц: {exception.Message}", "Ошибка", MessageBoxType.Error);
+      }
+    }
+
     private void HandleCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
     {
       if (e.EditAction == DataGridEditAction.Commit)
@@ -248,6 +300,28 @@ namespace NumericalMethodsApp.LeastSquaresMethod
         });
       }
       view.UpdateDataGrid(dataGridItems);
+    }
+
+    private string ConvertGoogleSheetsUrlToCsv(string sheetUrl)
+    {
+      try
+      {
+        Uri uri = new Uri(sheetUrl);
+        string path = uri.AbsolutePath;
+        var pathParts = path.Split('/');
+        string sheetId = pathParts.Length >= 4 ? pathParts[3] :
+            throw new ArgumentException("Неверный формат ссылки на Google Таблицу");
+        string gridId = "0";
+        if (uri.Fragment.Contains("gid="))
+        {
+          gridId = uri.Fragment.Split('=')[1];
+        }
+        return $"https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv&gid={gridId}";
+      }
+      catch (Exception exception)
+      {
+        throw new ArgumentException($"Неверный формат ссылки на Google Таблицу: {exception.Message}");
+      }
     }
 
     private int GetDecimalPlacesFromPrecision(double precision)
