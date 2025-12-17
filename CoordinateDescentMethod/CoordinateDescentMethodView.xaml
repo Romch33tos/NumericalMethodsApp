@@ -129,7 +129,7 @@
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="8">
                     <Label Content="Функция f(x, y):" FontWeight="Bold" FontSize="13"/>
                     <TextBox x:Name="TextBoxFunction" 
-                            Width="484" 
+                            Width="472" 
                             ToolTip="Введите математическую функцию с переменными x и y, например: x^2 + y^2"/>
                 </StackPanel>
 
