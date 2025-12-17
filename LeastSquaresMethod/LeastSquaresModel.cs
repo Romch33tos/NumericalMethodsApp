@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace NumericalMethodsApp.LeastSquaresMethod
 {
@@ -17,5 +18,14 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       X = x;
       Y = y;
     }
+  }
+
+  public class LeastSquaresModel
+  {
+    public List<DataPoint> Points { get; } = new List<DataPoint>();
+    public int Dimension { get; set; } = 3;
+    public double RangeStart { get; set; } = 0;
+    public double RangeEnd { get; set; } = 10;
+    public double Precision { get; set; } = 0.001;
   }
 }
