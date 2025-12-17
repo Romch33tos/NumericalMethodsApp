@@ -114,6 +114,7 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       }
 
       view.ResultText = resultText;
+      view.UpdatePlot(model.Points, coefficients);
     }
 
     private void HandleClearAllClicked(object sender, RoutedEventArgs e)
@@ -137,6 +138,7 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       view.PrecisionText = model.Precision.ToString(CultureInfo.InvariantCulture);
       view.IsDataGridEnabled = false;
       view.ResultText = "";
+      view.ClearPlot();
       UpdateDataGrid();
     }
 
@@ -253,6 +255,21 @@ namespace NumericalMethodsApp.LeastSquaresMethod
       {
         view.ShowMessage($"Ошибка при импорте из Google Таблиц: {exception.Message}", "Ошибка", MessageBoxType.Error);
       }
+    }
+
+    private void HandleHelpClicked(object sender, RoutedEventArgs e)
+    {
+      view.ShowMessage(
+          "Справка по использованию приложения:\n\n" +
+          "1. Укажите размерность (n) - степень полинома + 1\n" +
+          "2. Нажмите 'Применить'\n" +
+          "3. Введите точки (x, y) в таблицу или сгенерируйте случайные\n" +
+          "4. Укажите точность вычислений (ε)\n" +
+          "5. Нажмите 'Вычислить' для расчета коэффициентов\n" +
+          "6. Результаты отобразятся в текстовом поле и на графике\n\n" +
+          "Для импорта данных используйте кнопки 'Импорт из CSV' или 'Импорт из Google Таблиц'",
+          "Справка",
+          MessageBoxType.Information);
     }
 
     private void HandleCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
