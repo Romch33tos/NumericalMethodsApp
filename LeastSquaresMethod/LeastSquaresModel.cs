@@ -27,5 +27,23 @@ namespace NumericalMethodsApp.LeastSquaresMethod
     public double RangeStart { get; set; } = 0;
     public double RangeEnd { get; set; } = 10;
     public double Precision { get; set; } = 0.001;
+
+    public void UpdateDimension(int newDimension)
+    {
+      if (newDimension < 1)
+        throw new ArgumentException("Размерность должна быть положительной.");
+
+      Dimension = newDimension;
+
+      while (Points.Count < Dimension)
+      {
+        Points.Add(new DataPoint(0, 0));
+      }
+
+      while (Points.Count > Dimension)
+      {
+        Points.RemoveAt(Points.Count - 1);
+      }
+    }
   }
 }
