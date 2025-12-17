@@ -1,552 +1,147 @@
-﻿using Microsoft.Win32;
 using OxyPlot;
 using OxyPlot.Axes;
-using OxyPlot.Series;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
+using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
-using System.Globalization;
+using System.Windows.Input;
 
-namespace NumericalMethodsApp.LeastSquaresMethod
+namespace NumericalMethodsApp
 {
-  public partial class LeastSquaresMethodView : Window
+  public partial class CoordinateDescentView : Window, ICoordinateDescentView
   {
-    private List<DataPoint> dataPoints = new List<DataPoint>();
-    private Random randomGenerator = new Random();
+    private CoordinateDescentPresenter presenter;
+    private PlotModel currentPlotModel;
 
-    public LeastSquaresMethodView()
+    public CoordinateDescentView()
     {
       InitializeComponent();
-      InitializeView();
-      SubscribeToEvents();
+      presenter = new CoordinateDescentPresenter(this);
+      InitializePlot();
+      TextBoxEpsilon.Text = "0.001";
+      TextBoxStepSize.Text = "0.01";
     }
 
-    private void InitializeView()
+    private void InitializePlot()
     {
-      DimensionTextBox.Text = "3";
-      RangeStartTextBox.Text = "0";
-      RangeEndTextBox.Text = "10";
-      PrecisionTextBox.Text = "0.001";
-      UpdateDataGrid();
-      UpdatePlot();
-    }
-
-    private void SubscribeToEvents()
-    {
-      DimensionTextBox.TextChanged += OnDimensionTextChanged;
-      RangeStartTextBox.TextChanged += OnRangeTextChanged;
-      RangeEndTextBox.TextChanged += OnRangeTextChanged;
-      PrecisionTextBox.TextChanged += OnPrecisionTextChanged;
-    }
-
-    private void OnDimensionTextChanged(object sender, TextChangedEventArgs e)
-    {
-      if (int.TryParse(DimensionTextBox.Text, out int dimension) && dimension > 0)
+      currentPlotModel = new PlotModel
       {
-        while (dataPoints.Count < dimension)
-        {
-          dataPoints.Add(new DataPoint(0, 0));
-        }
-        while (dataPoints.Count > dimension)
-        {
-          dataPoints.RemoveAt(dataPoints.Count - 1);
-        }
-        UpdateDataGrid();
-      }
-    }
-
-    private void OnRangeTextChanged(object sender, TextChangedEventArgs e)
-    {
-      UpdateDataGrid();
-    }
-
-    private void OnPrecisionTextChanged(object sender, TextChangedEventArgs e)
-    {
-      UpdateDataGrid();
-    }
-
-    private void UpdateDataGrid()
-    {
-      var items = new List<DataPointItem>();
-      for (int index = 0; index < dataPoints.Count; ++index)
-      {
-        items.Add(new DataPointItem
-        {
-          Index = index + 1,
-          X = dataPoints[index].X,
-          Y = dataPoints[index].Y
-        });
-      }
-      PointsDataGrid.ItemsSource = items;
-    }
-
-    private void UpdatePlot()
-    {
-      var plotModel = new PlotModel
-      {
-        Title = "Метод наименьших квадратов",
-        Background = OxyColors.White
+        Title = "",
+        Background = OxyColors.White,
+        PlotAreaBorderThickness = new OxyThickness(1),
+        PlotAreaBorderColor = OxyColors.LightGray
       };
 
-      plotModel.Axes.Add(new LinearAxis
+      var xAxis = new LinearAxis
       {
         Position = AxisPosition.Bottom,
-        Title = "X",
+        Title = "x",
+        Minimum = -5,
+        Maximum = 5,
         MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(30, 0, 0, 0),
         MinorGridlineStyle = LineStyle.Dot,
-        MajorGridlineColor = OxyColors.LightGray,
-        MinorGridlineColor = OxyColors.LightGray.WithAlpha(40)
-      });
+        MinorGridlineColor = OxyColor.FromArgb(15, 0, 0, 0)
+      };
+      currentPlotModel.Axes.Add(xAxis);
 
-      plotModel.Axes.Add(new LinearAxis
+      var yAxis = new LinearAxis
       {
         Position = AxisPosition.Left,
-        Title = "Y",
+        Title = "y",
+        Minimum = -5,
+        Maximum = 5,
         MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(30, 0, 0, 0),
         MinorGridlineStyle = LineStyle.Dot,
-        MajorGridlineColor = OxyColors.LightGray,
-        MinorGridlineColor = OxyColors.LightGray.WithAlpha(40)
-      });
-
-      var scatterSeries = new ScatterSeries
-      {
-        Title = "Исходные точки",
-        MarkerType = MarkerType.Circle,
-        MarkerSize = 6,
-        MarkerFill = OxyColors.Red,
-        MarkerStroke = OxyColors.DarkRed,
-        MarkerStrokeThickness = 1
+        MinorGridlineColor = OxyColor.FromArgb(15, 0, 0, 0)
       };
+      currentPlotModel.Axes.Add(yAxis);
 
-      foreach (var point in dataPoints)
-      {
-        scatterSeries.Points.Add(new ScatterPoint(point.X, point.Y));
-      }
-
-      plotModel.Series.Add(scatterSeries);
-
-      if (dataPoints.Count >= 2)
-      {
-        var coefficients = CalculateCoefficients();
-        if (coefficients != null)
-        {
-          var lineSeries = new LineSeries
-          {
-            Title = "Аппроксимирующая функция",
-            Color = OxyColors.Blue,
-            StrokeThickness = 2
-          };
-
-          double minX = dataPoints.Min(p => p.X);
-          double maxX = dataPoints.Max(p => p.X);
-          double step = (maxX - minX) / 100;
-
-          for (double x = minX - 1; x <= maxX + 1; x += step)
-          {
-            double y = EvaluatePolynomial(x, coefficients);
-            lineSeries.Points.Add(new DataPoint(x, y));
-          }
-
-          plotModel.Series.Add(lineSeries);
-        }
-      }
-
-      MainPlot.Model = plotModel;
+      PlotView.Model = currentPlotModel;
     }
 
-    private double[] CalculateCoefficients()
+    public string FunctionExpression
     {
-      if (dataPoints.Count < 2) return null;
-
-      int n = dataPoints.Count;
-      double[,] matrix = new double[n, n + 1];
-
-      for (int row = 0; row < n; ++row)
-      {
-        for (int col = 0; col < n; ++col)
-        {
-          matrix[row, col] = Math.Pow(dataPoints[row].X, col);
-        }
-        matrix[row, n] = dataPoints[row].Y;
-      }
-
-      for (int pivot = 0; pivot < n; ++pivot)
-      {
-        double maxElement = Math.Abs(matrix[pivot, pivot]);
-        int maxRow = pivot;
-        for (int row = pivot + 1; row < n; ++row)
-        {
-          if (Math.Abs(matrix[row, pivot]) > maxElement)
-          {
-            maxElement = Math.Abs(matrix[row, pivot]);
-            maxRow = row;
-          }
-        }
-
-        if (maxElement < double.Epsilon) return null;
-
-        if (maxRow != pivot)
-        {
-          for (int col = pivot; col <= n; ++col)
-          {
-            double temp = matrix[pivot, col];
-            matrix[pivot, col] = matrix[maxRow, col];
-            matrix[maxRow, col] = temp;
-          }
-        }
-
-        for (int row = pivot + 1; row < n; ++row)
-        {
-          double factor = matrix[row, pivot] / matrix[pivot, pivot];
-          for (int col = pivot; col <= n; ++col)
-          {
-            matrix[row, col] -= factor * matrix[pivot, col];
-          }
-        }
-      }
-
-      double[] coefficients = new double[n];
-      for (int i = n - 1; i >= 0; --i)
-      {
-        coefficients[i] = matrix[i, n];
-        for (int j = i + 1; j < n; ++j)
-        {
-          coefficients[i] -= matrix[i, j] * coefficients[j];
-        }
-        coefficients[i] /= matrix[i, i];
-      }
-
-      return coefficients;
+      get => TextBoxFunction.Text;
+      set => TextBoxFunction.Text = value;
     }
 
-    private double EvaluatePolynomial(double x, double[] coefficients)
+    public string XStart
     {
-      double result = 0;
-      for (int i = 0; i < coefficients.Length; ++i)
-      {
-        result += coefficients[i] * Math.Pow(x, i);
-      }
-      return result;
+      get => TextBoxX.Text;
+      set => TextBoxX.Text = value;
     }
 
-    private void RandomGenerateButton_Click(object sender, RoutedEventArgs e)
+    public string YStart
     {
-      if (!double.TryParse(RangeStartTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double min) ||
-          !double.TryParse(RangeEndTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double max))
-      {
-        MessageBox.Show("Укажите корректный диапазон значений", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        return;
-      }
-
-      if (min >= max)
-      {
-        MessageBox.Show("Начало диапазона должно быть меньше конца", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        return;
-      }
-
-      for (int index = 0; index < dataPoints.Count; ++index)
-      {
-        double x = min + (randomGenerator.NextDouble() * (max - min));
-        double y = min + (randomGenerator.NextDouble() * (max - min));
-        dataPoints[index] = new DataPoint(Math.Round(x, 2), Math.Round(y, 2));
-      }
-
-      UpdateDataGrid();
-      UpdatePlot();
+      get => TextBoxY.Text;
+      set => TextBoxY.Text = value;
     }
 
-    private void ImportCsvButton_Click(object sender, RoutedEventArgs e)
+    public string Epsilon
     {
-      OpenFileDialog openFileDialog = new OpenFileDialog();
-      openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
-      openFileDialog.Title = "Импорт данных из CSV";
-
-      if (openFileDialog.ShowDialog() == true)
-      {
-        try
-        {
-          string[] lines = File.ReadAllLines(openFileDialog.FileName);
-          dataPoints.Clear();
-
-          foreach (string line in lines)
-          {
-            string[] values = line.Split(',');
-            if (values.Length >= 2)
-            {
-              if (double.TryParse(values[0].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double x) &&
-                  double.TryParse(values[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double y))
-              {
-                dataPoints.Add(new DataPoint(x, y));
-              }
-            }
-          }
-
-          DimensionTextBox.Text = dataPoints.Count.ToString();
-          UpdateDataGrid();
-          UpdatePlot();
-          MessageBox.Show($"Успешно импортировано {dataPoints.Count} точек", "Импорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        catch (Exception ex)
-        {
-          MessageBox.Show($"Ошибка при импорте CSV: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-      }
+      get => TextBoxEpsilon.Text;
+      set => TextBoxEpsilon.Text = value;
     }
 
-    private void ImportGoogleSheetsButton_Click(object sender, RoutedEventArgs e)
+    public string StepSize
     {
-      try
-      {
-        GoogleSheetsImportDialog dialog = new GoogleSheetsImportDialog();
-        if (dialog.ShowDialog() == true)
-        {
-          string url = dialog.SheetsUrl;
-          string csvUrl = ConvertGoogleSheetsUrlToCsv(url);
-
-          using (WebClient client = new WebClient())
-          {
-            string csvData = client.DownloadString(csvUrl);
-            dataPoints.Clear();
-
-            using (StringReader reader = new StringReader(csvData))
-            {
-              string line;
-              while ((line = reader.ReadLine()) != null)
-              {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                string[] values = line.Split(',');
-                if (values.Length >= 2)
-                {
-                  string xStr = values[0].Trim().Replace("\"", "");
-                  string yStr = values[1].Trim().Replace("\"", "");
-
-                  if (!string.IsNullOrEmpty(xStr) && !string.IsNullOrEmpty(yStr) &&
-                      double.TryParse(xStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double x) &&
-                      double.TryParse(yStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double y))
-                  {
-                    dataPoints.Add(new DataPoint(x, y));
-                  }
-                }
-              }
-            }
-
-            DimensionTextBox.Text = dataPoints.Count.ToString();
-            UpdateDataGrid();
-            UpdatePlot();
-
-            MessageBox.Show($"Успешно импортировано {dataPoints.Count} точек из Google Таблиц",
-                "Импорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
-          }
-        }
-      }
-      catch (Exception ex)
-      {
-        MessageBox.Show($"Ошибка при импорте из Google Таблиц: {ex.Message}",
-            "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-      }
+      get => TextBoxStepSize.Text;
+      set => TextBoxStepSize.Text = value;
     }
 
-    private string ConvertGoogleSheetsUrlToCsv(string url)
+    public string Result
     {
-      try
-      {
-        Uri uri = new Uri(url);
-        string path = uri.AbsolutePath;
-
-        var pathParts = path.Split('/');
-        string sheetId = pathParts.Length >= 4 ? pathParts[3] :
-            throw new ArgumentException("Неверный формат ссылки на Google Таблицу");
-
-        string gid = "0";
-        if (uri.Fragment.Contains("gid="))
-        {
-          gid = uri.Fragment.Split('=')[1];
-        }
-
-        return $"https://docs.google.com/spreadsheets/d/{sheetId}/export?format=csv&gid={gid}";
-      }
-      catch (Exception ex)
-      {
-        throw new ArgumentException($"Неверный формат ссылки на Google Таблицу: {ex.Message}");
-      }
+      get => ResultText.Text;
+      set => ResultText.Text = value;
     }
 
-    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
+    public event EventHandler CalculateClicked;
+    public event EventHandler ClearAllClicked;
+    public event EventHandler HelpClicked;
+
+    public void UpdatePlot(PlotModel plotModel)
     {
-      MessageBoxResult result = MessageBox.Show(
-          "Вы действительно хотите очистить все данные?",
-          "Подтверждение очистки",
-          MessageBoxButton.YesNo,
-          MessageBoxImage.Question);
-
-      if (result != MessageBoxResult.Yes) return;
-
-      DimensionTextBox.Text = "3";
-      RangeStartTextBox.Text = "0";
-      RangeEndTextBox.Text = "10";
-      PrecisionTextBox.Text = "0.001";
-      dataPoints.Clear();
-      for (int i = 0; i < 3; ++i)
-      {
-        dataPoints.Add(new DataPoint(0, 0));
-      }
-      UpdateDataGrid();
-      UpdatePlot();
-      ResultTextBox.Text = "";
+      currentPlotModel = plotModel;
+      PlotView.Model = currentPlotModel;
+      PlotView.InvalidatePlot(true);
     }
 
     private void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
-      if (dataPoints.Count < 2)
-      {
-        MessageBox.Show("Недостаточно точек для расчета", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        return;
-      }
-
-      if (!double.TryParse(PrecisionTextBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double precision) || precision <= 0)
-      {
-        MessageBox.Show("Укажите корректную точность (положительное число)", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        return;
-      }
-
-      var coefficients = CalculateCoefficients();
-      if (coefficients == null)
-      {
-        MessageBox.Show("Не удалось вычислить коэффициенты", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        return;
-      }
-
-      int decimalPlaces = GetDecimalPlacesFromPrecision(precision);
-      string formatString = $"F{decimalPlaces}";
-
-      string resultText = "Коэффициенты полинома:\n";
-      for (int i = 0; i < coefficients.Length; ++i)
-      {
-        resultText += $"a{i} = {coefficients[i].ToString(formatString, CultureInfo.InvariantCulture)}\n";
-      }
-
-      resultText += "\nАппроксимирующая функция:\n";
-      resultText += "f(x) = ";
-      for (int i = 0; i < coefficients.Length; ++i)
-      {
-        if (i == 0)
-        {
-          resultText += coefficients[i].ToString(formatString, CultureInfo.InvariantCulture);
-        }
-        else
-        {
-          string sign = coefficients[i] >= 0 ? " + " : " - ";
-          resultText += $"{sign}{Math.Abs(coefficients[i]).ToString(formatString, CultureInfo.InvariantCulture)}*x^{i}";
-        }
-      }
-
-      ResultTextBox.Text = resultText;
-      UpdatePlot();
+      CalculateClicked?.Invoke(this, EventArgs.Empty);
     }
 
-    private int GetDecimalPlacesFromPrecision(double precision)
+    private void ClearAllButton_Click(object sender, RoutedEventArgs e)
     {
-      if (precision >= 1) return 0;
-      if (precision >= 0.1) return 1;
-      if (precision >= 0.01) return 2;
-      if (precision >= 0.001) return 3;
-      if (precision >= 0.0001) return 4;
-      if (precision >= 0.00001) return 5;
-      return 6;
+      ClearAllClicked?.Invoke(this, EventArgs.Empty);
     }
 
     private void HelpButton_Click(object sender, RoutedEventArgs e)
     {
-      MessageBox.Show(
-          "Справка по использованию приложения:\n\n" +
-          "1. Укажите размерность (n) - степень полинома + 1\n" +
-          "2. Введите точки (x, y) в таблицу или сгенерируйте случайные\n" +
-          "3. Укажите точность вычислений (ε)\n" +
-          "4. Нажмите 'Вычислить' для расчета коэффициентов\n" +
-          "5. Результаты отобразятся в текстовом поле и на графике\n\n" +
-          "Для импорта данных используйте кнопки 'Импорт из CSV' или 'Импорт из Google Таблиц'",
-          "Справка",
-          MessageBoxButton.OK,
-          MessageBoxImage.Information);
+      HelpClicked?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ApplyDimensionButton_Click(object sender, RoutedEventArgs e)
+    private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
     {
-      if (int.TryParse(DimensionTextBox.Text, out int dimension) && dimension > 0)
-      {
-        while (dataPoints.Count < dimension)
-        {
-          dataPoints.Add(new DataPoint(0, 0));
-        }
-        while (dataPoints.Count > dimension)
-        {
-          dataPoints.RemoveAt(dataPoints.Count - 1);
-        }
-        UpdateDataGrid();
-        UpdatePlot();
-      }
-      else
-      {
-        MessageBox.Show("Пожалуйста, введите корректное положительное число для размерности", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-        DimensionTextBox.Text = "3";
-      }
+      Regex regex = new Regex(@"^[-]?[0-9]*[.,]?[0-9]*$");
+      e.Handled = !regex.IsMatch((sender as System.Windows.Controls.TextBox).Text + e.Text);
     }
 
-    public class DataPoint
+    public void ShowError(string message)
     {
-      public double X { get; set; }
-      public double Y { get; set; }
-
-      public DataPoint(double x, double y)
-      {
-        X = x;
-        Y = y;
-      }
+      MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
-    public class DataPointItem
+    public void ClearResults()
     {
-      public int Index { get; set; }
-      public double X { get; set; }
-      public double Y { get; set; }
-    }
-
-    private void PointsDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-    {
-      if (e.EditAction == DataGridEditAction.Commit)
-      {
-        var textBox = e.EditingElement as TextBox;
-        if (textBox != null)
-        {
-          if (!double.TryParse(textBox.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
-          {
-            MessageBox.Show("Введите корректное число", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            e.Cancel = true;
-          }
-          else
-          {
-            int rowIndex = e.Row.GetIndex();
-            if (rowIndex < dataPoints.Count)
-            {
-              var propertyName = (e.Column.Header.ToString());
-              if (propertyName == "X")
-              {
-                dataPoints[rowIndex] = new DataPoint(value, dataPoints[rowIndex].Y);
-              }
-              else if (propertyName == "Y")
-              {
-                dataPoints[rowIndex] = new DataPoint(dataPoints[rowIndex].X, value);
-              }
-              UpdatePlot();
-            }
-          }
-        }
-      }
+      FunctionExpression = string.Empty;
+      XStart = string.Empty;
+      YStart = string.Empty;
+      Epsilon = "0.001";
+      StepSize = "0.01";
+      Result = string.Empty;
+      InitializePlot();
     }
   }
 }
