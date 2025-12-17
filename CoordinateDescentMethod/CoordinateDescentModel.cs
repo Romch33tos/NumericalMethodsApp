@@ -14,9 +14,9 @@ namespace NumericalMethodsApp
     private double currentX;
     private double currentY;
     private double epsilon;
+    private double searchStep;
     private const int MaxIterations = 10000;
     private const double SearchRange = 2.0;
-    private const double SearchStep = 0.01;
 
     public List<Point2D> OptimizationPath { get; private set; }
     public Point2D MinimumPoint { get; private set; }
@@ -40,12 +40,10 @@ namespace NumericalMethodsApp
         parsedExpression.Parameters["y"] = 0.0;
 
         double testResult = Convert.ToDouble(parsedExpression.Evaluate());
-
         parsedExpression.Parameters["x"] = 1.0;
         parsedExpression.Parameters["y"] = 2.0;
         double testResult2 = Convert.ToDouble(parsedExpression.Evaluate());
 
-        
         if (Math.Abs(testResult - testResult2) < 1e-12)
         {
           parsedExpression.Parameters["x"] = -1.0;
@@ -85,6 +83,15 @@ namespace NumericalMethodsApp
       return true;
     }
 
+    public bool SetStepSize(double stepValue)
+    {
+      if (stepValue <= 0)
+        return false;
+
+      searchStep = stepValue;
+      return true;
+    }
+
     private double EvaluateFunction(double inputX, double inputY)
     {
       try
@@ -109,7 +116,6 @@ namespace NumericalMethodsApp
     {
       double leftBound = currentX - SearchRange;
       double rightBound = currentX + SearchRange;
-      double stepSize = SearchStep;
 
       double optimalX = leftBound;
       double minValue = EvaluateFunction(leftBound, fixedY);
@@ -117,7 +123,7 @@ namespace NumericalMethodsApp
       if (double.IsNaN(minValue))
         return currentX;
 
-      for (double candidateX = leftBound + stepSize; candidateX <= rightBound; candidateX += stepSize)
+      for (double candidateX = leftBound + searchStep; candidateX <= rightBound; candidateX += searchStep)
       {
         double currentValue = EvaluateFunction(candidateX, fixedY);
         if (!double.IsNaN(currentValue) && currentValue < minValue)
@@ -134,7 +140,6 @@ namespace NumericalMethodsApp
     {
       double lowerBound = currentY - SearchRange;
       double upperBound = currentY + SearchRange;
-      double stepSize = SearchStep;
 
       double optimalY = lowerBound;
       double minValue = EvaluateFunction(fixedX, lowerBound);
@@ -142,7 +147,7 @@ namespace NumericalMethodsApp
       if (double.IsNaN(minValue))
         return currentY;
 
-      for (double candidateY = lowerBound + stepSize; candidateY <= upperBound; candidateY += stepSize)
+      for (double candidateY = lowerBound + searchStep; candidateY <= upperBound; candidateY += searchStep)
       {
         double currentValue = EvaluateFunction(fixedX, candidateY);
         if (!double.IsNaN(currentValue) && currentValue < minValue)
