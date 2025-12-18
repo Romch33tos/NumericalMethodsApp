@@ -94,31 +94,39 @@
                 <StackPanel Grid.Column="0" Margin="10,0,5,0">
                     <Button Content="Метод дихотомии" 
                  Click="MethodButton_Click" Tag="Method1"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method1Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method1Button"
+                 ToolTip="Поиск корня функции на заданном интервале"/>
                     <Button Content="Метод золотого сечения" 
                  Click="MethodButton_Click" Tag="Method2"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method2Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method2Button"
+                 ToolTip="Поиск минимума/максимума функции"/>
                     <Button Content="Олимпиадные сортировки" 
                  Click="MethodButton_Click" Tag="Method3"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method3Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method3Button"
+                 ToolTip="Эффективные алгоритмы сортировки данных"/>
                     <Button Content="Метод покоординатного спуска" 
                  Click="MethodButton_Click" Tag="Method4"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method4Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method4Button"
+                 ToolTip="Поиск минимума функции нескольких переменных"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Margin="5,0,10,0">
                     <Button Content="Решение СЛАУ" 
                  Click="MethodButton_Click" Tag="Method5"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method5Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method5Button"
+                 ToolTip="Решение систем линейных алгебраических уравнений"/>
                     <Button Content="Метод Ньютона" 
                  Click="MethodButton_Click" Tag="Method6"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method6Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method6Button"
+                 ToolTip="Поиск локального минимума функции"/>
                     <Button Content="Решение определенного интеграла" 
                  Click="MethodButton_Click" Tag="Method7"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method7Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method7Button"
+                 ToolTip="Численное вычисление определенного интеграла"/>
                     <Button Content="Метод наименьших квадратов" 
                  Click="MethodButton_Click" Tag="Method8"
-                 Style="{StaticResource MethodButtonStyle}" Name="Method8Button"/>
+                 Style="{StaticResource MethodButtonStyle}" Name="Method8Button"
+                 ToolTip="Аппроксимация данных линейной функцией"/>
                 </StackPanel>
             </Grid>
         </Grid>

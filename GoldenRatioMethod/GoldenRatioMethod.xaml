@@ -137,7 +137,7 @@
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="8">
                     <Label Content="Функция f(x):" FontWeight="Bold" FontSize="13"/>
                     <TextBox x:Name="FunctionTextBox" 
-                            Width="484" 
+                            Width="478" 
                             ToolTip="Введите математическую функцию, например: x^2 + 2*x + 1"
                             Text="{Binding FunctionExpression, ElementName=ThisWindow}"/>
                 </StackPanel>
