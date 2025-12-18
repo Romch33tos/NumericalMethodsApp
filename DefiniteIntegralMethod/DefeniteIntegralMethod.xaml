@@ -118,7 +118,7 @@
         </Menu>
 
         <Border Background="White" Margin="15" CornerRadius="8" 
-                BorderThickness="1" BorderBrush="#FFEAECEE" Height="630">
+                BorderThickness="1" BorderBrush="#FFEAECEE" Height="640">
             <Grid Margin="15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -139,13 +139,13 @@
                 <Border Grid.Row="1" Grid.ColumnSpan="3" Height="220" Margin="8" 
                         BorderThickness="1" BorderBrush="#FFEAECEE" 
                         Background="#FFF8F9FA" CornerRadius="6">
-                    <oxy:PlotView x:Name="PlotViewControl" Background="Transparent" Margin="5"/>
+                    <oxy:PlotView x:Name="PlotViewControl" Background="Transparent" Margin="5,5,5,23"/>
                 </Border>
 
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="8">
                     <Label Content="Функция f(x):" FontWeight="Bold" FontSize="13"/>
                     <TextBox x:Name="FunctionTextBox" 
-                            Width="484" 
+                            Width="476" 
                             ToolTip="Введите математическую функцию, например: x^2 + 2*x + 1"
                             Text="{Binding FunctionExpression, ElementName=ThisWindow}"/>
                 </StackPanel>
@@ -199,10 +199,10 @@
                         <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0">
                             <RadioButton x:Name="AutoPartitionsRadio" Content="Автоматически" 
                                        IsChecked="{Binding AutoPartitions, ElementName=ThisWindow}"
-                                       Margin="4,0"/>
+                                       Margin="4,0" Width="148"/>
                             <RadioButton x:Name="FixedPartitionsRadio" Content="Ручной ввод" 
                                        IsChecked="{Binding UseFixedPartitions, ElementName=ThisWindow}"
-                                       Margin="4,0"/>
+                                       Margin="4,0" Width="98"/>
                         </StackPanel>
                     </Grid>
                 </GroupBox>
@@ -240,7 +240,7 @@
                         <TextBox x:Name="ResultTextBox" 
                                 Style="{StaticResource ResultTextBoxStyle}"
                                 Text="{Binding ResultText, ElementName=ThisWindow}"
-                                Height="70"
+                                Height="60"
                                 MinHeight="70"
                                 MaxHeight="500"/>
                     </ScrollViewer>
