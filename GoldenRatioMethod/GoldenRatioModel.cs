@@ -13,6 +13,7 @@ namespace NumericalMethodsApp.Models
     public double UpperBound { get; set; }
     public double Epsilon { get; set; }
     public bool FindMinimum { get; set; }
+    public bool FindZero { get; set; }
 
     public CalculationResult CalculationResult { get; private set; }
 
@@ -29,16 +30,78 @@ namespace NumericalMethodsApp.Models
         throw new InvalidOperationException("Некорректные входные данные");
       }
 
-      double resultPoint = GoldenRatioSearch(LowerBound, UpperBound, Epsilon, FindMinimum);
-      double functionValue = EvaluateFunction(resultPoint);
-
-      CalculationResult = new CalculationResult
+      if (FindZero)
       {
-        Point = resultPoint,
-        Value = functionValue,
-        IsMinimum = FindMinimum,
-        Success = true
-      };
+        double resultPoint = FindZeroUsingBisection(LowerBound, UpperBound, Epsilon);
+        CalculationResult = new CalculationResult
+        {
+          Point = resultPoint,
+          Value = 0,
+          IsMinimum = false,
+          IsZero = true,
+          Success = true
+        };
+      }
+      else
+      {
+        double resultPoint = GoldenRatioSearch(LowerBound, UpperBound, Epsilon, FindMinimum);
+        double functionValue = EvaluateFunction(resultPoint);
+
+        CalculationResult = new CalculationResult
+        {
+          Point = resultPoint,
+          Value = functionValue,
+          IsMinimum = FindMinimum,
+          IsZero = false,
+          Success = true
+        };
+      }
+    }
+
+    private double FindZeroUsingBisection(double lowerBound, double upperBound, double epsilonValue)
+    {
+      double currentLower = lowerBound;
+      double currentUpper = upperBound;
+
+      double fLower = EvaluateFunction(currentLower);
+      double fUpper = EvaluateFunction(currentUpper);
+
+      if (Math.Sign(fLower) == Math.Sign(fUpper))
+      {
+        throw new InvalidOperationException("Функция должна иметь разные знаки на концах интервала для поиска нуля");
+      }
+
+      int iterationCounter = 0;
+      while (Math.Abs(currentUpper - currentLower) > epsilonValue)
+      {
+        ++iterationCounter;
+
+        double midPoint = (currentLower + currentUpper) / 2;
+        double fMid = EvaluateFunction(midPoint);
+
+        if (Math.Abs(fMid) < epsilonValue)
+        {
+          return midPoint;
+        }
+
+        if (Math.Sign(fLower) * Math.Sign(fMid) < 0)
+        {
+          currentUpper = midPoint;
+          fUpper = fMid;
+        }
+        else
+        {
+          currentLower = midPoint;
+          fLower = fMid;
+        }
+
+        if (iterationCounter > 1000)
+        {
+          throw new Exception("Превышено максимальное количество итераций при поиске нуля.");
+        }
+      }
+
+      return (currentLower + currentUpper) / 2;
     }
 
     private double GoldenRatioSearch(double lowerBound, double upperBound, double epsilonValue, bool findMinimum)
@@ -95,7 +158,12 @@ namespace NumericalMethodsApp.Models
 
       try
       {
-        string expressionText = FunctionExpression.Replace(" ", "");
+        string expressionText = FunctionExpression.Trim();
+
+        if (string.IsNullOrWhiteSpace(expressionText))
+        {
+          throw new Exception("Выражение функции пусто");
+        }
 
         if (expressionText.ToLower() == "x" || expressionText.ToLower() == "y=x")
         {
@@ -104,7 +172,7 @@ namespace NumericalMethodsApp.Models
 
         if (expressionText.ToLower().StartsWith("y="))
         {
-          expressionText = expressionText.Substring(2);
+          expressionText = expressionText.Substring(2).Trim();
         }
 
         if (expressionText.Trim() == "x")
@@ -226,6 +294,9 @@ namespace NumericalMethodsApp.Models
 
       expression = ConvertPowerOperators(expression);
       expression = ConvertImplicitMultiplication(expression);
+
+      expression = FixLinearFunctions(expression);
+
       return expression;
     }
 
@@ -250,15 +321,17 @@ namespace NumericalMethodsApp.Models
       return expression;
     }
 
+    private string FixLinearFunctions(string expression)
+    {
+      expression = expression.Replace("*-", "*(-1)*");
+      expression = expression.Replace("/-", "/(-1)/");
+
+      return expression;
+    }
+
     private bool ValidateInput()
     {
       if (string.IsNullOrWhiteSpace(FunctionExpression))
-        return false;
-
-      if (IsConstantFunction(FunctionExpression))
-        return false;
-
-      if (IsTrivialExpression(FunctionExpression))
         return false;
 
       if (LowerBound >= UpperBound)
@@ -270,12 +343,6 @@ namespace NumericalMethodsApp.Models
       string processedExpression = ConvertToNCalcExpression(FunctionExpression);
       if (string.IsNullOrWhiteSpace(processedExpression))
         return false;
-
-      string discontinuityCheckResult = CheckForDiscontinuities(LowerBound, UpperBound);
-      if (!string.IsNullOrEmpty(discontinuityCheckResult))
-      {
-        throw new Exception($"Обнаружен разрыв функции: {discontinuityCheckResult}");
-      }
 
       try
       {
@@ -289,110 +356,6 @@ namespace NumericalMethodsApp.Models
       }
 
       return true;
-    }
-
-    public bool IsConstantFunction(string expression)
-    {
-      string cleanExpression = expression.Replace(" ", "").ToLower();
-
-      if (!cleanExpression.Contains("x"))
-        return true;
-
-      if (cleanExpression == "x")
-        return false;
-
-      string testExpression = cleanExpression.Replace("x", "");
-
-      if (string.IsNullOrWhiteSpace(testExpression))
-        return false;
-
-      try
-      {
-        var testExpr = new NCalc.Expression(testExpression);
-        testExpr.Parameters["e"] = Math.E;
-        testExpr.Parameters["pi"] = Math.PI;
-
-        var result1 = testExpr.Evaluate();
-        return result1 != null;
-      }
-      catch
-      {
-        return false;
-      }
-    }
-
-    private bool IsTrivialExpression(string expression)
-    {
-      string cleanExpression = expression.Replace(" ", "").ToLower();
-
-      if (double.TryParse(cleanExpression, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
-        return true;
-
-      try
-      {
-        double test1 = EvaluateFunction(1.0);
-        double test2 = EvaluateFunction(2.0);
-
-        if (Math.Abs(test1 - test2) < 1e-10)
-          return true;
-
-        string[] trivialPatterns = {
-          "0*x", "x*0", "0x", "x0", 
-          "x-x", 
-          "x/x", 
-          "x^0",
-        };
-
-        foreach (string pattern in trivialPatterns)
-        {
-          if (cleanExpression.Contains(pattern))
-            return true;
-        }
-
-        if (!cleanExpression.Contains("x"))
-          return true;
-
-        return false;
-      }
-      catch
-      {
-        return false;
-      }
-    }
-
-    private string CheckForDiscontinuities(double lowerBound, double upperBound)
-    {
-      const int testPointsCount = 50;
-      double step = (upperBound - lowerBound) / testPointsCount;
-      double? previousValue = null;
-
-      for (int counter = 0; counter <= testPointsCount; ++counter)
-      {
-        double testPoint = lowerBound + counter * step;
-        try
-        {
-          double currentValue = EvaluateFunction(testPoint);
-
-          if (previousValue.HasValue)
-          {
-            double difference = Math.Abs(currentValue - previousValue.Value);
-            double maxAllowedDifference = Math.Max(Math.Abs(previousValue.Value) * 10, 1000);
-
-            if (difference > maxAllowedDifference && !double.IsInfinity(currentValue) && !double.IsInfinity(previousValue.Value))
-            {
-              return $"Резкое изменение значения функции между x={testPoint - step} и x={testPoint}";
-            }
-          }
-
-          previousValue = currentValue;
-        }
-        catch (Exception ex)
-        {
-          return $"Функция не определена в точке x={testPoint}: {ex.Message}";
-        }
-      }
-
-      return null;
     }
 
     public static double ParseDouble(string text)
@@ -415,5 +378,6 @@ namespace NumericalMethodsApp.Models
     public bool IsMinimum { get; set; }
     public bool Success { get; set; }
     public string ErrorMessage { get; set; }
+    public bool IsZero { get; set; }
   }
 }

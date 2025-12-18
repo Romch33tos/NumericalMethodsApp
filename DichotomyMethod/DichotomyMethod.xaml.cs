@@ -25,9 +25,9 @@ namespace NumericalMethodsApp
       InitializePlot();
       _presenter = new DichotomyPresenter(this);
 
-      TextBoxFunction.Text = "x^2 - 4";
-      TextBoxA.Text = "1";
-      TextBoxB.Text = "3";
+      TextBoxFunction.Text = "";
+      TextBoxA.Text = "0";
+      TextBoxB.Text = "1";
       TextBoxEpsilon.Text = "0.001";
 
       KeyboardNavigation.SetTabIndex(TextBoxFunction, 0);
@@ -40,8 +40,30 @@ namespace NumericalMethodsApp
     private void InitializePlot()
     {
       _plotModel = new PlotModel { Title = "" };
-      _plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "x", FontSize = 14 });
-      _plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "f(x)", FontSize = 14 });
+
+      // Ось X с сеткой
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Bottom,
+        Title = "x",
+        FontSize = 14,
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(40, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
+        MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 0)
+      });
+
+      _plotModel.Axes.Add(new LinearAxis
+      {
+        Position = AxisPosition.Left,
+        Title = "f(x)",
+        FontSize = 14,
+        MajorGridlineStyle = LineStyle.Solid,
+        MajorGridlineColor = OxyColor.FromArgb(40, 0, 0, 0),
+        MinorGridlineStyle = LineStyle.Dot,
+        MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 0)
+      });
+
       PlotView.Model = _plotModel;
     }
 

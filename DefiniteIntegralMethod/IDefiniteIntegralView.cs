@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using OxyPlot;
 
@@ -11,8 +12,17 @@ namespace NumericalMethodsApp.DefiniteIntegralMethod
     double UpperBound { get; set; }
     double Epsilon { get; set; }
     string ResultText { get; set; }
-    IntegrationMethod SelectedMethod { get; set; }
+    List<IntegrationMethod> SelectedMethods { get; set; }
     PlotModel PlotModel { get; set; }
+    bool UseFixedPartitions { get; set; }
+    bool AutoPartitions { get; set; }
+    int FixedPartitions { get; set; }
+
+    bool IsLeftRectSelected { get; set; }
+    bool IsRightRectSelected { get; set; }
+    bool IsMidRectSelected { get; set; }
+    bool IsTrapezoidSelected { get; set; }
+    bool IsSimpsonSelected { get; set; }
 
     event EventHandler CalculateRequested;
     event EventHandler ClearAllRequested;

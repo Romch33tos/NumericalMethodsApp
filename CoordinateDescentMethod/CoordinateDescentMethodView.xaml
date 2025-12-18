@@ -1,8 +1,8 @@
-<Window x:Class="NumericalMethodsApp.Views.GoldenRatioMethod"
+<Window x:Class="NumericalMethodsApp.CoordinateDescentView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:oxy="http://oxyplot.org/wpf"
-        Title="Метод золотого сечения" Height="720" Width="1000" 
+        Title="Метод покоординатного спуска" Height="720" Width="1000" 
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
         Background="White"
         x:Name="ThisWindow">
@@ -81,13 +81,6 @@
             <Setter Property="Margin" Value="8"/>
         </Style>
 
-        <Style TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#FF2C3E50"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Margin" Value="4,6"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-
         <Style x:Key="ResultTextBoxStyle" TargetType="TextBox">
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="Height" Value="60"/>
@@ -106,16 +99,15 @@
 
     <DockPanel Margin="0">
         <Menu DockPanel.Dock="Top" Background="White">
-            <MenuItem Header="Справка" Click="Help_Click" Background="White" BorderBrush="White"/>
+            <MenuItem Header="Справка" Click="HelpButton_Click" Background="White" BorderBrush="White"/>
         </Menu>
 
         <Border Background="White" Margin="15" CornerRadius="8" 
-                BorderThickness="1" BorderBrush="#FFEAECEE" Height="631">
+                BorderThickness="1" BorderBrush="#FFEAECEE" Height="646">
             <Grid Margin="15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="240"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -131,18 +123,17 @@
                 <Border Grid.Row="1" Grid.ColumnSpan="3" Height="220" Margin="8" 
                         BorderThickness="1" BorderBrush="#FFEAECEE" 
                         Background="#FFF8F9FA" CornerRadius="6">
-                    <oxy:PlotView x:Name="PlotViewControl" Background="Transparent" Margin="5"/>
+                    <oxy:PlotView x:Name="PlotView" Background="Transparent" Margin="5"/>
                 </Border>
 
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="8">
-                    <Label Content="Функция f(x):" FontWeight="Bold" FontSize="13"/>
-                    <TextBox x:Name="FunctionTextBox" 
-                            Width="484" 
-                            ToolTip="Введите математическую функцию, например: x^2 + 2*x + 1"
-                            Text="{Binding FunctionExpression, ElementName=ThisWindow}"/>
+                    <Label Content="Функция f(x, y):" FontWeight="Bold" FontSize="13"/>
+                    <TextBox x:Name="TextBoxFunction" 
+                            Width="472" 
+                            ToolTip="Введите математическую функцию с переменными x и y, например: x^2 + y^2"/>
                 </StackPanel>
 
-                <GroupBox Grid.Row="3" Grid.Column="0" Header="Введите границы интервала" Margin="8">
+                <GroupBox Grid.Row="3" Grid.Column="0" Header="Начальные приближения" Margin="8">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -153,64 +144,51 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="Начало (А):" Grid.Row="0" Grid.Column="0"/>
-                        <TextBox x:Name="TextBoxA" Grid.Row="0" Grid.Column="1" 
-                                ToolTip="Нижняя граница интервала"
-                                Text="{Binding LowerBound, ElementName=ThisWindow}"/>
+                        <Label Content="Начальное x:" Grid.Row="0" Grid.Column="0"/>
+                        <TextBox x:Name="TextBoxX" Grid.Row="0" Grid.Column="1" 
+                                ToolTip="Начальное приближение для переменной x"
+                                PreviewTextInput="NumberValidationTextBox"/>
 
-                        <Label Content="Конец (В):" Grid.Row="1" Grid.Column="0"/>
-                        <TextBox x:Name="TextBoxB" Grid.Row="1" Grid.Column="1" 
-                                ToolTip="Верхняя граница интервала"
-                                Text="{Binding UpperBound, ElementName=ThisWindow}"/>
+                        <Label Content="Начальное y:" Grid.Row="1" Grid.Column="0"/>
+                        <TextBox x:Name="TextBoxY" Grid.Row="1" Grid.Column="1" 
+                                ToolTip="Начальное приближение для переменной y"
+                                PreviewTextInput="NumberValidationTextBox"/>
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="1" Header="Укажите точность вычислений" Margin="8">
+                <GroupBox Grid.Row="3" Grid.Column="1" Header="Параметры поиска" Margin="8">
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="Значение ε:"/>
-                        <TextBox x:Name="EpsilonTextBox" Grid.Column="1" 
+                        <Label Content="Точность ε:" Grid.Row="0" Grid.Column="0"/>
+                        <TextBox x:Name="TextBoxEpsilon" Grid.Row="0" Grid.Column="1" 
                                 ToolTip="Точность вычисления (например: 0.001)" 
-                                Text="{Binding Epsilon, ElementName=ThisWindow}"/>
+                                PreviewTextInput="NumberValidationTextBox"/>
+
+                        <Label Content="Шаг h:" Grid.Row="1" Grid.Column="0"/>
+                        <TextBox x:Name="TextBoxStepSize" Grid.Row="1" Grid.Column="1" 
+                                ToolTip="Шаг поиска (например: 0.01)" 
+                                PreviewTextInput="NumberValidationTextBox"/>
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Grid.Row="3" Grid.Column="2" Header="Выберите режим работы" Margin="8">
-                    <StackPanel>
-                        <RadioButton Content="Найти минимум функции" x:Name="MinRadioButton" 
-                 Checked="RadioButton_Checked"
-                 IsChecked="{Binding FindMinimum, ElementName=ThisWindow}"
-                 Margin="2"
-                 GroupName="ExtremumType"/>
-                        <RadioButton Content="Найти максимум функции" x:Name="MaxRadioButton" 
-                 Checked="RadioButton_Checked"
-                 IsChecked="{Binding FindMaximum, ElementName=ThisWindow}"
-                 Margin="2"
-                 GroupName="ExtremumType"/>
-                        <RadioButton Content="Найти ноль функции" x:Name="ZeroRadioButton" 
-                 Checked="RadioButton_Checked"
-                 IsChecked="{Binding FindZero, ElementName=ThisWindow}"
-                 Margin="2"
-                 GroupName="ExtremumType"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" 
-                           HorizontalAlignment="Center" Margin="0,8,0,8">
-                    <Button Content="Вычислить" Click="CalculateButton_Click" Width="136" 
+                <StackPanel Grid.Row="4" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="8">
+                    <Button Content="Вычислить" x:Name="CalculateButton" Click="CalculateButton_Click" Width="136" 
                            Background="#FF27AE60" FontSize="13" Margin="8,0"/>
                     <Button Content="Очистить все" Click="ClearAllButton_Click" Width="135" 
                            Background="#FF3498DB" FontSize="13" Margin="8,0"/>
                 </StackPanel>
 
-                <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="8">
-                    <TextBox x:Name="ResultTextBox" 
-                            Style="{StaticResource ResultTextBoxStyle}" Height="65"
-                            Text="{Binding ResultText, ElementName=ThisWindow}"/>
+                <GroupBox Grid.Row="5" Grid.ColumnSpan="3" Header="Результат" Margin="8,10,8,8">
+                    <TextBox x:Name="ResultText" 
+                            Style="{StaticResource ResultTextBoxStyle}" Height="70"/>
                 </GroupBox>
             </Grid>
         </Border>

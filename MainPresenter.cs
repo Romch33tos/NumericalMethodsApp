@@ -32,8 +32,8 @@ namespace NumericalMethodsApp
           view.OpenMethodWindow(methodName, sortingWindow, button);
           break;
         case "Method4":
-          string message = $"Метод {methodName} будет реализован в будущем.";
-          view.ShowMessage(message);
+          CoordinateDescentView coordinateDescentWindow = new CoordinateDescentView();
+          view.OpenMethodWindow(methodName, coordinateDescentWindow, button);
           break;
         case "Method5":
           LinearEquationsView slauWindow = new LinearEquationsView();
@@ -48,11 +48,11 @@ namespace NumericalMethodsApp
           view.OpenMethodWindow(methodName, integralWindow, button);
           break;
         case "Method8":
-          message = $"Метод {methodName} будет реализован в будущем.";
-          view.ShowMessage(message);
+          LeastSquaresMethod.LeastSquaresMethodView leastSquaresWindow = new LeastSquaresMethod.LeastSquaresMethodView();
+          view.OpenMethodWindow(methodName, leastSquaresWindow, button);
           break;
         default:
-          message = $"Метод {methodName} будет реализован в будущем.";
+          string message = $"Метод {methodName} будет реализован в будущем.";
           view.ShowMessage(message);
           break;
       }
@@ -61,14 +61,14 @@ namespace NumericalMethodsApp
     public void ShowAbout()
     {
       string aboutText = "Данное приложение предназначено для реализации следующих численных методов:\n\n" +
-                       "- Метод дихотомии\n" +
-                       "- Метод золотого сечения\n" +
-                       "- Олимпиадные сортировки\n" +
-                       "- Метод покоординатного спуска\n" +
-                       "- Решение СЛАУ (Гаусс, Жордан-Гаусс, Крамер)\n" +
-                       "- Метод Ньютона\n" +
-                       "- Решение определенного интеграла\n" +
-                       "- Метод наименьших квадратов";
+                 "- Метод дихотомии\n" +
+                 "- Метод золотого сечения\n" +
+                 "- Олимпиадные сортировки\n" +
+                 "- Метод покоординатного спуска\n" +
+                 "- Решение СЛАУ (Гаусс, Жордан-Гаусс, Крамер)\n" +
+                 "- Метод Ньютона\n" +
+                 "- Решение определенного интеграла\n" +
+                 "- Метод наименьших квадратов";
 
       view.ShowMessage(aboutText);
     }
