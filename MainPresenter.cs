@@ -1,4 +1,5 @@
 using NumericalMethodsApp.DefiniteIntegralMethod;
+using NumericalMethodsApp.LeastSquaresMethod;
 using NumericalMethodsApp.OlympiadSorting;
 using NumericalMethodsApp.Views;
 using System.Windows;
@@ -48,7 +49,7 @@ namespace NumericalMethodsApp
           view.OpenMethodWindow(methodName, integralWindow, button);
           break;
         case "Method8":
-          LeastSquaresMethod.LeastSquaresMethodView leastSquaresWindow = new LeastSquaresMethod.LeastSquaresMethodView();
+          LeastSquaresView leastSquaresWindow = new LeastSquaresView();
           view.OpenMethodWindow(methodName, leastSquaresWindow, button);
           break;
         default:
@@ -62,13 +63,16 @@ namespace NumericalMethodsApp
     {
       string aboutText = "Данное приложение предназначено для реализации следующих численных методов:\n\n" +
                  "- Метод дихотомии\n" +
+                 "- Решение систем линейных алгебраических уравнений\n" +
                  "- Метод золотого сечения\n" +
-                 "- Олимпиадные сортировки\n" +
-                 "- Метод покоординатного спуска\n" +
-                 "- Решение СЛАУ (Гаусс, Жордан-Гаусс, Крамер)\n" +
                  "- Метод Ньютона\n" +
+                 "- Олимпиадные сортировки\n" +
                  "- Решение определенного интеграла\n" +
-                 "- Метод наименьших квадратов";
+                 "- Метод покоординатного спуска\n" +
+                 "- Метод наименьших квадратов\n\n" +
+                 "Разработчик: Хадралиев Роман\n" +
+                 "Версия: 2.1.0\n" +
+                 "Кемеровский государственный университет, 2025";
 
       view.ShowMessage(aboutText);
     }
