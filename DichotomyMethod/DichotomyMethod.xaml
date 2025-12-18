@@ -129,8 +129,8 @@
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="8">
                     <Label Content="Функция f(x):" FontWeight="Bold" FontSize="13"/>
                     <TextBox x:Name="TextBoxFunction" 
-                            Width="491" 
-                            ToolTip="Введите математическую функцию, например: x^2 + 2*x + 1"/>
+                            Width="478" 
+                            ToolTip="Введите математическую функцию, например: x^2 + 2*x + 1" TextChanged="TextBoxFunction_TextChanged"/>
                 </StackPanel>
 
                 <GroupBox Grid.Row="3" Grid.Column="0" Header="Введите границы интервала" Margin="8">
