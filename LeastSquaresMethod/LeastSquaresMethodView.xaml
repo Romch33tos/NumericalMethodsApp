@@ -162,9 +162,9 @@
             </GroupBox>
 
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Top" 
-                   Margin="285,291,0,0" Orientation="Horizontal" Height="32" Width="310">
-                <Button Content="Очистить все" Width="145" Click="ClearAllButton_Click" Margin="0,0,20,0"/>
-                <Button Content="Вычислить" Width="145" Click="CalculateButton_Click"/>
+                   Margin="285,282,0,0" Orientation="Horizontal" Height="41" Width="310">
+                <Button Content="Очистить все" Width="145" Click="ClearAllButton_Click" Margin="0,0,20,0" Height="36"/>
+                <Button Content="Вычислить" Width="145" Click="CalculateButton_Click" Height="36"/>
             </StackPanel>
         </Grid>
     </DockPanel>
