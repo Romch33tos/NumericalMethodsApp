@@ -34,7 +34,7 @@
 
 ### Интерфейс окна метода дихотомии
 
-<img width="800" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/cc98985c-e629-4470-bf64-e29a7ddbb6c3" />
+<img width="800" alt="DichotomyMethod" src="https://github.com/user-attachments/assets/bf87e41e-6461-48aa-9e4a-ed92ce617b10" />
 
 ---
 
@@ -100,7 +100,7 @@
 
 ### Интерфейс окна метода золотого сечения
 
-<img width="800" alt="GoldenRatioMethod" src="https://github.com/user-attachments/assets/fcfb380d-3337-472d-92d4-63e60eaf105b" />
+<img width="800" alt="GoldenRatioMethod" src="https://github.com/user-attachments/assets/e1fbdc57-8aae-4322-832b-bba790f08841" />
 
 ---
 
@@ -119,7 +119,7 @@
 
 ### Интерфейс окна метода Ньютона
 
-<img width="800" alt="NewtonMethod" src="https://github.com/user-attachments/assets/2a305f54-31f2-4ded-9242-255d3c13605f" />
+<img width="800" alt="NewtonMethod" src="https://github.com/user-attachments/assets/247f60bb-a76c-49ef-9104-c18386b0d88a" />
 
 ---
 
@@ -248,7 +248,7 @@
 
 ### Интерфейс окна метода вычисления определенного интеграла
 
-<img width="800" alt="DefiniteIntegralMethod" src="https://github.com/user-attachments/assets/bede163b-790e-43bb-8917-5e0a7e929adf" />
+<img width="800" alt="DefeniteIntegralMethod" src="https://github.com/user-attachments/assets/f0317330-e461-43f5-aa30-6c8615f7ce45" />
 
 ---
 
@@ -271,7 +271,8 @@
 
 ### Интерфейс окна метода покоординатного спуска
 
-<img width="800" alt="CoordinateDescentMethod" src="https://github.com/user-attachments/assets/96817e00-6a8b-4e86-a976-9d66ff020116" />
+<img width="800" alt="CoordinateDescentMethod" src="https://github.com/user-attachments/assets/9dd4e1e6-14e1-4db6-bb8a-b2d77d2477be" />
+
 
 ---
 
@@ -281,24 +282,16 @@
 
 Метод наименьших квадратов — это математический метод аппроксимации экспериментальных данных аналитической функцией. Цель метода — найти такую функцию, которая минимизирует сумму квадратов отклонений между теоретическими и экспериментальными значениями.
 
-**Алгоритм для полиномиальной аппроксимации:**
+**Алгоритм для вычисления аппроксимирующей функции:**
 
 1. Задаются экспериментальные точки `(xᵢ, yᵢ)`, где `i = 1, 2, ..., n`.
 2. Составляется система линейных уравнений для определения коэффициентов полинома `P(x) = a₀ + a₁x + a₂x² + ... + aₘxᵐ`:
    - Минимизируется сумма квадратов отклонений: `S = Σ[yᵢ - P(xᵢ)]²`
    - Условия минимума: `∂S/∂aⱼ = 0` для всех `j = 0, 1, ..., m`
 3. Полученная система уравнений решается методом Гаусса.
-4. Полученные коэффициенты определяют аппроксимирующий полином.
-
-**Математическая формулировка:**
-Для нахождения коэффициентов `a₀, a₁, ..., aₘ` решается система нормальных уравнений:
-```
-Σa₀·n + Σa₁·xᵢ + Σa₂·xᵢ² + ... + Σaₘ·xᵢᵐ = Σyᵢ
-Σa₀·xᵢ + Σa₁·xᵢ² + Σa₂·xᵢ³ + ... + Σaₘ·xᵢᵐ⁺¹ = Σxᵢ·yᵢ
-...
-Σa₀·xᵢᵐ + Σa₁·xᵢᵐ⁺¹ + Σa₂·xᵢᵐ⁺² + ... + Σaₘ·xᵢ²ᵐ = Σxᵢᵐ·yᵢ
-```
+4. Полученные коэффициенты определяют аппроксимирующую функцию.
 
 ### Интерфейс окна метода наименьших квадратов
 
-<img width="800" alt="LeastSquaresMethod" src="https://github.com/user-attachments/assets/244935a5-764c-42ad-9e8c-904cd8d0c513" />
+<img width="800" alt="LeastSquaresMethod" src="https://github.com/user-attachments/assets/4b7f8531-029d-470d-b4a5-6b4ea834cf09" />
+
